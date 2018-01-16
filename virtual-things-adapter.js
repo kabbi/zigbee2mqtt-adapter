@@ -81,7 +81,7 @@ class VirtualThingsAdapter extends Adapter {
 
     for (let i = 0; i < VIRTUAL_THINGS.length; i++) {
       var id = 'virtual-things-' + i;
-      new Device(this, id, VIRTUAL_THINGS[i]);
+      new VirtualThingsDevice(this, id, VIRTUAL_THINGS[i]);
     }
   }
 }
