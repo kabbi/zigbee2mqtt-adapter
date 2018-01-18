@@ -34,6 +34,35 @@ const onOffColorLight = {
   ]
 };
 
+const dimmableColorLight = {
+  type: 'dimmableColorLight',
+  name: 'Virtual Dimmable Color Light',
+  properties: [
+    {
+      name: 'color',
+      value: '#ffffff',
+      metadata: {
+        type: 'string'
+      }
+    },
+    {
+      name: 'level',
+      value: 0,
+      metadata: {
+        type: 'number',
+        unit: 'percent'
+      }
+    },
+    {
+      name: 'on',
+      value: false,
+      metadata: {
+        type: 'boolean'
+      }
+    }
+  ]
+};
+
 const multiLevelSwitch = {
   type: 'multiLevelSwitch',
   name: 'Virtual Multi-level Switch',
@@ -61,8 +90,7 @@ const VIRTUAL_THINGS = [
   // onOffSwitch,
   onOffColorLight,
   multiLevelSwitch,
-  // colorLight,
-  // dimmableColorLight,
+  dimmableColorLight,
   // binarySensor,
 ];
 
