@@ -13,6 +13,27 @@ var Adapter = require('../adapter');
 var Device = require('../device');
 var Property = require('../property');
 
+const onOffColorLight = {
+  type: 'onOffColorLight',
+  name: 'Virtual On/Off Color Light',
+  properties: [
+    {
+      name: 'color',
+      value: '#ffffff',
+      metadata: {
+        type: 'string'
+      }
+    },
+    {
+      name: 'on',
+      value: false,
+      metadata: {
+        type: 'boolean'
+      }
+    }
+  ]
+};
+
 const multiLevelSwitch = {
   type: 'multiLevelSwitch',
   name: 'Virtual Multi-level Switch',
@@ -38,6 +59,7 @@ const multiLevelSwitch = {
 const VIRTUAL_THINGS = [
   // thing,
   // onOffSwitch,
+  onOffColorLight,
   multiLevelSwitch,
   // colorLight,
   // dimmableColorLight,
