@@ -45,6 +45,28 @@ const VIRTUAL_THINGS = [
 ];
 
 /**
+ * A virtual property
+ */
+class VirtualThingsProperty extends Property {
+  constructor(device, name, descr, value) {
+    super(device, name, descr);
+    this.setCachedValue(value);
+  }
+
+  /**
+   * @param {any} value
+   * @return {Promise} a promise which resolves to the updated value.
+   */
+  setValue(value) {
+    return new Promise(resolve => {
+      this.setCachedValue(value);
+      resolve(this.value);
+      this.device.notifyPropertyChanged(this);
+    });
+  }
+}
+
+/**
  * A virtual device
  */
 class VirtualThingsDevice extends Device {
@@ -62,7 +84,7 @@ class VirtualThingsDevice extends Device {
 
     for (let prop of template.properties) {
       this.properties.set(prop.name,
-        new Property(this, prop.name, prop.metadata, prop.value));
+        new VirtualThingsProperty(this, prop.name, prop.metadata, prop.value));
     }
 
     this.adapter.handleDeviceAdded(this);
