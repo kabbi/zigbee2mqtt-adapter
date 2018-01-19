@@ -1,16 +1,29 @@
 {
   "name": "virtual-things-adapter",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Mozilla IoT Virtual Things Adapter",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "hobinjk@gmail.com",
+  "keywords": [
+    "mozilla",
+    "iot",
+    "adapter",
+    "virtual"
+  ],
+  "homepage": "https://github.com/mozilla-iot/virtual-things-adapter",
+  "author": "Mozilla IoT Team",
   "license": "MPL-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mozilla-iot/virtual-things-adapter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mozilla-iot/virtual-things-adapter/issues"
+  },
   "dependencies": {
   },
   "files": [
+    "LICENSE",
+    "SHA256SUMS",
     "index.js",
     "virtual-things-adapter.js"
   ],
@@ -19,7 +32,6 @@
       "min": 1,
       "max": 1
     },
-    "enabled": true,
     "plugin": true,
     "exec": "{nodeLoader} {path}"
   }
