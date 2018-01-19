@@ -13,24 +13,43 @@ var Adapter = require('../adapter');
 var Device = require('../device');
 var Property = require('../property');
 
+function on() {
+  return {
+    name: 'on',
+    value: false,
+    metadata: {
+      type: 'boolean'
+    }
+  };
+}
+
+function color() {
+  return {
+    name: 'color',
+    value: '#ffffff',
+    metadata: {
+      type: 'string'
+    }
+  };
+}
+
+function level() {
+  return {
+    name: 'level',
+    value: 0,
+    metadata: {
+      type: 'number',
+      unit: 'percent'
+    }
+  };
+}
+
 const onOffColorLight = {
   type: 'onOffColorLight',
   name: 'Virtual On/Off Color Light',
   properties: [
-    {
-      name: 'color',
-      value: '#ffffff',
-      metadata: {
-        type: 'string'
-      }
-    },
-    {
-      name: 'on',
-      value: false,
-      metadata: {
-        type: 'boolean'
-      }
-    }
+    on(),
+    color()
   ]
 };
 
@@ -38,28 +57,9 @@ const dimmableColorLight = {
   type: 'dimmableColorLight',
   name: 'Virtual Dimmable Color Light',
   properties: [
-    {
-      name: 'color',
-      value: '#ffffff',
-      metadata: {
-        type: 'string'
-      }
-    },
-    {
-      name: 'level',
-      value: 0,
-      metadata: {
-        type: 'number',
-        unit: 'percent'
-      }
-    },
-    {
-      name: 'on',
-      value: false,
-      metadata: {
-        type: 'boolean'
-      }
-    }
+    color(),
+    level(),
+    on()
   ]
 };
 
@@ -67,21 +67,8 @@ const multiLevelSwitch = {
   type: 'multiLevelSwitch',
   name: 'Virtual Multi-level Switch',
   properties: [
-    {
-      name: 'level',
-      value: 0,
-      metadata: {
-        type: 'number',
-        unit: 'percent'
-      }
-    },
-    {
-      name: 'on',
-      value: false,
-      metadata: {
-        type: 'boolean'
-      }
-    }
+    level(),
+    on()
   ]
 };
 
@@ -89,13 +76,82 @@ const onOffSwitch = {
   type: 'onOffSwitch',
   name: 'Virtual On/Off Switch',
   properties: [
+    on()
+  ]
+};
+
+const binarySensor = {
+  type: 'binarySensor',
+  name: 'Virtual Binary Sensor',
+  properties: [
+    on()
+  ]
+};
+
+const multiLevelSensor = {
+  type: 'multiLevelSensor',
+  name: 'Virtual Multi-level Sensor',
+  properties: [
+    on(),
+    level()
+  ]
+};
+
+const smartPlug = {
+  type: 'smartPlug',
+  name: 'Virtual Smart Plug',
+  properties: [
+    on(),
+    level(),
     {
-      name: 'on',
-      value: false,
+      name: 'instantaneousPower',
+      value: 0,
       metadata: {
-        type: 'boolean'
+        type: 'number',
+        unit: 'watt'
+      }
+    },
+    {
+      name: 'voltage',
+      value: 0,
+      metadata: {
+        type: 'number',
+        unit: 'volt'
+      }
+    },
+    {
+      name: 'current',
+      value: 0,
+      metadata: {
+        type: 'number',
+        unit: 'ampere'
+      }
+    },
+    {
+      name: 'frequency',
+      value: 0,
+      metadata: {
+        type: 'number',
+        unit: 'hertz'
       }
     }
+  ]
+};
+
+const onOffLight = {
+  type: 'onOffLight',
+  name: 'Virtual On/Off Light',
+  properties: [
+    on()
+  ]
+};
+
+const dimmableLight = {
+  type: 'dimmableLight',
+  name: 'Virtual Dimmable Light',
+  properties: [
+    on(),
+    level()
   ]
 };
 
@@ -105,7 +161,11 @@ const VIRTUAL_THINGS = [
   multiLevelSwitch,
   dimmableColorLight,
   onOffSwitch,
-  // binarySensor,
+  binarySensor,
+  multiLevelSensor,
+  smartPlug,
+  onOffLight,
+  dimmableLight
 ];
 
 /**
