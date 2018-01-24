@@ -138,6 +138,52 @@ const smartPlug = {
   ]
 };
 
+const thing = {
+  type: 'thing',
+  name: 'Virtual Thing',
+  properties: [
+    {
+      name: 'boolProperty',
+      value: true,
+      metadata: {
+        type: 'boolean'
+      }
+    },
+    {
+      name: 'stringProperty',
+      value: 'blah',
+      metadata: {
+        type: 'string'
+      }
+    },
+    {
+      name: 'numberProperty',
+      value: 12,
+      metadata: {
+        type: 'number'
+      }
+    },
+    {
+      name: 'numberUnitProperty',
+      value: 34,
+      metadata: {
+        type: 'number',
+        unit: 'metres'
+      }
+    },
+    {
+      name: 'numberUnitMinMaxProperty',
+      value: 56,
+      metadata: {
+        type: 'number',
+        unit: 'degrees',
+        min: 0,
+        max: 100
+      }
+    }
+  ]
+};
+
 const onOffLight = {
   type: 'onOffLight',
   name: 'Virtual On/Off Light',
@@ -156,7 +202,6 @@ const dimmableLight = {
 };
 
 const VIRTUAL_THINGS = [
-  // thing,
   onOffColorLight,
   multiLevelSwitch,
   dimmableColorLight,
@@ -165,7 +210,8 @@ const VIRTUAL_THINGS = [
   multiLevelSensor,
   smartPlug,
   onOffLight,
-  dimmableLight
+  dimmableLight,
+  thing
 ];
 
 /**
