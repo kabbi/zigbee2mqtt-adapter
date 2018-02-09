@@ -266,8 +266,8 @@ class VirtualThingsDevice extends Device {
  * Instantiates one virtual device per template
  */
 class VirtualThingsAdapter extends Adapter {
-  constructor(adapterManager) {
-    super(adapterManager, 'virtual-things', 'virtual-things');
+  constructor(adapterManager, manifestName) {
+    super(adapterManager, 'virtual-things', manifestName);
 
     adapterManager.addAdapter(this);
 
