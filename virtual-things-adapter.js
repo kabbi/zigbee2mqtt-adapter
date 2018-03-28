@@ -283,9 +283,19 @@ class VirtualThingsAdapter extends Adapter {
 
     adapterManager.addAdapter(this);
 
+    this.addAllThings();
+  }
+
+  startPairing() {
+    this.addAllThings();
+  }
+
+  addAllThings() {
     for (let i = 0; i < VIRTUAL_THINGS.length; i++) {
       var id = 'virtual-things-' + i;
-      new VirtualThingsDevice(this, id, VIRTUAL_THINGS[i]);
+      if (!this.devices[id]) {
+        new VirtualThingsDevice(this, id, VIRTUAL_THINGS[i]);
+      }
     }
   }
 }
