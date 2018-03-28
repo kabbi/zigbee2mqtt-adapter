@@ -1,6 +1,6 @@
 {
   "name": "virtual-things-adapter",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Mozilla IoT Virtual Things Adapter",
   "main": "index.js",
   "keywords": [
