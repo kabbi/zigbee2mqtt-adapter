@@ -9,7 +9,7 @@
 
 'use strict';
 
-let Adapter, Device, Property;
+let Adapter, Device, Event, Property;
 try {
   Adapter = require('../adapter');
   Device = require('../device');
@@ -22,6 +22,7 @@ try {
   const gwa = require('gateway-addon');
   Adapter = gwa.Adapter;
   Device = gwa.Device;
+  Event = gwa.Event;
   Property = gwa.Property;
 }
 
@@ -30,8 +31,8 @@ function on() {
     name: 'on',
     value: false,
     metadata: {
-      type: 'boolean'
-    }
+      type: 'boolean',
+    },
   };
 }
 
@@ -40,8 +41,8 @@ function color() {
     name: 'color',
     value: '#ffffff',
     metadata: {
-      type: 'string'
-    }
+      type: 'string',
+    },
   };
 }
 
@@ -51,8 +52,8 @@ function level() {
     value: 0,
     metadata: {
       type: 'number',
-      unit: 'percent'
-    }
+      unit: 'percent',
+    },
   };
 }
 
@@ -61,8 +62,10 @@ const onOffColorLight = {
   name: 'Virtual On/Off Color Light',
   properties: [
     on(),
-    color()
-  ]
+    color(),
+  ],
+  actions: [],
+  events: [],
 };
 
 const dimmableColorLight = {
@@ -71,8 +74,10 @@ const dimmableColorLight = {
   properties: [
     color(),
     level(),
-    on()
-  ]
+    on(),
+  ],
+  actions: [],
+  events: [],
 };
 
 const multiLevelSwitch = {
@@ -80,24 +85,30 @@ const multiLevelSwitch = {
   name: 'Virtual Multi-level Switch',
   properties: [
     level(),
-    on()
-  ]
+    on(),
+  ],
+  actions: [],
+  events: [],
 };
 
 const onOffSwitch = {
   type: 'onOffSwitch',
   name: 'Virtual On/Off Switch',
   properties: [
-    on()
-  ]
+    on(),
+  ],
+  actions: [],
+  events: [],
 };
 
 const binarySensor = {
   type: 'binarySensor',
   name: 'Virtual Binary Sensor',
   properties: [
-    on()
-  ]
+    on(),
+  ],
+  actions: [],
+  events: [],
 };
 
 const multiLevelSensor = {
@@ -105,8 +116,10 @@ const multiLevelSensor = {
   name: 'Virtual Multi-level Sensor',
   properties: [
     on(),
-    level()
-  ]
+    level(),
+  ],
+  actions: [],
+  events: [],
 };
 
 const smartPlug = {
@@ -120,34 +133,57 @@ const smartPlug = {
       value: 0,
       metadata: {
         type: 'number',
-        unit: 'watt'
-      }
+        unit: 'watt',
+      },
     },
     {
       name: 'voltage',
       value: 0,
       metadata: {
         type: 'number',
-        unit: 'volt'
-      }
+        unit: 'volt',
+      },
     },
     {
       name: 'current',
       value: 0,
       metadata: {
         type: 'number',
-        unit: 'ampere'
-      }
+        unit: 'ampere',
+      },
     },
     {
       name: 'frequency',
       value: 0,
       metadata: {
         type: 'number',
-        unit: 'hertz'
-      }
-    }
-  ]
+        unit: 'hertz',
+      },
+    },
+  ],
+  actions: [],
+  events: [],
+};
+
+const onOffLight = {
+  type: 'onOffLight',
+  name: 'Virtual On/Off Light',
+  properties: [
+    on(),
+  ],
+  actions: [],
+  events: [],
+};
+
+const dimmableLight = {
+  type: 'dimmableLight',
+  name: 'Virtual Dimmable Light',
+  properties: [
+    on(),
+    level(),
+  ],
+  actions: [],
+  events: [],
 };
 
 const thing = {
@@ -158,30 +194,30 @@ const thing = {
       name: 'boolProperty',
       value: true,
       metadata: {
-        type: 'boolean'
-      }
+        type: 'boolean',
+      },
     },
     {
       name: 'stringProperty',
       value: 'blah',
       metadata: {
-        type: 'string'
-      }
+        type: 'string',
+      },
     },
     {
       name: 'numberProperty',
       value: 12,
       metadata: {
-        type: 'number'
-      }
+        type: 'number',
+      },
     },
     {
       name: 'numberUnitProperty',
       value: 34,
       metadata: {
         type: 'number',
-        unit: 'metres'
-      }
+        unit: 'metres',
+      },
     },
     {
       name: 'numberUnitMinMaxProperty',
@@ -190,27 +226,91 @@ const thing = {
         type: 'number',
         unit: 'degrees',
         min: 0,
-        max: 100
-      }
-    }
-  ]
+        max: 100,
+      },
+    },
+  ],
+  actions: [],
+  events: [],
 };
 
-const onOffLight = {
-  type: 'onOffLight',
-  name: 'Virtual On/Off Light',
-  properties: [
-    on()
-  ]
-};
-
-const dimmableLight = {
-  type: 'dimmableLight',
-  name: 'Virtual Dimmable Light',
-  properties: [
-    on(),
-    level()
-  ]
+const actionsEventsThing = {
+  type: 'thing',
+  name: 'Virtual Actions & Events Thing',
+  properties: [],
+  actions: [
+    {
+      name: 'basic',
+      metadata: {
+        description: 'An action with no inputs, fires an event',
+      },
+    },
+    {
+      name: 'single',
+      metadata: {
+        description: 'An action with a single, non-object input',
+        input: {
+          type: 'number',
+        },
+      },
+    },
+    {
+      name: 'multiple',
+      metadata: {
+        description: 'An action with mutiple, optional inputs',
+        input: {
+          type: 'object',
+          properties: {
+            stringInput: {
+              type: 'string',
+            },
+            booleanInput: {
+              type: 'boolean',
+            },
+          },
+        },
+      },
+    },
+    {
+      name: 'advanced',
+      metadata: {
+        description: 'An action with many inputs, some required',
+        input: {
+          type: 'object',
+          required: [
+            'numberInput',
+          ],
+          properties: {
+            numberInput: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+              unit: 'percent',
+            },
+            integerInput: {
+              type: 'integer',
+              unit: 'meters',
+            },
+            stringInput: {
+              type: 'string',
+            },
+            booleanInput: {
+              type: 'boolean',
+            },
+          },
+        },
+      },
+    },
+  ],
+  events: [
+    {
+      name: 'virtualEvent',
+      metadata: {
+        description: 'An event from a virtual thing',
+        type: 'number',
+      },
+    },
+  ],
 };
 
 const VIRTUAL_THINGS = [
@@ -223,7 +323,8 @@ const VIRTUAL_THINGS = [
   smartPlug,
   onOffLight,
   dimmableLight,
-  thing
+  thing,
+  actionsEventsThing,
 ];
 
 /**
@@ -240,7 +341,7 @@ class VirtualThingsProperty extends Property {
    * @return {Promise} a promise which resolves to the updated value.
    */
   setValue(value) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       this.setCachedValue(value);
       resolve(this.value);
       this.device.notifyPropertyChanged(this);
@@ -264,12 +365,40 @@ class VirtualThingsDevice extends Device {
 
     this.type = template.type;
 
-    for (let prop of template.properties) {
-      this.properties.set(prop.name,
+    for (const prop of template.properties) {
+      this.properties.set(
+        prop.name,
         new VirtualThingsProperty(this, prop.name, prop.metadata, prop.value));
     }
 
+    if (Event) {
+      for (const action of template.actions) {
+        this.addAction(action.name, action.metadata);
+      }
+
+      for (const event of template.events) {
+        this.addEvent(event.name, event.metadata);
+      }
+    }
+
     this.adapter.handleDeviceAdded(this);
+  }
+
+  performAction(action) {
+    console.log(`Performing action "${action.name}" with input:`, action.input);
+
+    action.start();
+
+    if (action.name === 'basic') {
+      // For the "basic" action, fire an event.
+      this.eventNotify(new Event(this,
+                                 'virtualEvent',
+                                 Math.floor(Math.random() * 100)));
+    }
+
+    action.finish();
+
+    return Promise.resolve();
   }
 }
 
@@ -292,7 +421,7 @@ class VirtualThingsAdapter extends Adapter {
 
   addAllThings() {
     for (let i = 0; i < VIRTUAL_THINGS.length; i++) {
-      var id = 'virtual-things-' + i;
+      const id = `virtual-things-${i}`;
       if (!this.devices[id]) {
         new VirtualThingsDevice(this, id, VIRTUAL_THINGS[i]);
       }
