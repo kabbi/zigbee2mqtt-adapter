@@ -313,6 +313,20 @@ const actionsEventsThing = {
   ],
 };
 
+const onOffSwitchWithPin = {
+  type: 'onOffSwitch',
+  name: 'Virtual On/Off Switch (with PIN)',
+  properties: [
+    on(),
+  ],
+  actions: [],
+  events: [],
+  pin: {
+    required: true,
+    pattern: '^\\d{4}$',
+  },
+};
+
 const VIRTUAL_THINGS = [
   onOffColorLight,
   multiLevelSwitch,
@@ -325,6 +339,7 @@ const VIRTUAL_THINGS = [
   dimmableLight,
   thing,
   actionsEventsThing,
+  onOffSwitchWithPin,
 ];
 
 /**
@@ -364,6 +379,14 @@ class VirtualThingsDevice extends Device {
     this.name = template.name;
 
     this.type = template.type;
+
+    if (template.hasOwnProperty('pin')) {
+      this.pinRequired = template.pin.required;
+      this.pinPattern = template.pin.pattern;
+    } else {
+      this.pinRequired = false;
+      this.pinPattern = false;
+    }
 
     for (const prop of template.properties) {
       this.properties.set(
@@ -426,6 +449,17 @@ class VirtualThingsAdapter extends Adapter {
         new VirtualThingsDevice(this, id, VIRTUAL_THINGS[i]);
       }
     }
+  }
+
+  setPin(deviceId, pin) {
+    return new Promise((resolve, reject) => {
+      const device = this.getDevice(deviceId);
+      if (device && device.pinRequired && pin === '1234') {
+        resolve();
+      } else {
+        reject('Invalid PIN');
+      }
+    });
   }
 }
 
