@@ -9,7 +9,7 @@
 
 'use strict';
 
-let Adapter, Device, Event, Property;
+let Action, Adapter, Device, Event, Property;
 try {
   Adapter = require('../adapter');
   Device = require('../device');
@@ -20,6 +20,7 @@ try {
   }
 
   const gwa = require('gateway-addon');
+  Action = gwa.Action;
   Adapter = gwa.Adapter;
   Device = gwa.Device;
   Event = gwa.Event;
@@ -31,7 +32,9 @@ function on() {
     name: 'on',
     value: false,
     metadata: {
+      label: 'On/Off',
       type: 'boolean',
+      '@type': 'OnOffProperty',
     },
   };
 }
@@ -41,7 +44,9 @@ function color() {
     name: 'color',
     value: '#ffffff',
     metadata: {
+      label: 'Color',
       type: 'string',
+      '@type': 'ColorProperty',
     },
   };
 }
@@ -51,10 +56,25 @@ function colorTemperature() {
     name: 'colorTemperature',
     value: 2500,
     metadata: {
+      label: 'Color Temperature',
       type: 'number',
+      '@type': 'ColorTemperatureProperty',
       unit: 'kelvin',
       min: 2500,
       max: 9000,
+    },
+  };
+}
+
+function brightness() {
+  return {
+    name: 'level',
+    value: 0,
+    metadata: {
+      label: 'Brightness',
+      type: 'number',
+      '@type': 'BrightnessProperty',
+      unit: 'percent',
     },
   };
 }
@@ -64,7 +84,9 @@ function level() {
     name: 'level',
     value: 0,
     metadata: {
+      label: 'Level',
       type: 'number',
+      '@type': 'LevelProperty',
       unit: 'percent',
     },
   };
@@ -72,6 +94,8 @@ function level() {
 
 const onOffColorLight = {
   type: 'onOffColorLight',
+  '@context': 'https://iot.mozilla.org/schemas',
+  '@type': ['OnOffSwitch', 'Light', 'ColorControl'],
   name: 'Virtual On/Off Color Light',
   properties: [
     on(),
@@ -83,6 +107,8 @@ const onOffColorLight = {
 
 const onOffColorTemperatureLight = {
   type: 'onOffColorLight',
+  '@context': 'https://iot.mozilla.org/schemas',
+  '@type': ['OnOffSwitch', 'Light', 'ColorControl'],
   name: 'Virtual On/Off Color Temperature Light',
   properties: [
     on(),
@@ -94,10 +120,12 @@ const onOffColorTemperatureLight = {
 
 const dimmableColorLight = {
   type: 'dimmableColorLight',
+  '@context': 'https://iot.mozilla.org/schemas',
+  '@type': ['OnOffSwitch', 'Light', 'ColorControl'],
   name: 'Virtual Dimmable Color Light',
   properties: [
     color(),
-    level(),
+    brightness(),
     on(),
   ],
   actions: [],
@@ -106,6 +134,8 @@ const dimmableColorLight = {
 
 const multiLevelSwitch = {
   type: 'multiLevelSwitch',
+  '@context': 'https://iot.mozilla.org/schemas',
+  '@type': ['OnOffSwitch', 'MultiLevelSwitch'],
   name: 'Virtual Multi-level Switch',
   properties: [
     level(),
@@ -117,6 +147,8 @@ const multiLevelSwitch = {
 
 const onOffSwitch = {
   type: 'onOffSwitch',
+  '@context': 'https://iot.mozilla.org/schemas',
+  '@type': ['OnOffSwitch'],
   name: 'Virtual On/Off Switch',
   properties: [
     on(),
@@ -127,6 +159,8 @@ const onOffSwitch = {
 
 const binarySensor = {
   type: 'binarySensor',
+  '@context': 'https://iot.mozilla.org/schemas',
+  '@type': ['BinarySensor'],
   name: 'Virtual Binary Sensor',
   properties: [
     on(),
@@ -137,6 +171,8 @@ const binarySensor = {
 
 const multiLevelSensor = {
   type: 'multiLevelSensor',
+  '@context': 'https://iot.mozilla.org/schemas',
+  '@type': ['MultiLevelSensor'],
   name: 'Virtual Multi-level Sensor',
   properties: [
     on(),
@@ -148,6 +184,8 @@ const multiLevelSensor = {
 
 const smartPlug = {
   type: 'smartPlug',
+  '@context': 'https://iot.mozilla.org/schemas',
+  '@type': ['OnOffSwitch', 'EnergyMonitor', 'SmartPlug', 'MultiLevelSwitch'],
   name: 'Virtual Smart Plug',
   properties: [
     on(),
@@ -191,6 +229,8 @@ const smartPlug = {
 
 const onOffLight = {
   type: 'onOffLight',
+  '@context': 'https://iot.mozilla.org/schemas',
+  '@type': ['OnOffSwitch', 'Light'],
   name: 'Virtual On/Off Light',
   properties: [
     on(),
@@ -201,10 +241,12 @@ const onOffLight = {
 
 const dimmableLight = {
   type: 'dimmableLight',
+  '@context': 'https://iot.mozilla.org/schemas',
+  '@type': ['OnOffSwitch', 'Light'],
   name: 'Virtual Dimmable Light',
   properties: [
     on(),
-    level(),
+    brightness(),
   ],
   actions: [],
   events: [],
@@ -212,6 +254,8 @@ const dimmableLight = {
 
 const thing = {
   type: 'thing',
+  '@context': 'https://iot.mozilla.org/schemas',
+  '@type': [],
   name: 'Virtual Thing',
   properties: [
     {
@@ -260,18 +304,22 @@ const thing = {
 
 const actionsEventsThing = {
   type: 'thing',
+  '@context': 'https://iot.mozilla.org/schemas',
+  '@type': [],
   name: 'Virtual Actions & Events Thing',
   properties: [],
   actions: [
     {
       name: 'basic',
       metadata: {
+        label: 'No Input',
         description: 'An action with no inputs, fires an event',
       },
     },
     {
       name: 'single',
       metadata: {
+        label: 'Single Input',
         description: 'An action with a single, non-object input',
         input: {
           type: 'number',
@@ -281,6 +329,7 @@ const actionsEventsThing = {
     {
       name: 'multiple',
       metadata: {
+        label: 'Multiple Inputs',
         description: 'An action with mutiple, optional inputs',
         input: {
           type: 'object',
@@ -298,6 +347,7 @@ const actionsEventsThing = {
     {
       name: 'advanced',
       metadata: {
+        label: 'Advanced Inputs',
         description: 'An action with many inputs, some required',
         input: {
           type: 'object',
@@ -339,6 +389,8 @@ const actionsEventsThing = {
 
 const onOffSwitchWithPin = {
   type: 'onOffSwitch',
+  '@context': 'https://iot.mozilla.org/schemas',
+  '@type': ['OnOffSwitch'],
   name: 'Virtual On/Off Switch (with PIN)',
   properties: [
     on(),
@@ -404,6 +456,8 @@ class VirtualThingsDevice extends Device {
     this.name = template.name;
 
     this.type = template.type;
+    this['@context'] = template['@context'];
+    this['@type'] = template['@type'];
 
     if (template.hasOwnProperty('pin')) {
       this.pinRequired = template.pin.required;
@@ -419,11 +473,13 @@ class VirtualThingsDevice extends Device {
         new VirtualThingsProperty(this, prop.name, prop.metadata, prop.value));
     }
 
-    if (Event) {
+    if (Action) {
       for (const action of template.actions) {
         this.addAction(action.name, action.metadata);
       }
+    }
 
+    if (Event) {
       for (const event of template.events) {
         this.addEvent(event.name, event.metadata);
       }
