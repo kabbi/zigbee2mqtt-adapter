@@ -46,6 +46,19 @@ function color() {
   };
 }
 
+function colorTemperature() {
+  return {
+    name: 'colorTemperature',
+    value: 2500,
+    metadata: {
+      type: 'number',
+      unit: 'kelvin',
+      min: 2500,
+      max: 9000,
+    },
+  };
+}
+
 function level() {
   return {
     name: 'level',
@@ -63,6 +76,17 @@ const onOffColorLight = {
   properties: [
     on(),
     color(),
+  ],
+  actions: [],
+  events: [],
+};
+
+const onOffColorTemperatureLight = {
+  type: 'onOffColorLight',
+  name: 'Virtual On/Off Color Temperature Light',
+  properties: [
+    on(),
+    colorTemperature(),
   ],
   actions: [],
   events: [],
@@ -340,6 +364,7 @@ const VIRTUAL_THINGS = [
   thing,
   actionsEventsThing,
   onOffSwitchWithPin,
+  onOffColorTemperatureLight,
 ];
 
 /**
