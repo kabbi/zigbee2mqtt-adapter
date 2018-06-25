@@ -379,6 +379,14 @@ const actionsEventsThing = {
             booleanInput: {
               type: 'boolean',
             },
+            enumInput: {
+              type: 'string',
+              enum: [
+                'enum string1',
+                'enum string2',
+                'enum string3',
+              ],
+            },
           },
         },
       },
