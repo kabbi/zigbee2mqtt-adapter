@@ -194,6 +194,8 @@ const smartPlug = {
       name: 'instantaneousPower',
       value: 0,
       metadata: {
+        '@type': 'InstantaneousPowerProperty',
+        label: 'Power',
         type: 'number',
         unit: 'watt',
       },
@@ -202,6 +204,8 @@ const smartPlug = {
       name: 'voltage',
       value: 0,
       metadata: {
+        '@type': 'VoltageProperty',
+        label: 'Voltage',
         type: 'number',
         unit: 'volt',
       },
@@ -210,6 +214,8 @@ const smartPlug = {
       name: 'current',
       value: 0,
       metadata: {
+        '@type': 'CurrentProperty',
+        label: 'Current',
         type: 'number',
         unit: 'ampere',
       },
@@ -218,6 +224,8 @@ const smartPlug = {
       name: 'frequency',
       value: 0,
       metadata: {
+        '@type': 'FrequencyProperty',
+        label: 'Frequency',
         type: 'number',
         unit: 'hertz',
       },
