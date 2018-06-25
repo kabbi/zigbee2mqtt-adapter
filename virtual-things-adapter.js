@@ -27,6 +27,18 @@ try {
   Property = gwa.Property;
 }
 
+function bool() {
+  return {
+    name: 'on',
+    value: false,
+    metadata: {
+      label: 'On/Off',
+      type: 'boolean',
+      '@type': 'BooleanProperty',
+    },
+  };
+}
+
 function on() {
   return {
     name: 'on',
@@ -163,7 +175,7 @@ const binarySensor = {
   '@type': ['BinarySensor'],
   name: 'Virtual Binary Sensor',
   properties: [
-    on(),
+    bool(),
   ],
   actions: [],
   events: [],
@@ -175,7 +187,7 @@ const multiLevelSensor = {
   '@type': ['MultiLevelSensor'],
   name: 'Virtual Multi-level Sensor',
   properties: [
-    on(),
+    bool(),
     level(),
   ],
   actions: [],
