@@ -317,6 +317,33 @@ const thing = {
         max: 100,
       },
     },
+    {
+      name: 'numberEnumProperty',
+      value: 0,
+      metadata: {
+        type: 'number',
+        unit: 'something',
+        enum: [
+          0,
+          10,
+          20,
+          30,
+        ],
+      },
+    },
+    {
+      name: 'stringEnumProperty',
+      value: 'string1',
+      metadata: {
+        type: 'string',
+        enum: [
+          'string1',
+          'string2',
+          'string3',
+          'string4',
+        ],
+      },
+    },
   ],
   actions: [],
   events: [],
