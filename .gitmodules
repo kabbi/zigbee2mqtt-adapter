@@ -1,0 +1,3 @@
+[submodule "mocks/gateway-addon"]
+	path = mocks/gateway-addon
+	url = https://github.com/mozilla-iot/gateway-addon-node.git

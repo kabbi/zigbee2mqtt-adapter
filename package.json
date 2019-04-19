@@ -1,8 +1,8 @@
 {
-  "name": "virtual-things-adapter",
-  "display_name": "Virtual Things",
+  "name": "zigbee2mqtt-adapter",
+  "display_name": "zigbee2mqtt adapter",
   "version": "0.2.6",
-  "description": "Mozilla IoT Virtual Things Adapter",
+  "description": "Brings all your zigbee devices to the gateway through mqtt bridge",
   "main": "index.js",
   "keywords": [
     "mozilla",
@@ -10,26 +10,28 @@
     "adapter",
     "virtual"
   ],
-  "homepage": "https://github.com/mozilla-iot/virtual-things-adapter",
+  "homepage": "https://github.com/kabbi/zigbee2mqtt-adapter",
   "author": "Mozilla IoT",
   "license": "MPL-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mozilla-iot/virtual-things-adapter.git"
+    "url": "https://github.com/kabbi/zigbee2mqtt-adapter.git"
   },
   "bugs": {
-    "url": "https://github.com/mozilla-iot/virtual-things-adapter/issues"
+    "url": "https://github.com/kabbi/zigbee2mqtt-adapter/issues"
   },
   "dependencies": {
+    "mqtt": "^2.18.8"
   },
   "devDependencies": {
-    "eslint": "^4.19.1"
+    "eslint": "^4.19.1",
+    "sqlite3": "^4.0.6"
   },
   "files": [
     "LICENSE",
     "SHA256SUMS",
     "index.js",
-    "virtual-things-adapter.js"
+    "zigbee2mqtt-adapter.js"
   ],
   "moziot": {
     "api": {
@@ -37,6 +39,10 @@
       "max": 2
     },
     "plugin": true,
-    "exec": "{nodeLoader} {path}"
+    "exec": "{nodeLoader} {path}",
+    "config": {
+      "mqtt": "mqtt://localhost",
+      "prefix": "zigbee2mqtt"
+    }
   }
 }

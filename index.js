@@ -1,5 +1,5 @@
 /**
- * index.js - Loads the virtual things adapter
+ * index.js - Loads the zigbee2mqtt adapter
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,8 +8,6 @@
 
 'use strict';
 
-const VirtualThingsAdapter = require('./virtual-things-adapter');
+const loadAdapter = require('./zigbee2mqtt-adapter');
 
-module.exports = function(adapterManager, manifest) {
-  new VirtualThingsAdapter(adapterManager, manifest.name);
-};
+module.exports = loadAdapter;
