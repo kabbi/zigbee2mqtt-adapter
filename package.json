@@ -43,6 +43,19 @@
     "config": {
       "mqtt": "mqtt://localhost",
       "prefix": "zigbee2mqtt"
+    },
+    "schema": {
+      "type": "object",
+      "properties": {
+        "mqtt": {
+          "type": "string",
+          "description": "Mosquitto or other mqtt server host/port to connect to"
+        },
+        "prefix": {
+          "type": "string",
+          "description": "Mqtt topic prefix for zigbee2mqtt"
+        }
+      }
     }
   }
 }
