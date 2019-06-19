@@ -98,4 +98,32 @@ module.exports = {
       },
     },
   },
+  'lumi.sens': {
+    name: 'Xiaomi Temperature & Humidity Sensor',
+    '@type': ['TemperatureSensor'],
+    properties: {
+      battery: {
+        type: 'integer',
+        unit: 'percent',
+        minimum: 0,
+        maximum: 100,
+        readOnly: true,
+      },
+      linkquality: {
+        type: 'integer',
+        readOnly: true,
+      },
+      temperature: {
+        type: 'number',
+        '@type': 'TemperatureProperty',
+        unit: 'degree celsius',
+        readOnly: true,
+      },
+      humidity: {
+        type: 'number',
+        unit: 'percent',
+        readOnly: true,
+      },
+    },
+  },
 };
