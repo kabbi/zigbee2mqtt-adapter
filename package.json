@@ -11,7 +11,7 @@
     "virtual"
   ],
   "homepage": "https://github.com/kabbi/zigbee2mqtt-adapter",
-  "author": "Mozilla IoT",
+  "author": "Kabbi",
   "license": "MPL-2.0",
   "repository": {
     "type": "git",
