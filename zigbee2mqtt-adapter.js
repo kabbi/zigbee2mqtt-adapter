@@ -74,33 +74,65 @@ class ZigbeeMqttAdapter extends Adapter {
 
   handleIncomingMessage(topic, data) {
     const msg = JSON.parse(data.toString());
+    
+    // Here we add a new thing.
     if (topic.startsWith(`${this.config.prefix}/bridge/config/devices`)) {
       for (const device of msg) {
         this.addDevice(device);
       }
     }
+    
+    // Here we deal with incoming messages from things, such as state changes or new values from sensors.
     if (!topic.startsWith(`${this.config.prefix}/bridge`)) {
-      const description = Devices[msg.device.modelId];
-      const device = this.devices[msg.device.friendlyName];
+      
+      
+      var possibleModelId = "";
+      var possibleFriendlyName = "";
+      
+      if('device' in msg){                  // In some cases it's a complex message with a device dictionary in it.
+        possibleFriendlyName = msg.device.friendlyName;
+        possibleModelId = msg.device.modelId;
+      }
+      else {                                // In other cases it's a simple message, just a list of new values.
+        var parts = topic.split("/");
+        possibleFriendlyName = parts.pop();
+      }
+      
+      // If we found the device ID in the incoming message, then we can look-up the existing thing.
+      const device = this.devices[possibleFriendlyName];
       if (!device) {
         return;
       }
-      if (msg.action && description.events[msg.action]) {
-        const event = new Event(
-          device,
-          msg.action,
-          msg[description.events[msg.action]],
-        );
-        device.eventNotify(event);
-      }
+      
+      // We loop over all the attributes of the incoming message, and try to match it to the properties in the existing thing.
       for (const key of Object.keys(msg)) {
         const property = device.findProperty(key);
         if (!property) {
           continue;
+        }       
+        
+        if(possibleModelId) {               // If we are dealing with a complex message.
+          const description = Devices[possibleModelId];
+          const { fromMqtt = identity } = description.properties[key];
+          property.setCachedValue(fromMqtt(msg[key]));
         }
-        const { fromMqtt = identity } = description.properties[key];
-        property.setCachedValue(fromMqtt(msg[key]));
-        device.notifyPropertyChanged(property);
+        else {                              // If we are dealing with a simple message which only holds values.
+          property.setCachedValue(msg[key]);
+        }
+        device.notifyPropertyChanged(property); // Notify the Gateway that this property's value has updated.
+      }
+      
+      // If it's a complex message, then it may hold an event update
+      if (msg.action && possibleModelId) {
+        const description = Devices[possibleModelId];
+        if(description.events[msg.action]) {
+          const event = new Event(
+            device,
+            msg.action,
+            msg[description.events[msg.action]],
+          );
+          device.eventNotify(event);
+        }
       }
     }
   }
