@@ -1,0 +1,39 @@
+{
+  "author": "Kabbi",
+  "description": "Brings all your zigbee devices to the gateway through mqtt bridge",
+  "gateway_specific_settings": {
+    "webthings": {
+      "exec": "{nodeLoader} {path}",
+      "primary_type": "adapter",
+      "strict_max_version": "*",
+      "strict_min_version": "0.10.0",
+      "enabled": true
+    }
+  },
+  "homepage_url": "https://github.com/kabbi/zigbee2mqtt-adapter",
+  "id": "zigbee2mqtt-adapter",
+  "license": "MPL-2.0",
+  "manifest_version": 1,
+  "name": "zigbee2mqtt adapter",
+  "options": {
+    "default": {
+      "mqtt": "mqtt://localhost",
+      "prefix": "zigbee2mqtt"
+    },
+    "schema": {
+      "type": "object",
+      "properties": {
+        "mqtt": {
+          "type": "string",
+          "description": "Mosquitto or other mqtt server host/port to connect to"
+        },
+        "prefix": {
+          "type": "string",
+          "description": "Mqtt topic prefix for zigbee2mqtt"
+        }
+      }
+    }    
+  },
+  "short_name": "zigbee2mqtt adapter",
+  "version": "0.2.6"
+}

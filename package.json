@@ -30,8 +30,12 @@
   "files": [
     "LICENSE",
     "SHA256SUMS",
+    "README.md",
+    "manifest.json",
     "index.js",
-    "zigbee2mqtt-adapter.js"
+    "zigbee2mqtt-adapter.js",
+    "devices.js",
+    "simulator.js"
   ],
   "moziot": {
     "api": {
