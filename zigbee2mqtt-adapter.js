@@ -80,7 +80,7 @@ class ZigbeeMqttAdapter extends Adapter {
       }
     }
     if (!topic.startsWith(`${this.config.prefix}/bridge`)) {
-      const description = Devices[msg.device.modelId];
+      const description = Devices[msg.device.modelId || msg.device.model];
       const device = this.devices[msg.device.friendlyName];
       if (!device) {
         return;
