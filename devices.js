@@ -168,7 +168,12 @@ module.exports = {
       voltage: {
         type: 'integer',
         '@type': 'VoltageProperty',
-        unit: 'volts',
+        unit: 'volt',
+        readOnly: true,
+      },
+      "water_leak": {
+        type: 'boolean',
+        '@type': 'WaterLeakProperty',
         readOnly: true,
       },
       linkquality: {
