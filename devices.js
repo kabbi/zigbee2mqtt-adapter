@@ -154,4 +154,27 @@ module.exports = {
       },
     },
   },
+  "SJCGQ11LM": {
+    name: 'Xiaomi Aqara Water Leak Sensor',
+    '@type': ['VoltageSensor'],
+    properties: {
+      battery: {
+        type: 'integer',
+        unit: 'percent',
+        minimum: 0,
+        maximum: 100,
+        readOnly: true,
+      },
+      voltage: {
+        type: 'integer',
+        '@type': 'VoltageProperty',
+        unit: 'volts',
+        readOnly: true,
+      },
+      linkquality: {
+        type: 'integer',
+        readOnly: true,
+      },
+    },
+  }
 };
