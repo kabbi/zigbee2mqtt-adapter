@@ -125,9 +125,10 @@ class ZigbeeMqttAdapter extends Adapter {
       console.warn(`Failed to add new device. There is no description for ${modelId} model.`);
       return;
     }
-    const device = new MqttDevice(this, info.friendlyName || info.friendly_name, description);
+    const friendlyName = info.friendlyName || info.friendly_name;
+    const device = new MqttDevice(this, friendlyName, description);
     this.handleDeviceAdded(device);
-    console.info(`New device ${modelId} is added.`);
+    console.info(`New device model:${modelId}, friendlyName:${friendlyName} is added.`);
   }
 
   startPairing(_timeoutSeconds) {
