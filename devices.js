@@ -173,7 +173,7 @@ module.exports = {
       },
       "water_leak": {
         type: 'boolean',
-        '@type': 'WaterLeakProperty',
+        '@type': 'BooleanProperty',
         readOnly: true,
       },
       linkquality: {
