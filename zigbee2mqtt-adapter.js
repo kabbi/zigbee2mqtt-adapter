@@ -106,11 +106,12 @@ class ZigbeeMqttAdapter extends Adapter {
   }
 
   getDevice(msg) {
-    const device = this.devices[msg.device.friendlyName];
+    const friendlyName = msg.device.friendlyName || msg.device.friendly_name;
+    const device = this.devices[friendlyName];
     if (!device) {
       this.addDevice(msg.device);
     }
-    return this.devices[msg.device.friendlyName];
+    return this.devices[friendlyName];
   }
 
   publishMessage(topic, msg) {
@@ -124,7 +125,7 @@ class ZigbeeMqttAdapter extends Adapter {
       console.warn(`Failed to add new device. There is no description for ${modelId} model.`);
       return;
     }
-    const device = new MqttDevice(this, info.friendlyName, description);
+    const device = new MqttDevice(this, info.friendlyName || info.friendly_name, description);
     this.handleDeviceAdded(device);
     console.info(`New device ${modelId} is added.`);
   }
