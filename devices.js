@@ -156,7 +156,7 @@ module.exports = {
   },
   "SJCGQ11LM": {
     name: 'Xiaomi Aqara Water Leak Sensor',
-    '@type': ['VoltageSensor'],
+    '@type': ['BinarySensor'],
     properties: {
       battery: {
         type: 'integer',
@@ -172,6 +172,34 @@ module.exports = {
         readOnly: true,
       },
       "water_leak": {
+        type: 'boolean',
+        '@type': 'BooleanProperty',
+        readOnly: true,
+      },
+      linkquality: {
+        type: 'integer',
+        readOnly: true,
+      },
+    },
+  },
+  "MCCGQ01LM": {
+    name: 'Aqara door & window contact sensor',
+    '@type': ['BinarySensor'],
+    properties: {
+      battery: {
+        type: 'integer',
+        unit: 'percent',
+        minimum: 0,
+        maximum: 100,
+        readOnly: true,
+      },
+      voltage: {
+        type: 'integer',
+        '@type': 'VoltageProperty',
+        unit: 'volt',
+        readOnly: true,
+      },
+      "contact": {
         type: 'boolean',
         '@type': 'BooleanProperty',
         readOnly: true,
