@@ -152,6 +152,11 @@ module.exports = {
         unit: 'percent',
         readOnly: true,
       },
+      pressure: {
+        type: 'integer',
+        unit: 'hPa',
+        readOnly: true,
+      }
     },
   },
   "SJCGQ11LM": {
