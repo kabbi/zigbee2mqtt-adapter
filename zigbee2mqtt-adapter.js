@@ -74,25 +74,15 @@ class ZigbeeMqttAdapter extends Adapter {
 
   handleIncomingMessage(topic, data) {
     const msg = JSON.parse(data.toString());
-    if (topic.startsWith(`${this.config.prefix}/bridge/config/devices`)) {
-      for (const device of msg) {
-        this.addDevice(device);
-      }
-    }
+    if (topic.startsWith(`${this.config.prefix}/bridge/config/devices`)) this.handleConfigMEssage(msg);
     if (!topic.startsWith(`${this.config.prefix}/bridge`)) {      
-      const device = this.getDevice(msg);
+      const friendlyName = this.getFriendlyName(topic);
+      const device = this.getDevice(msg, friendlyName);
 
       if (!device) return;
 
       const description = Devices[msg.device.modelId || msg.device.model];
-      if (msg.action && description.events[msg.action]) {
-        const event = new Event(
-          device,
-          msg.action,
-          msg[description.events[msg.action]],
-        );
-        device.eventNotify(event);
-      }
+      this.processEvent(msg, description, device);
       for (const key of Object.keys(msg)) {
         const property = device.findProperty(key);
         if (!property) {
@@ -105,8 +95,29 @@ class ZigbeeMqttAdapter extends Adapter {
     }
   }
 
-  getDevice(msg) {
-    const friendlyName = msg.device.friendlyName || msg.device.friendly_name;
+  processEvent(msg, description, device) {
+    if (msg.action && description.events[msg.action]) {
+      const event = new Event(
+        device,
+        msg.action,
+        msg[description.events[msg.action]]
+      );
+      device.eventNotify(event);
+    }
+  }
+
+  handleConfigMEssage(msg) {
+    for (const device of msg) {
+      this.addDevice(device);
+    }
+  }
+
+  getFriendlyName(topic) {
+    const arr = topic.split('/');
+    return arr[arr.length - 1];
+  }
+
+  getDevice(msg, friendlyName) {
     const device = this.devices[friendlyName];
     if (!device) {
       this.addDevice(msg.device);
