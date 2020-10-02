@@ -81,7 +81,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
       if (!device) return;
 
-      const description = Devices[msg.modelId || msg.model];
+      const description = Devices[msg.device.modelId || msg.device.model];
       this.processEvent(msg, description, device);
       for (const key of Object.keys(msg)) {
         const property = device.findProperty(key);
