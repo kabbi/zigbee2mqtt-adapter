@@ -120,7 +120,7 @@ class ZigbeeMqttAdapter extends Adapter {
   getDevice(msg, friendlyName) {
     const device = this.devices[friendlyName];
     if (!device) {
-      this.addDevice(msg);
+      this.addDevice(msg.device);
     }
     return this.devices[friendlyName];
   }
