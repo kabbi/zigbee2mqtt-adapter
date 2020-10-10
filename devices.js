@@ -272,5 +272,32 @@ module.exports = {
         readOnly: true,
       },
     },
-  }
+  },
+  'LED1537R6': {
+    name: 'Ikea Tradfri spot',
+    '@type': ['Light', 'OnOffSwitch'],
+    properties: {
+      state: {
+        '@type': 'OnOffProperty',
+        type: 'boolean',
+        fromMqtt: v => v === 'ON',
+        toMqtt: v => (v ? 'ON' : 'OFF'),
+      },
+      brightness: {
+        '@type': 'BrightnessProperty',
+        type: 'number',
+        minimum: 0,
+        maximum: 255
+      },
+      color_temp: {
+        type: 'integer',
+        minimum: 0,
+        maximum: 500,
+      },
+      linkquality: {
+        type: 'integer',
+        readOnly: true,
+      },
+    },
+  }	
 };
