@@ -44,10 +44,12 @@ class MqttProperty extends Property {
 }
 
 class MqttDevice extends Device {
-  constructor(adapter, id, description) {
+  constructor(adapter, id, modelId) {
     super(adapter, id);
+    const description = Devices[modelId];
     this.name = description.name;
     this['@type'] = description['@type'];
+    this.modelId = modelId;
     for (const [name, desc] of Object.entries(description.properties || {})) {
       const property = new MqttProperty(this, name, desc);
       this.properties.set(name, property);
@@ -68,7 +70,6 @@ class ZigbeeMqttAdapter extends Adapter {
     this.client.on('error', error => console.error('mqtt error', error));
     this.client.on('message', this.handleIncomingMessage.bind(this));
     this.client.subscribe(`${this.config.prefix}/bridge/config/devices`);
-    this.client.subscribe(`${this.config.prefix}/+`);
     this.client.publish(`${this.config.prefix}/bridge/config/devices/get`);
   }
 
@@ -79,6 +80,7 @@ class ZigbeeMqttAdapter extends Adapter {
         this.addDevice(device);
       }
     }
+    /* //  the original code
     if (!topic.startsWith(`${this.config.prefix}/bridge`)) {      
       const device = this.getDevice(msg);
 
@@ -86,10 +88,19 @@ class ZigbeeMqttAdapter extends Adapter {
 
       const description = Devices[msg.device.modelId || msg.device.model];
       if (msg.action && description.events[msg.action]) {
+      */
+    if (!topic.startsWith(`${this.config.prefix}/bridge`)) {
+      const topicElements = topic.split('/');
+      const friendlyName = topicElements[topicElements.length - 1]; 
+      const device = this.getDevice(friendlyName);
+      if (!device) {
+        return;
+      }
+      if (msg.action && device.events.get(msg.action)) {
         const event = new Event(
           device,
           msg.action,
-          msg[description.events[msg.action]],
+          msg[device.events.get(msg.action)],
         );
         device.eventNotify(event);
       }
@@ -98,7 +109,7 @@ class ZigbeeMqttAdapter extends Adapter {
         if (!property) {
           continue;
         }
-        const { fromMqtt = identity } = description.properties[key];
+        const { fromMqtt = identity } = property.options;
         property.setCachedValue(fromMqtt(msg[key]));
         device.notifyPropertyChanged(property);
       }
@@ -119,6 +130,7 @@ class ZigbeeMqttAdapter extends Adapter {
   }
 
   addDevice(info) {
+/* // the original code
     const modelId = info.modelId || info.model;
     const description = Devices[modelId];
     if (!description) {
@@ -131,6 +143,20 @@ class ZigbeeMqttAdapter extends Adapter {
       return;
     }
     const device = new MqttDevice(this, friendlyName, description);
+*/
+    if (!Devices[info.modelID]) {
+      // No definition for the given model ID. Skipping.
+      return;
+    }
+    const existingDevice = this.getDevice(info.friendly_name);
+    if (existingDevice && existingDevice.modelId === info.modelID) {
+      console.info(`Device ${info.friendly_name} already exists`)
+      return;
+    }
+
+    const device = new MqttDevice(this, info.friendly_name, info.modelID);
+    this.client.subscribe(`${this.config.prefix}/${info.friendly_name}`);
+
     this.handleDeviceAdded(device);
     console.info(`New device model:${modelId}, friendlyName:${friendlyName} is added.`);
   }
@@ -150,3 +176,4 @@ function loadAdapter(addonManager, manifest, _errorCallback) {
 }
 
 module.exports = loadAdapter;
+
