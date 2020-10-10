@@ -184,5 +184,93 @@ module.exports = {
       },
     },
   },
-
+'WSDCGQ11LM': {
+    name: 'Xiaomi Temperature & Humidity Sensor',
+    '@type': ['TemperatureSensor'],
+    properties: {
+      battery: {
+        type: 'integer',
+        unit: 'percent',
+        minimum: 0,
+        maximum: 100,
+        readOnly: true,
+      },
+      linkquality: {
+        type: 'integer',
+        readOnly: true,
+      },
+      temperature: {
+        type: 'number',
+        '@type': 'TemperatureProperty',
+        unit: 'degree celsius',
+        readOnly: true,
+      },
+      humidity: {
+        type: 'number',
+        unit: 'percent',
+        readOnly: true,
+      },
+      pressure: {
+        type: 'integer',
+        unit: 'hPa',
+        readOnly: true,
+      }
+    },
+  },
+  "SJCGQ11LM": {
+    name: 'Xiaomi Aqara Water Leak Sensor',
+    '@type': ['BinarySensor'],
+    properties: {
+      battery: {
+        type: 'integer',
+        unit: 'percent',
+        minimum: 0,
+        maximum: 100,
+        readOnly: true,
+      },
+      voltage: {
+        type: 'integer',
+        '@type': 'VoltageProperty',
+        unit: 'volt',
+        readOnly: true,
+      },
+      "water_leak": {
+        type: 'boolean',
+        '@type': 'BooleanProperty',
+        readOnly: true,
+      },
+      linkquality: {
+        type: 'integer',
+        readOnly: true,
+      },
+    },
+  },
+  "MCCGQ01LM": {
+    name: 'Aqara door & window contact sensor',
+    '@type': ['BinarySensor'],
+    properties: {
+      battery: {
+        type: 'integer',
+        unit: 'percent',
+        minimum: 0,
+        maximum: 100,
+        readOnly: true,
+      },
+      voltage: {
+        type: 'integer',
+        '@type': 'VoltageProperty',
+        unit: 'volt',
+        readOnly: true,
+      },
+      "contact": {
+        type: 'boolean',
+        '@type': 'BooleanProperty',
+        readOnly: true,
+      },
+      linkquality: {
+        type: 'integer',
+        readOnly: true,
+      },
+    },
+  }
 };
