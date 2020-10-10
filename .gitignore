@@ -1,3 +1,5 @@
 node_modules/
 SHA256SUMS
 *.tgz
+mocks/
+zigbee2mqtt/
