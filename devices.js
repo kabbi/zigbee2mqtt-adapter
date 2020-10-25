@@ -370,5 +370,27 @@ module.exports = {
         readOnly: true,
       },
     },
+  },
+  'TRADFRI Driver 30W': {
+    name: 'IKEA TRADFRI driver for wireless control (30 watt) (ICPSHC24-30EU-IL-1)',
+    '@type': ['Light', 'OnOffSwitch'],
+    properties: {
+      state: {
+        '@type': 'OnOffProperty',
+        type: 'boolean',
+        fromMqtt: v => v === 'ON',
+        toMqtt: v => (v ? 'ON' : 'OFF'),
+      },
+      brightness: {
+        '@type': 'BrightnessProperty',
+        type: 'number',
+        minimum: 0,
+        maximum: 255
+      },
+      linkquality: {
+        type: 'integer',
+        readOnly: true,
+      },
+    },
   }
 };
