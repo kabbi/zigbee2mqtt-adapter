@@ -299,5 +299,98 @@ module.exports = {
         readOnly: true,
       },
     },
-  }	
+  },
+  'TRADFRI bulb E14 WS 470lm': {
+    name: 'IKEA TRADFRI bulb E14 WS 470 lumen, dimmable, white spectrum, opal white (LED1903C5/LED1835C6)',
+    '@type': ['Light', 'OnOffSwitch'],
+    properties: {
+      state: {
+        '@type': 'OnOffProperty',
+        type: 'boolean',
+        fromMqtt: v => v === 'ON',
+        toMqtt: v => (v ? 'ON' : 'OFF'),
+      },
+      brightness: {
+        '@type': 'BrightnessProperty',
+        type: 'number',
+        minimum: 0,
+        maximum: 255
+      },
+      color_temp: {
+        type: 'integer',
+        minimum: 0,
+        maximum: 500,
+      },
+      linkquality: {
+        type: 'integer',
+        readOnly: true,
+      },
+    },
+  },
+  'TRADFRI bulb E27 WW 806lm': {
+    name: 'IKEA TRADFRI LED bulb E26/E27 806 lumen, dimmable, warm white (LED1836G9)',
+    '@type': ['Light', 'OnOffSwitch'],
+    properties: {
+      state: {
+        '@type': 'OnOffProperty',
+        type: 'boolean',
+        fromMqtt: v => v === 'ON',
+        toMqtt: v => (v ? 'ON' : 'OFF'),
+      },
+      brightness: {
+        '@type': 'BrightnessProperty',
+        type: 'number',
+        minimum: 0,
+        maximum: 255
+      },
+      linkquality: {
+        type: 'integer',
+        readOnly: true,
+      },
+    },
+  },
+  'TRADFRI Driver 10W': {
+    name: 'IKEA TRADFRI driver for wireless control (10 watt) (ICPSHC24-10EU-IL-1)',
+    '@type': ['Light', 'OnOffSwitch'],
+    properties: {
+      state: {
+        '@type': 'OnOffProperty',
+        type: 'boolean',
+        fromMqtt: v => v === 'ON',
+        toMqtt: v => (v ? 'ON' : 'OFF'),
+      },
+      brightness: {
+        '@type': 'BrightnessProperty',
+        type: 'number',
+        minimum: 0,
+        maximum: 255
+      },
+      linkquality: {
+        type: 'integer',
+        readOnly: true,
+      },
+    },
+  },
+  'TRADFRI Driver 30W': {
+    name: 'IKEA TRADFRI driver for wireless control (30 watt) (ICPSHC24-30EU-IL-1)',
+    '@type': ['Light', 'OnOffSwitch'],
+    properties: {
+      state: {
+        '@type': 'OnOffProperty',
+        type: 'boolean',
+        fromMqtt: v => v === 'ON',
+        toMqtt: v => (v ? 'ON' : 'OFF'),
+      },
+      brightness: {
+        '@type': 'BrightnessProperty',
+        type: 'number',
+        minimum: 0,
+        maximum: 255
+      },
+      linkquality: {
+        type: 'integer',
+        readOnly: true,
+      },
+    },
+  }
 };
