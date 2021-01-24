@@ -13,6 +13,7 @@ const mqtt = require('mqtt');
 const { Adapter, Device, Property, Event } = require('gateway-addon');
 
 const Devices = require('./devices');
+const ExposesDeviceGenerator = require('./ExposesDeviceGenerator');
 
 const identity = v => v;
 
@@ -44,12 +45,14 @@ class MqttProperty extends Property {
 }
 
 class MqttDevice extends Device {
-  constructor(adapter, id, modelId) {
+  constructor(adapter, id, modelId, description) {
     super(adapter, id);
-    const description = Devices[modelId];
     this.name = description.name;
     this['@type'] = description['@type'];
     this.modelId = modelId;
+    for (const [name, desc] of Object.entries(description.actions || {})) {
+      this.addAction(name, desc);
+    }
     for (const [name, desc] of Object.entries(description.properties || {})) {
       const property = new MqttProperty(this, name, desc);
       this.properties.set(name, property);
@@ -58,6 +61,16 @@ class MqttDevice extends Device {
       this.addEvent(name, desc);
     }
   }
+
+  performAction(action) {
+    return new Promise((resolve, reject) => {
+      action.start();
+      this.adapter.publishMessage(`${this.id}/set`, {
+        [action.name]: action.input
+      });
+      action.finish();
+    });
+  }
 }
 
 class ZigbeeMqttAdapter extends Adapter {
@@ -65,17 +78,17 @@ class ZigbeeMqttAdapter extends Adapter {
     super(addonManager, 'ZigbeeMqttAdapter', manifest.name);
     this.config = manifest.moziot.config;
     addonManager.addAdapter(this);
+    this.exposesDeviceGenerator = new ExposesDeviceGenerator();
 
     this.client = mqtt.connect(this.config.mqtt);
     this.client.on('error', error => console.error('mqtt error', error));
     this.client.on('message', this.handleIncomingMessage.bind(this));
-    this.client.subscribe(`${this.config.prefix}/bridge/config/devices`);
-    this.client.publish(`${this.config.prefix}/bridge/config/devices/get`);
+    this.client.subscribe(`${this.config.prefix}/bridge/devices`);
   }
 
   handleIncomingMessage(topic, data) {
     const msg = JSON.parse(data.toString());
-    if (topic.startsWith(`${this.config.prefix}/bridge/config/devices`)) {
+    if (topic.startsWith(`${this.config.prefix}/bridge/devices`)) {
       for (const device of msg) {
         this.addDevice(device);
       }
@@ -111,19 +124,29 @@ class ZigbeeMqttAdapter extends Adapter {
   }
 
   addDevice(info) {
-    if (!Devices[info.modelID]) {
-      // No definition for the given model ID. Skipping.
-      return;
-    }
     const existingDevice = this.getDevice(info.friendly_name);
-    if (existingDevice && existingDevice.modelId === info.modelID) {
+    if (existingDevice && existingDevice.modelId === info.model_id) {
       console.info(`Device ${info.friendly_name} already exists`)
       return;
     }
 
-    const device = new MqttDevice(this, info.friendly_name, info.modelID);
-    this.client.subscribe(`${this.config.prefix}/${info.friendly_name}`);
-    this.handleDeviceAdded(device);
+    let deviceDefinition = Devices[info.model_id]; // devices.js
+
+    if (!deviceDefinition) {
+      const detectedDevice = this.exposesDeviceGenerator.generateDevice(info);
+      if (detectedDevice) {
+        deviceDefinition = detectedDevice;
+        console.info(`Device ${info.friendly_name} created from Exposes API`)
+      }
+    } else {
+      console.info(`Device ${info.friendly_name} created from devices.js`)
+    }
+
+    if (deviceDefinition) {
+      const device = new MqttDevice(this, info.friendly_name, info.model_id, deviceDefinition);
+      this.client.subscribe(`${this.config.prefix}/${info.friendly_name}`);
+      this.handleDeviceAdded(device);
+    }
   }
 
   startPairing(_timeoutSeconds) {
