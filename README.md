@@ -38,7 +38,7 @@ You can add new ones to `devices.js` like this:
 ```
 
 
-#Installation
+Installation
 
 Download the addon
 `git clone https://github.com/kabbi/zigbee2mqtt-adapter ~\.webthings\addons\zigbee2mqtt-adapter`
