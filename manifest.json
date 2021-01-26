@@ -18,7 +18,9 @@
   "options": {
     "default": {
       "mqtt": "mqtt://localhost",
-      "prefix": "zigbee2mqtt"
+      "prefix": "zigbee2mqtt",
+			"serial_port": "/dev/ttyACM0",
+			"permit_join": true
     },
     "schema": {
       "type": "object",
@@ -30,10 +32,18 @@
         "prefix": {
           "type": "string",
           "description": "Mqtt topic prefix for zigbee2mqtt"
+        },
+        "serial_port": {
+          "type": "string",
+          "description": "The serial port ID of the zigbee USB stick you are using. Normally this is /dev/ttyACM0 ."
+        },
+				"permit_join": {
+          "type": "string",
+          "description": "Devices can only be added to your Zigbee network while this is enabled."
         }
       }
     }    
   },
   "short_name": "zigbee2mqtt adapter",
-  "version": "0.2.6"
+  "version": "0.3.0"
 }

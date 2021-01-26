@@ -9,12 +9,23 @@ const manager = {
   handleDeviceAdded(device) {
     console.log('+', device.id);
   },
+	getGatewayVersion(){
+		return 1;
+	},
+	getUserProfile(){
+		return {}
+	},
+	getPreferences(){
+		return {}
+	}
 };
 const manifest = {
   moziot: {
     config: {
-      mqtt: 'mqtt://keeper.local',
+      mqtt: 'mqtt://localhost',
       prefix: 'zigbee2mqtt',
+			serial_port:'/dev/ttyACM0',
+			permit_join:true,
     },
   },
 };

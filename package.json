@@ -1,7 +1,7 @@
 {
   "name": "zigbee2mqtt-adapter",
   "display_name": "zigbee2mqtt adapter",
-  "version": "0.2.6",
+  "version": "0.3.0",
   "description": "Brings all your zigbee devices to the gateway through mqtt bridge",
   "main": "index.js",
   "keywords": [
@@ -31,7 +31,11 @@
     "LICENSE",
     "SHA256SUMS",
     "index.js",
-    "zigbee2mqtt-adapter.js"
+		"manifest.json",
+    "zigbee2mqtt-adapter.js",
+		"ExposesDeviceGenerator.js",
+		"devices.js",
+		"zigbee2mqtt/"
   ],
   "moziot": {
     "api": {
