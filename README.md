@@ -41,13 +41,13 @@ You can add new ones to `devices.js` like this:
 ## Installation
 
 Download the addon
-`git clone https://github.com/kabbi/zigbee2mqtt-adapter ~\.webthings\addons\zigbee2mqtt-adapter`
+`git clone https://github.com/kabbi/zigbee2mqtt-adapter home/pi/.webthings/addons/zigbee2mqtt-adapter`
 
 Update NPM, the package manager for NodeJS
 `npm install -g npm`
 
 Go to the addon folder
-`cd ~\.webthings\addons\zigbee2mqtt-adapter`
+`cd ~/.webthings/addons/zigbee2mqtt-adapter`
 
 Get the addon to download the software it depends on
 `npm install`
