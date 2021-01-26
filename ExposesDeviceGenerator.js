@@ -31,6 +31,8 @@ class ExposesDeviceGenerator {
             return;
         }
 
+        console.debug(`Device ${info.friendly_name} exposes ${JSON.stringify(info.definition.exposes)}`);
+
         const device = new Object();
         device['@type'] = [];
         device.properties = new Object();
@@ -114,6 +116,7 @@ class ExposesDeviceGenerator {
                     break;
             }
         }
+        console.debug(`Device ${info.friendly_name} transformed to ${JSON.stringify(device)}`);
         return device;
     }
 
