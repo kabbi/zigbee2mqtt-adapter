@@ -23,44 +23,8 @@ const events = require('events');
 const myEmitter = new events.EventEmitter();
 
 const identity = v => v;
-/*
-function copyFileSync( source, target ) {
 
-    var targetFile = target;
 
-    // If target is a directory, a new file with the same name will be created
-    if ( fs.existsSync( target ) ) {
-        if ( fs.lstatSync( target ).isDirectory() ) {
-            targetFile = path.join( target, path.basename( source ) );
-        }
-    }
-
-    fs.writeFileSync(targetFile, fs.readFileSync(source));
-}
-
-function copyFolderRecursiveSync( source, target ) {
-    var files = [];
-
-    // Check if folder needs to be created or integrated
-    var targetFolder = path.join( target, path.basename( source ) );
-    if ( !fs.existsSync( targetFolder ) ) {
-        fs.mkdirSync( targetFolder );
-    }
-
-    // Copy
-    if ( fs.lstatSync( source ).isDirectory() ) {
-        files = fs.readdirSync( source );
-        files.forEach( function ( file ) {
-            var curSource = path.join( source, file );
-            if ( fs.lstatSync( curSource ).isDirectory() ) {
-                copyFolderRecursiveSync( curSource, targetFolder );
-            } else {
-                copyFileSync( curSource, targetFolder );
-            }
-        } );
-    }
-}
-*/
 
 class ZigbeeMqttAdapter extends Adapter {
   constructor(addonManager, manifest) {
@@ -71,7 +35,7 @@ class ZigbeeMqttAdapter extends Adapter {
 		
     super(addonManager, 'ZigbeeMqttAdapter', manifest.name);
     this.config = manifest.moziot.config;
-		console.log(this.config);
+		if(this.config.debug){ console.log(this.config); }
     addonManager.addAdapter(this);
     this.exposesDeviceGenerator = new ExposesDeviceGenerator();
 
@@ -80,35 +44,34 @@ class ZigbeeMqttAdapter extends Adapter {
     this.client.on('message', this.handleIncomingMessage.bind(this));
     this.client.subscribe(`${this.config.prefix}/bridge/devices`);
 		
-		console.log(this.config);
 		
 		const addon_path = path.resolve('.');
-		console.log("+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +");
-		console.log("addon path: " + addon_path);
+		//console.log("+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +");
+		//console.log("addon path: " + addon_path);
 			
 		
 		this.zigbee2mqtt_data_dir_path = path.join(path.resolve('../..'), 'data','zigbee2mqtt-adapter'); // configuration file location
-		console.log("this.zigbee2mqtt_data_dir_path = " + this.zigbee2mqtt_data_dir_path);
+		//console.log("this.zigbee2mqtt_data_dir_path = " + this.zigbee2mqtt_data_dir_path);
 		
 		//this.zigbee2mqtt_dir_path = path.join(addon_path, 'zigbee2mqtt'); // actual zigbee2mqt location
 		this.zigbee2mqtt_dir_path = path.join(this.zigbee2mqtt_data_dir_path, 'zigbee2mqtt'); // actual zigbee2mqt location
 		
 		this.zigbee2mqtt_file_path = path.join(this.zigbee2mqtt_dir_path, 'index.js'); // index.js file to be started by node
-		console.log("this.zigbee2mqtt_dir_path = " + this.zigbee2mqtt_dir_path);
+		//console.log("this.zigbee2mqtt_dir_path = " + this.zigbee2mqtt_dir_path);
 		
 		this.zigbee2mqtt_configuration_file_source_path = path.join(this.zigbee2mqtt_dir_path, 'data', 'configuration.yaml'); // should be copied at the first installation
 		this.zigbee2mqtt_configuration_file_path = path.join(this.zigbee2mqtt_data_dir_path, 'configuration.yaml');
-		console.log("this.zigbee2mqtt_configuration_file_path  = " + this.zigbee2mqtt_configuration_file_path);
+		//console.log("this.zigbee2mqtt_configuration_file_path  = " + this.zigbee2mqtt_configuration_file_path);
 		
 		this.zigbee2mqtt_configuration_devices_file_path = path.join(this.zigbee2mqtt_data_dir_path, 'devices.yaml');
 		this.zigbee2mqtt_configuration_groups_file_path = path.join(this.zigbee2mqtt_data_dir_path, 'groups.yaml');
-		console.log("this.zigbee2mqtt_configuration_devices_file_path = " + this.zigbee2mqtt_configuration_devices_file_path);
+		//console.log("this.zigbee2mqtt_configuration_devices_file_path = " + this.zigbee2mqtt_configuration_devices_file_path);
 		
 		this.zigbee2mqtt_package_file_path = path.join(this.zigbee2mqtt_data_dir_path, 'zigbee2mqtt','package.json');
-		console.log("this.zigbee2mqtt_package_file_path = " + this.zigbee2mqtt_package_file_path);
+		//console.log("this.zigbee2mqtt_package_file_path = " + this.zigbee2mqtt_package_file_path);
 		
 		this.zigbee2mqtt_configuration_log_path = path.join(this.zigbee2mqtt_data_dir_path, 'log','%TIMESTAMP%');
-		console.log("this.zigbee2mqtt_configuration_log_path = " + this.zigbee2mqtt_configuration_log_path);
+		//console.log("this.zigbee2mqtt_configuration_log_path = " + this.zigbee2mqtt_configuration_log_path);
 			
 	
 
@@ -123,93 +86,91 @@ class ZigbeeMqttAdapter extends Adapter {
 				this.download_z2m();
 				
 			}else{
-				console.log("B. Zigbee2mqtt directory already existed.");
-				console.log(manifest.moziot.config);
- 				console.log("zigbee2mqtt folder existed. Checking if zigbee2mqtt should be updated");
+ 				console.log("zigbee2mqtt folder existed.");
 				
- 				//let url = "https://api.github.com/repos/Koenkk/zigbee2mqtt/releases/latest";
+				if(this.config.auto_update){
+					console.log("Auto-update is enabled. Checking if zigbee2mqtt should be updated...");
+	 				// downloads json from https://api.github.com/repos/Koenkk/zigbee2mqtt/releases/latest;
 
-				const options = {
-				  hostname: 'api.github.com',
-				  port: 443,
-				  path: '/repos/Koenkk/zigbee2mqtt/releases/latest',
-				  method: 'GET',
-				  headers: {
-				     'X-Forwarded-For': 'xxx',
-				     'User-Agent': 'Node'
-				  }
-				};
+					try{
+						const options = {
+						  hostname: 'api.github.com',
+						  port: 443,
+						  path: '/repos/Koenkk/zigbee2mqtt/releases/latest',
+						  method: 'GET',
+						  headers: {
+						     'X-Forwarded-For': 'xxx',
+						     'User-Agent': 'Node'
+						  }
+						};
 
-				const req = https.request(options, (res) => {
-				  console.log('statusCode:', res.statusCode);
-				  //console.log('headers:', res.headers);
+						const req = https.request(options, (res) => {
+						  console.log('statusCode:', res.statusCode);
+						  //console.log('headers:', res.headers);
 
-					let body = "";
-				  res.on('data', (chunk) => {
-						body += chunk;
-				  });
+							let body = "";
+						  res.on('data', (chunk) => {
+								body += chunk;
+						  });
 					
-			    res.on("end", () => {
-			        try {
-								  console.log("parsing...");
-									//console.log(body);
-			            let github_json = JSON.parse(body);
+					    res.on("end", () => {
+					        try {
+										  //console.log("parsing...");
+											//console.log(body);
+					            let github_json = JSON.parse(body);
 									
+											console.log("latest zigbee2MQTT version found on Github = " + github_json['tag_name']);
 									
-									console.log("-------- --- - - - - --");
-									
-									console.log("tarball_version = " + github_json['tag_name']);
-									
-									fs.readFile(this.zigbee2mqtt_package_file_path, 'utf8', (err, data) => {
+											fs.readFile(this.zigbee2mqtt_package_file_path, 'utf8', (err, data) => {
 
-									    if (err) {
-									        console.log(`Error reading file from disk: ${err}`);
-									    } else {
+											    if (err) {
+											        console.log(`Error reading file from disk: ${err}`);
+											    } else {
 
-									        // parse JSON string to JSON object
-									        const z2m_package_json = JSON.parse(data);
-													console.log('local version = ' + z2m_package_json['version']);
+											        // parse JSON string to JSON object
+											        const z2m_package_json = JSON.parse(data);
+															console.log('local zigbee2MQTT version = ' + z2m_package_json['version']);
 													
-													if(github_json['tag_name'] == z2m_package_json['version']){
-														  console.log("zigbee2mqtt versions are the same, no need to update zigbee2mqtt");
-															this.check_if_config_file_exists(this);
-													}
-													else{
-														  console.log("a new official release of zigbee2mqtt is available");
-															console.log("tarball_url to download = " + github_json['tarball_url']);
-													}
-													
-													
-													// start_z2m();
-													
-													
-									        // print all databases
-									        //databases.forEach(db => {
-									        //    console.log(`${db.name}: ${db.type}`);
-									        //});
-									    }
+															if(github_json['tag_name'] == z2m_package_json['version']){
+																  console.log("zigbee2mqtt versions are the same, no need to update zigbee2mqtt");
+																	this.check_if_config_file_exists(this);
+															}
+															else{
+																  console.log("a new official release of zigbee2mqtt is available. Will attempt to upgrade.");
+																	//console.log("tarball_url to download = " + github_json['tarball_url']);
+																	delete_z2m();
+																	download_z2m();
+															}
+											    }
 
-									});
+											});
 									
-									let json = JSON.parse(body);
+											let json = JSON.parse(body);
 									
-			            // do something with JSON
-			        } catch (error) {
-			            console.error(error.message);
-			        };
-			    });
+					            // do something with JSON
+					        } catch (error) {
+					            console.error(error.message);
+					        };
+					    });
 					
-				});
+						});
 
-				req.on('error', (e) => {
-				  console.error(e);
-				});
-				req.end();
+						req.on('error', (e) => {
+						  console.error(e);
+						});
+						req.end();
+					}
+					catch(error){
+						console.error(error.message);
+					}
+				}
 				
 			}
 		}); // end of fs.access check
 
   }
+
+
 
 	// By having the config files outside of the zigbee2mqtt folder it becomes easier to update zigbee2mqtt
 	check_if_config_file_exists(){
@@ -221,7 +182,7 @@ class ZigbeeMqttAdapter extends Adapter {
 			fs.access(this.zigbee2mqtt_configuration_file_source_path, (err) => {
 			//fs.access(this.zigbee2mqtt_configuration_file_source_path, function(err) {
 				if (err && err.code === 'ENOENT') {
-					console.log("Weird, the configuration.yaml source file doesn't exist: " + this.zigbee2mqtt_configuration_file_source_path);
+					console.log("The configuration.yaml source file doesn't exist: " + this.zigbee2mqtt_configuration_file_source_path);
 				}else{
 					console.log("configuration.yaml source file existed");
 					fs.access(this.zigbee2mqtt_configuration_file_path, (err) => {
@@ -230,7 +191,7 @@ class ZigbeeMqttAdapter extends Adapter {
 							console.log("data dir configuration.yaml file doesn't exist yet. It should be copied over.");
 							fs.copyFile(this.zigbee2mqtt_configuration_file_source_path, this.zigbee2mqtt_configuration_file_path, (err) => {
 							  if (err) throw err;
-							  console.log('configuration file was copied.');
+							  console.log('configuration yaml file was copied to the correct location.');
 								this.run_zigbee2mqtt();
 							});
 						}else{
@@ -247,15 +208,27 @@ class ZigbeeMqttAdapter extends Adapter {
       console.error("Error checking if zigbee2mqtt config file exists: " + error.message);
   	};
 	}
+	
+	
+
+	stop_zigbee2mqtt(){
+		try{
+			this.zigbee2mqtt_subprocess.kill()
+		}
+		catch (error) {
+      console.error("Error stopping zigbee2mqtt: " + error.message);
+  	}
+	}
+
 
 
 	run_zigbee2mqtt(){
-		console.log("here we go");
+		console.log("starting zigbee2MQTT");
 		
 		process.env["ZIGBEE2MQTT_DATA"] = this.zigbee2mqtt_data_dir_path;
 		
 		try{
-			let zigbee2mqtt_subprocess = execFile('node', [this.zigbee2mqtt_file_path], (error, stdout, stderr) => {
+			this.zigbee2mqtt_subprocess = execFile('node', [this.zigbee2mqtt_file_path], (error, stdout, stderr) => {
 			    if (error) {
 			        console.log(`error: ${error.message}`);
 			        return;
@@ -269,67 +242,19 @@ class ZigbeeMqttAdapter extends Adapter {
 		}
 		catch (error) {
       console.error("Error starting zigbee2mqtt: " + error.message);
-  	};
+  	}
 		
-		
-		/*
-		if (zigbee2mqtt_subprocess.exitCode === 0) {
-			console.log('Tests Pass.');
-		} else {
-		  console.log('ERRORS Encountered.');
-		}
-		*/
-			
-			
-
-			
-		//let zigbee2mqtt_subprocess = execFile('node ' + this.zigbee2mqtt_file_path, options);
-	
-	
-		/*
-		zigbee2mqtt_subprocess.stdout.on('data', (data) => {
-		  console.info(`z2m subprocess stdout: ${data}`);
-		});
-
-		zigbee2mqtt_subprocess.stderr.on('data', (data) => {
-		  console.error(`z2m subprocess stderr: ${data}`);
-		});
-
-		zigbee2mqtt_subprocess.on('close', (code) => {
-		  console.log(`z2m child process exited with code ${code}`);
-		});
-		*/
 	}
 
 
-  download_z2m(){
-  	
-		console.log("zigbee2mqtt folder did not exist");
-		
-		
+
+  download_z2m(){  	
+		console.log("Downloading zigbee2MQTT");
 		let git_clone_result = execSync('git clone --depth=1 https://github.com/Koenkk/zigbee2mqtt ' + this.zigbee2mqtt_dir_path, {
 		  stdio: [0, 1, 2], // we need this so node will print the command output
 		})
 		
-		/*
-		let git_clone_result = execSync('git clone --depth=1 https://github.com/Koenkk/zigbee2mqtt ' + this.zigbee2mqtt_dir_path, (error, stdout, stderr) => {
-		    if (error) {
-		        console.log(`error: ${error.message}`);
-		        return;
-		    }
-		    if (stderr) {
-		        console.log(`stderr: ${stderr}`);
-		        return;
-		    }
-		    console.log(`stdout: ${stdout}`);
-				console.log("?? DOWNLOAD DONE ?? ");
-		});
-		*/
-		
-		console.log("---beyond git clone---");
-		console.log("Installing downloaded files");
-		
-		
+		console.log("Installing zigbee2MQTT. This may take up to 10 minutes.");
 		let ci_result = execSync('cd ' + this.zigbee2mqtt_dir_path + '; npm ci --production', (error, stdout, stderr) => {
 		    if (error) {
 		        console.log(`- install error: ${error.message}`);
@@ -343,6 +268,17 @@ class ZigbeeMqttAdapter extends Adapter {
 		});
 		
   }
+
+
+
+	delete_z2m(){
+		console.log("deleting zigbee2mqtt from data folder");
+		let git_clone_result = execSync('rf -rf ' + this.zigbee2mqtt_dir_path, {
+		  stdio: [0, 1, 2],
+		})
+		
+	}
+
 
 
   handleIncomingMessage(topic, data) {	

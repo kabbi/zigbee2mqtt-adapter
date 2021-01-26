@@ -25,7 +25,8 @@ const manifest = {
       mqtt: 'mqtt://localhost',
       prefix: 'zigbee2mqtt',
 			serial_port:'/dev/ttyACM0',
-			permit_join:true,
+			auto_update:true,
+			debug:true,
     },
   },
 };

@@ -17,14 +17,19 @@
   "name": "zigbee2mqtt adapter",
   "options": {
     "default": {
+			"auto_update": true,
       "mqtt": "mqtt://localhost",
       "prefix": "zigbee2mqtt",
 			"serial_port": "/dev/ttyACM0",
-			"permit_join": true
+			"debug": true
     },
     "schema": {
       "type": "object",
       "properties": {
+				"auto_update": {
+          "type": "boolean",
+          "description": "Automatically try to update zigbee2MQTT to the latest version."
+        },
         "mqtt": {
           "type": "string",
           "description": "Mosquitto or other mqtt server host/port to connect to"
@@ -35,11 +40,11 @@
         },
         "serial_port": {
           "type": "string",
-          "description": "The serial port ID of the zigbee USB stick you are using. Normally this is /dev/ttyACM0 ."
+          "description": "The serial port ID of the zigbee USB stick you are using. Normally this is: /dev/ttyACM0"
         },
-				"permit_join": {
-          "type": "string",
-          "description": "Devices can only be added to your Zigbee network while this is enabled."
+				"debug": {
+          "type": "boolean",
+          "description": "Used to find issues if this addon isn't working properly. If enabled, you can find more details about its functioning in the internal log (found under settings -> development)."
         }
       }
     }    
