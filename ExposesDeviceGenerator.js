@@ -6,17 +6,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.*
  */
+
+// Zigbee2MQTT access bit to read a property via the published state of the object
+const ACCESS_BIT_STATE = 1;
+// Zigbee2MQTT access bit to set a property via /SET
+const ACCESS_BIT_SET = 2;
+// Zigbee2MQTT access bit to read a property via /GET
+const ACCESS_BIT_GET = 4;
+
+// The Zigbee2MQTT access mask for which we are going to generate Actions instead of Properties
+const ACCESS_MASK_ACTION = ACCESS_BIT_SET;
+
 class ExposesDeviceGenerator {
-
-    // Zigbee2MQTT access bit to read a property via the published state of the object
-    ACCESS_BIT_STATE = 1;
-    // Zigbee2MQTT access bit to set a property via /SET
-    ACCESS_BIT_SET = 2;
-    // Zigbee2MQTT access bit to read a property via /GET
-    ACCESS_BIT_GET = 4;
-
-    // The Zigbee2MQTT access mask for which we are going to generate Actions instead of Properties
-    ACCESS_MASK_ACTION = this.ACCESS_BIT_SET;
 
     /**
      * Generate a WebThings device definition based on the provided
@@ -40,7 +41,7 @@ class ExposesDeviceGenerator {
             switch (expose.type) {
                 // Generic type binary
                 case 'binary':
-                    if (expose.access === this.ACCESS_MASK_ACTION) {
+                    if (expose.access === ACCESS_MASK_ACTION) {
                         device.actions[expose.name] = this.binaryPropertyToBooleanAction(expose);
                     } else {
                         device.properties[expose.name] = this.binaryPropertyToBooleanProperty(expose);
@@ -49,7 +50,7 @@ class ExposesDeviceGenerator {
 
                 // Generic type numeric
                 case 'numeric':
-                    if (expose.access === this.ACCESS_MASK_ACTION) {
+                    if (expose.access === ACCESS_MASK_ACTION) {
                         device.actions[expose.name] = this.numericPropertyToIntegerAction(expose);
                     } else {
                         device.properties[expose.name] = this.numericPropertyToIntegerProperty(expose);
@@ -58,7 +59,7 @@ class ExposesDeviceGenerator {
 
                 // Generic type enum
                 case 'enum':
-                    if (expose.access === this.ACCESS_MASK_ACTION) {
+                    if (expose.access === ACCESS_MASK_ACTION) {
                         device.actions[expose.name] = this.enumPropertyToStringAction(expose);
                     } else {
                         device.properties[expose.name] = this.enumPropertyToStringProperty(expose);
@@ -67,7 +68,7 @@ class ExposesDeviceGenerator {
 
                 // Generic type text
                 case 'text':
-                    if (expose.access === this.ACCESS_MASK_ACTION) {
+                    if (expose.access === ACCESS_MASK_ACTION) {
                         device.actions[expose.name] = this.textPropertyToStringAction(expose);
                     } else {
                         device.properties[expose.name] = this.textPropertyToStringProperty(expose);
@@ -218,7 +219,7 @@ class ExposesDeviceGenerator {
      * Transforms a Zigbee2MQTT access flag into the readOnly field of a WebThings Property object.
      */
     accessToReadOnly(accessFlag) {
-        if (accessFlag & this.ACCESS_BIT_SET)
+        if (accessFlag & ACCESS_BIT_SET)
             return false;
         return true;
     }
