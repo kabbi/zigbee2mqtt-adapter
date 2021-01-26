@@ -164,6 +164,9 @@ class ZigbeeMqttAdapter extends Adapter {
 						console.error(error.message);
 					}
 				}
+				else{
+					this.check_if_config_file_exists();
+				}
 				
 			}
 		}); // end of fs.access check
@@ -188,7 +191,7 @@ class ZigbeeMqttAdapter extends Adapter {
 					fs.access(this.zigbee2mqtt_configuration_file_path, (err) => {
 					//fs.access(this.zigbee2mqtt_configuration_file_path, function(err) {
 						if (err && err.code === 'ENOENT') {
-							console.log("data dir configuration.yaml file doesn't exist yet. It should be copied over.");
+							console.log("data dir configuration.yaml file doesn't exist yet (" + this.zigbee2mqtt_configuration_file_path + "). It should be copied over.");
 							fs.copyFile(this.zigbee2mqtt_configuration_file_source_path, this.zigbee2mqtt_configuration_file_path, (err) => {
 							  if (err) throw err;
 							  console.log('configuration yaml file was copied to the correct location.');
