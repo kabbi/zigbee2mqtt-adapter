@@ -10,14 +10,14 @@ class ExposesDeviceGenerator {
 
     constructor() {
 	    // Zigbee2MQTT access bit to read a property via the published state of the object
-	    const ACCESS_BIT_STATE = 1;
+	    this.ACCESS_BIT_STATE = 1;
 	    // Zigbee2MQTT access bit to set a property via /SET
-	    const ACCESS_BIT_SET = 2;
+	    this.ACCESS_BIT_SET = 2;
 	    // Zigbee2MQTT access bit to read a property via /GET
-	    const ACCESS_BIT_GET = 4;
+	    this.ACCESS_BIT_GET = 4;
 
 	    // The Zigbee2MQTT access mask for which we are going to generate Actions instead of Properties
-	    const ACCESS_MASK_ACTION = this.ACCESS_BIT_SET;
+	    this.ACCESS_MASK_ACTION = this.ACCESS_BIT_SET;
     }
 
     /**
@@ -27,13 +27,12 @@ class ExposesDeviceGenerator {
      */
     generateDevice(info) {
 
-
-		
-
         if (!info.supported || !info.definition || !info.definition.exposes) {
             console.info(`Skipping device generation for ${info.friendly_name}`)
             return;
         }
+
+				console.debug(`Device ${info.friendly_name} exposes ${JSON.stringify(info.definition.exposes)}`);
 
         const device = new Object();
         device['@type'] = [];
