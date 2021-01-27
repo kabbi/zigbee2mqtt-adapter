@@ -1,3 +1,4 @@
+const mqtt = require('mqtt');
 const installAddon = require('./index');
 
 const manager = {
@@ -12,10 +13,13 @@ const manager = {
 		return 1;
 	},
 	getUserProfile(){
-		return {}
+		return {};
 	},
 	getPreferences(){
-		return {}
+		return {};
+	},
+	sendPropertyChangedNotification(){
+		return {};
 	}
 };
 const manifest = {
