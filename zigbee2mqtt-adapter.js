@@ -431,4 +431,3 @@ function loadAdapter(addonManager, manifest, _errorCallback) {
 }
 
 module.exports = loadAdapter;
-

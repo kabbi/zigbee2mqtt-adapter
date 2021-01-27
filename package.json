@@ -1,15 +1,11 @@
 {
   "name": "zigbee2mqtt-adapter",
-  "display_name": "zigbee2mqtt adapter",
   "version": "0.3.0",
   "description": "Brings all your zigbee devices to the gateway through mqtt bridge",
+  "scripts": {
+    "lint": "eslint ."
+  },
   "main": "index.js",
-  "keywords": [
-    "mozilla",
-    "iot",
-    "adapter",
-    "virtual"
-  ],
   "homepage": "https://github.com/kabbi/zigbee2mqtt-adapter",
   "author": "Kabbi",
   "license": "MPL-2.0",
@@ -21,20 +17,22 @@
     "url": "https://github.com/kabbi/zigbee2mqtt-adapter/issues"
   },
   "dependencies": {
-    "mqtt": "^2.18.8"
+    "mqtt": "^4.2.6"
   },
   "devDependencies": {
-    "eslint": "^4.19.1",
-    "sqlite3": "^4.0.6"
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.18.0"
   },
   "files": [
+    "ExposesDeviceGenerator.js",
     "LICENSE",
+    "README.md",
     "SHA256SUMS",
+    "devices.js",
     "index.js",
     "manifest.json",
+    "node_modules",
     "zigbee2mqtt-adapter.js",
-    "ExposesDeviceGenerator.js",
-    "devices.js",
     "zigbee2mqtt/"
   ]
 }
