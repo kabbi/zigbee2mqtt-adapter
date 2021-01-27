@@ -1,4 +1,3 @@
-const mqtt = require('mqtt');
 const installAddon = require('./index');
 
 const manager = {
