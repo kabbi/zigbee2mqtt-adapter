@@ -32,6 +32,7 @@
     "index.js",
     "manifest.json",
     "node_modules",
-    "zigbee2mqtt-adapter.js"
+    "zigbee2mqtt-adapter.js",
+    "simulator.js"
   ]
 }
