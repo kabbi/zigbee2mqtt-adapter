@@ -37,7 +37,7 @@ module.exports = {
       },
       flip90: {
         type: 'string',
-        mqttExpr: v => [v.from_side, v.to_side].join('->'),
+        mqttExpr: (v) => [v.from_side, v.to_side].join('->'),
       },
       flip180: {
         type: 'integer',
@@ -54,16 +54,16 @@ module.exports = {
       state: {
         '@type': 'OnOffProperty',
         type: 'boolean',
-        fromMqtt: v => v === 'ON',
-        toMqtt: v => (v ? 'ON' : 'OFF'),
+        fromMqtt: (v) => v === 'ON',
+        toMqtt: (v) => (v ? 'ON' : 'OFF'),
       },
       brightness: {
         '@type': 'BrightnessProperty',
         type: 'number',
         minimum: 0,
         maximum: 100,
-        fromMqtt: v => (v / 255) * 100,
-        toMqtt: v => (v / 100) * 255,
+        fromMqtt: (v) => (v / 255) * 100,
+        toMqtt: (v) => (v / 100) * 255,
       },
       color_temp: {
         type: 'integer',
@@ -167,24 +167,24 @@ module.exports = {
         type: 'number',
         '@type': 'TemperatureProperty',
         unit: 'degree celsius',
-	multipleOf: 0.1,
+        multipleOf: 0.1,
         readOnly: true,
       },
       humidity: {
         type: 'number',
         unit: 'percent',
-	multipleOf: 0.5,
+        multipleOf: 0.5,
         readOnly: true,
       },
       pressure: {
         type: 'number',
         unit: 'hPa',
-	multipleOf: 0.5,
+        multipleOf: 0.5,
         readOnly: true,
       },
     },
   },
-'WSDCGQ11LM': {
+  WSDCGQ11LM: {
     name: 'Xiaomi Temperature & Humidity Sensor',
     '@type': ['TemperatureSensor'],
     properties: {
@@ -214,10 +214,10 @@ module.exports = {
         type: 'integer',
         unit: 'hPa',
         readOnly: true,
-      }
+      },
     },
   },
-  "SJCGQ11LM": {
+  SJCGQ11LM: {
     name: 'Xiaomi Aqara Water Leak Sensor',
     '@type': ['BinarySensor'],
     properties: {
@@ -234,7 +234,7 @@ module.exports = {
         unit: 'volt',
         readOnly: true,
       },
-      "water_leak": {
+      water_leak: {
         type: 'boolean',
         '@type': 'BooleanProperty',
         readOnly: true,
@@ -245,7 +245,7 @@ module.exports = {
       },
     },
   },
-  "MCCGQ01LM": {
+  MCCGQ01LM: {
     name: 'Aqara door & window contact sensor',
     '@type': ['BinarySensor'],
     properties: {
@@ -262,7 +262,7 @@ module.exports = {
         unit: 'volt',
         readOnly: true,
       },
-      "contact": {
+      contact: {
         type: 'boolean',
         '@type': 'BooleanProperty',
         readOnly: true,
@@ -272,5 +272,5 @@ module.exports = {
         readOnly: true,
       },
     },
-  }
+  },
 };
