@@ -1,32 +1,31 @@
 {
   "author": "Kabbi",
-  "description": "Brings all your zigbee devices to the gateway through mqtt bridge",
+  "description": "Brings all your Zigbee devices to the gateway through MQTT bridge",
   "gateway_specific_settings": {
     "webthings": {
       "exec": "{nodeLoader} {path}",
       "primary_type": "adapter",
       "strict_max_version": "*",
-      "strict_min_version": "0.10.0",
-      "enabled": true
+      "strict_min_version": "0.10.0"
     }
   },
   "homepage_url": "https://github.com/kabbi/zigbee2mqtt-adapter",
   "id": "zigbee2mqtt-adapter",
   "license": "MPL-2.0",
   "manifest_version": 1,
-  "name": "zigbee2mqtt adapter",
+  "name": "Zigbee2MQTT",
   "options": {
     "default": {
-			"auto_update": true,
+      "auto_update": true,
       "mqtt": "mqtt://localhost",
       "prefix": "zigbee2mqtt",
-			"serial_port": "/dev/ttyACM0",
-			"debug": true
+      "serial_port": "/dev/ttyACM0",
+      "debug": true
     },
     "schema": {
       "type": "object",
       "properties": {
-				"auto_update": {
+        "auto_update": {
           "type": "boolean",
           "description": "Automatically try to update zigbee2MQTT to the latest version."
         },
@@ -42,13 +41,13 @@
           "type": "string",
           "description": "The serial port ID of the zigbee USB stick you are using. Normally this is: /dev/ttyACM0"
         },
-				"debug": {
+        "debug": {
           "type": "boolean",
           "description": "Used to find issues if this addon isn't working properly. If enabled, you can find more details about its functioning in the internal log (found under settings -> development)."
         }
       }
-    }    
+    }
   },
-  "short_name": "zigbee2mqtt adapter",
+  "short_name": "Zigbee2MQTT",
   "version": "0.3.0"
 }
