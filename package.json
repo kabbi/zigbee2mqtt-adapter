@@ -1,7 +1,7 @@
 {
   "name": "zigbee2mqtt-adapter",
   "version": "0.3.0",
-  "description": "Brings all your zigbee devices to the gateway through mqtt bridge",
+  "description": "Brings all your Zigbee devices to the gateway through MQTT bridge",
   "scripts": {
     "lint": "eslint ."
   },
@@ -32,7 +32,6 @@
     "index.js",
     "manifest.json",
     "node_modules",
-    "zigbee2mqtt-adapter.js",
-    "zigbee2mqtt/"
+    "zigbee2mqtt-adapter.js"
   ]
 }
