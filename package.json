@@ -1,6 +1,6 @@
 {
   "name": "zigbee2mqtt-adapter",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Brings all your Zigbee devices to the gateway through MQTT bridge",
   "scripts": {
     "lint": "eslint ."
@@ -25,7 +25,6 @@
     "eslint": "^7.18.0"
   },
   "files": [
-    "ExposesDeviceGenerator.js",
     "LICENSE",
     "README.md",
     "SHA256SUMS",
@@ -33,7 +32,15 @@
     "index.js",
     "manifest.json",
     "node_modules",
+    "ExposesDeviceGenerator.js",
     "zigbee2mqtt-adapter.js",
-    "simulator.js"
+    "simulator.js",
+		"api-handler.js",
+		"css/extension.css",
+    "js/extension.js",
+		"js/graphviz.js",
+		"images/menu-icon.svg",
+		"images/spinner.gif",
+		"views/content.html"
   ]
 }
