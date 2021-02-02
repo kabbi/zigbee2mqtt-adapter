@@ -33,7 +33,7 @@
       "prefix": "zigbee2mqtt",
       "serial_port": "/dev/ttyACM0",
 			"channel": 11,
-      "debug": true
+      "debug": false
     },
     "schema": {
       "type": "object",
@@ -44,7 +44,7 @@
         },
         "auto_update": {
           "type": "boolean",
-          "description": "If the addon manages its own version of Zigbee2MQTT, then enabling this will allow it to try and keep zigbee2MQTT updated to the latest version. This may allow the latest Zigbe devices to be supported. It does come with a small risk that if there would be something wrong with Zigbee2MQTT, then this addon may not start properly."
+          "description": "If the addon manages its own version of Zigbee2MQTT, then enabling this will allow it to try and keep zigbee2MQTT updated to the latest version. This may allow the latest Zigbee devices to be supported. It does come with a small risk that if there would be something wrong with Zigbee2MQTT, then this addon may not start properly."
         },
         "mqtt": {
           "type": "string",
@@ -70,7 +70,7 @@
     }
   },
   "short_name": "zigbee2mqtt",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
