@@ -372,10 +372,10 @@
 				} // end of for loop
 			
 				try{
-					const reading_list = document.getElementsByClassName('extension-zigbee2mqtt-adapter-read-about-risks')
+					const reading_list = document.getElementsByClassName('extension-zigbee2mqtt-adapter-read-about-risks');
 					for( var link in reading_list ){
 						reading_list[link].addEventListener('click', (event) => {
-							console.log(event);
+							//console.log(event);
 							document.getElementById('extension-zigbee2mqtt-adapter-content').classList = ['extension-zigbee2mqtt-adapter-show-tab-tutorial'];
 						});
 					}
