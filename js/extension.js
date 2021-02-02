@@ -310,23 +310,21 @@
 						}
 						pre.innerText = "Please wait 10 minutes before you start another update!";
 						
-						/*
-						// Send new values to backend
+						
+						// Send update request to backend
 						window.API.postJson(
 							`/extensions/${this.id}/api/ajax`,
-							{'action':'delete','friendly_name':items[item]['friendly_name']}
+							{'action':'update','friendly_name':items[item]['friendly_name']}
 						).then((body) => { 
-							console.log("delete item reaction: ");
-							console.log(body); 
-							//if( body['state'] != true ){
+							console.log("Update item reaction: ");
+							console.log(body);
 							pre.innerText = body['update'];
-							//}
 
 						}).catch((e) => {
 							console.log("zigbee2mqtt: error in start update button handler");
 							pre.innerText = e.toString();
 						});
-						*/
+						
 					
 					
 				  	});
