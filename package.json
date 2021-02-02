@@ -35,12 +35,12 @@
     "ExposesDeviceGenerator.js",
     "zigbee2mqtt-adapter.js",
     "simulator.js",
-		"api-handler.js",
-		"css/extension.css",
+    "api-handler.js",
+    "css/extension.css",
     "js/extension.js",
-		"js/graphviz.js",
-		"images/menu-icon.svg",
-		"images/spinner.gif",
-		"views/content.html"
+    "js/graphviz.js",
+    "images/menu-icon.svg",
+    "images/spinner.gif",
+    "views/content.html"
   ]
 }
