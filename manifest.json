@@ -1,6 +1,17 @@
 {
   "author": "Kabbi",
   "description": "Brings all your Zigbee devices to the gateway through MQTT bridge",
+  "content_scripts": [
+    {
+      "css": [
+        "css/extension.css"
+      ],
+      "js": [
+        "js/extension.js",
+				"js/graphviz.js"
+      ]
+    }
+  ],
   "gateway_specific_settings": {
     "webthings": {
       "exec": "{nodeLoader} {path}",
@@ -13,33 +24,43 @@
   "id": "zigbee2mqtt-adapter",
   "license": "MPL-2.0",
   "manifest_version": 1,
-  "name": "Zigbee2MQTT",
+  "name": "zigbee2mqtt-adapter",
   "options": {
     "default": {
+			"local_zigbee2mqtt":true,
       "auto_update": true,
       "mqtt": "mqtt://localhost",
       "prefix": "zigbee2mqtt",
       "serial_port": "/dev/ttyACM0",
+			"channel": 11,
       "debug": true
     },
     "schema": {
       "type": "object",
       "properties": {
+        "local_zigbee2mqtt": {
+          "type": "boolean",
+          "description": "If enabled, this addon will install and use its own version of Zigbee2MQTT. Disable this if you have already manually installed Zigbee2MQTT on your system."
+        },
         "auto_update": {
           "type": "boolean",
-          "description": "Automatically try to update zigbee2MQTT to the latest version."
+          "description": "If the addon manages its own version of Zigbee2MQTT, then enabling this will allow it to try and keep zigbee2MQTT updated to the latest version. This may allow the latest Zigbe devices to be supported. It does come with a small risk that if there would be something wrong with Zigbee2MQTT, then this addon may not start properly."
         },
         "mqtt": {
           "type": "string",
-          "description": "Mosquitto or other mqtt server host/port to connect to"
+          "description": "Mosquitto or other mqtt server host/port to connect to. Default is 'mqtt://localhost'."
         },
         "prefix": {
           "type": "string",
-          "description": "Mqtt topic prefix for zigbee2mqtt"
+          "description": "Mqtt topic prefix for zigbee2mqtt. Default is 'zigbee2mqtt'."
         },
         "serial_port": {
           "type": "string",
-          "description": "The serial port ID of the zigbee USB stick you are using. Normally this is: /dev/ttyACM0"
+          "description": "The serial port ID of the zigbee USB stick you are using. Default is '/dev/ttyACM0'."
+        },
+        "channel": {
+          "type": "string",
+          "description": "The wireless channel you want to the Zigbee network to use. If you change this, you will have to pair all your devices again. Suggested options are 11, 15, 20, or 25. The default is 11."
         },
         "debug": {
           "type": "boolean",
@@ -48,6 +69,14 @@
       }
     }
   },
-  "short_name": "Zigbee2MQTT",
-  "version": "0.3.3"
+  "short_name": "zigbee2mqtt",
+  "version": "0.4.0",
+  "web_accessible_resources": [
+    "css/*.css",
+    "images/*.svg",
+		"images/*.png",
+		"images/*.gif",
+    "js/*.js",
+    "views/*.html"
+  ]
 }

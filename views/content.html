@@ -1,0 +1,118 @@
+<div id="extension-zigbee2mqtt-adapter-content" class="extension-zigbee2mqtt-adapter-show-tab-things">
+  
+    <div id="extension-zigbee2mqtt-adapter-content-container">
+        <h3 id="extension-zigbee2mqtt-adapter-title"><img id="extension-zigbee2mqtt-adapter-main-page-icon" src="/extensions/zigbee2mqtt-adapter/images/menu-icon.svg">Zigbee2MQTT</h3>
+		
+		
+		<div class="extension-zigbee2mqtt-adapter-tab-buttons">
+            <button id="extension-zigbee2mqtt-adapter-tab-button-things" class="extension-zigbee2mqtt-adapter-main-tab-button">Things</button>
+			<button id="extension-zigbee2mqtt-adapter-tab-button-map" class="extension-zigbee2mqtt-adapter-main-tab-button">Map</button>
+            <button id="extension-zigbee2mqtt-adapter-tab-button-tutorial" class="extension-zigbee2mqtt-adapter-main-tab-button">?</button>
+        </div>
+		
+		<div id="extension-zigbee2mqtt-adapter-tabs-container">
+			
+			<div id="extension-zigbee2mqtt-adapter-tab-things" class="extension-zigbee2mqtt-adapter-tab">
+				
+				<div id="extension-zigbee2mqtt-adapter-list">    
+				</div>
+
+
+				<div id="extension-zigbee2mqtt-adapter-original-item" class="extension-zigbee2mqtt-adapter-item">
+					<div class="extension-zigbee2mqtt-adapter-item-setter">
+						<!--<div class="extension-zigbee2mqtt-adapter-icon">
+						</div>-->
+						<div class="extension-zigbee2mqtt-adapter-description"></div>
+						<div class="extension-zigbee2mqtt-adapter-line2">
+							<div class="extension-zigbee2mqtt-adapter-friendly-name"></div>
+							<div class="extension-zigbee2mqtt-adapter-version"></div>
+						</div>
+					</div>
+					<div class="extension-zigbee2mqtt-adapter-item-menu">
+						<div class="extension-zigbee2mqtt-adapter-item-left">
+							<button class="extension-zigbee2mqtt-adapter-item-update-button" disabled>Update</button>
+						</div>
+						<div class="extension-zigbee2mqtt-adapter-item-right">
+							<div class="extension-zigbee2mqtt-adapter-item-delete-button">&nbsp;</div>
+						</div>
+					</div>
+					<!--
+          <div class="extension-zigbee2mqtt-adapter-overlay rule-edit-overlay delete">
+              <div class="rule-delete-dialog">
+                  <p>Are you sure you want to force-remove this device from the Zigbee network?</p>
+                  <input class="rule-delete-cancel-button" type="button" data-l10n-id="rule-delete-cancel-button" value="Cancel">
+                  <input class="rule-delete-confirm-button" type="button" value="Force remove">
+              </div>
+          </div>
+					-->
+          <div class="extension-zigbee2mqtt-adapter-overlay rule-edit-overlay update">
+              <div class="rule-delete-dialog">
+                  <p>Are you sure you want to update the firmware of this device? Please <span class="extension-zigbee2mqtt-adapter-read-about-risks">read about the risks</a> first.</p>
+                  <input class="extension-zigbee2mqtt-adapter-overlay-cancel-update-button rule-delete-cancel-button" type="button" data-l10n-id="rule-delete-cancel-button" value="Cancel">
+                  <input class="extension-zigbee2mqtt-adapter-overlay-start-update-button rule-delete-confirm-button" type="button" value="Update">
+              </div>
+          </div>
+					
+          <div class="extension-zigbee2mqtt-adapter-overlay rule-edit-overlay updating">
+              <div class="rule-delete-dialog">
+                  <p>Updating. Please wait 10 minutes before updating another device.</p>
+                  
+              </div>
+          </div>
+				</div>
+				
+			</div>
+
+			
+			<div id="extension-zigbee2mqtt-adapter-tab-map" class="extension-zigbee2mqtt-adapter-tab">
+				<div id="extension-zigbee2mqtt-adapter-graphviz-container">
+				</div>
+				<div id="extension-zigbee2mqtt-adapter-map" class="extension-zigbee2mqtt-adapter-centered-page">
+					<p>Here you can find out how your Zigbee devices have organised themselves into a network. Depending on the size of your network, updating the map can take up to two minutes. During this time your Zigbee network may be very unresponsive.</p> 
+					<button id="extension-zigbee2mqtt-adapter-update-map-button">Update map</button>
+
+				</div>
+
+			</div>
+
+
+			<div id="extension-zigbee2mqtt-adapter-tab-tutorial" class="extension-zigbee2mqtt-adapter-tab">
+				<div id="extension-zigbee2mqtt-adapter-tutorial" class="extension-zigbee2mqtt-adapter-centered-page">
+					<h2>How to use the Zigbee2MQTT adapter</h2>
+					<p>Zigbee2MQTT is an open source software project in which hundreds of people have worked together to support as many Zigbee devices as possible. This addon builds on their work.</p>
+					<p>To learn more about the project, and learn which devices are supported, visit <a target="_blank" href="https://www.zigbee2mqtt.io">www.zigbee2mqtt.io</a>.</p>
+					<p>&nbsp;</p>
+					<h4>A word about firmware updates</h4>
+					<p>This addon can help you keep your devices up to date with the latest firmware. Not all manufacturers support this, but <a target="_blank" href="https://www.zigbee2mqtt.io/information/ota_updates.html">some do</a>. IKEA, for example.</p>
+					<p>Keeping Zigbee devices up to date isn't vital. Since Zigbee devices do not connect to the internet by themselves, they less likely to be hacked.</p>
+					<p>Before you update a device, always make sure you do some <a target="_blank" href="https://github.com/Koenkk/zigbee2mqtt/issues?q=is%3Aissue+is%3Aopen+firmware">research</a>. While firmware updates should generally improve security and perhaps even add features, in some cases there may be downsides associated with updating firmware on your devices.</p>
+					<p>Any interruption of the update process could damage your device. It's recommended to install fresh batteries in a device before you start a firmware update. Also make sure you don't turn off your Webthings Gateway during the proces.</p>
+					<p style="font-style:italic">This addon is not associated with any manufacturer of Zigbee devices. Use the update functionality at your own risk.</p>
+					<p>&nbsp;</p>
+					<h4>Removing devices from your network</h4>
+					<p>In theory, when you remove a thing from the gateway, it will also be unpaired from your Zigbee network. However, your Zigbee device will likely still contain your Zigbee network settings. If you want to sell your device, make sure to do a full reset. Details on how to do this may be found on the website of the manufacturer.</p>
+					
+				</div>
+			</div>
+		</div>
+		
+		
+		
+		
+
+        <br/>
+        <br/>
+
+        <div id="extension-zigbee2mqtt-adapter-response">
+            <p id="extension-zigbee2mqtt-adapter-response-data" class="extension-zigbee2mqtt-adapter-centered-error"></p>
+        </div>
+        <br/>
+
+    </div>
+    
+</div>
+
+
+
+
+
