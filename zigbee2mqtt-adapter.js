@@ -9,7 +9,7 @@
 
 'use strict';
 
-const {spawn, execSync, execFile} = require('child_process');
+const {spawn, exec, execSync, execFile} = require('child_process');
 const https = require('https');
 const os = require('os');
 const fs = require('fs');
@@ -90,7 +90,6 @@ class ZigbeeMqttAdapter extends Adapter {
 				this.config.serial_port = null; // fall back on Zigbee2MQTT's own auto-detect (which doesn't work on the Webthings Raspberry Pi disk image)
 			}
 		}
-		
 
     this.client = mqtt.connect(this.config.mqtt);
     this.client.on('error', (error) => console.error('mqtt error', error));
@@ -163,10 +162,10 @@ class ZigbeeMqttAdapter extends Adapter {
 		if(this.config.local_zigbee2mqtt == true){
 			
 	    fs.access(this.zigbee2mqtt_dir_path, (err) => {
-	      // fs.access(this.zigbee2mqtt_dir_path, function(err) {
 	      if (err && err.code === 'ENOENT') {
-	        this.download_z2m();
-	      } else {
+	        this.download_z2m(); // this also then starts zigbee2mqtt
+	      } 
+				else {
 	        if(this.config.debug){
 						console.log('zigbee2mqtt folder existed.');
 					}
@@ -200,8 +199,8 @@ class ZigbeeMqttAdapter extends Adapter {
 
 	              res.on('end', () => {
 	                try {
-	                  // console.log("parsing...");
-	                  // console.log(body);
+										
+										// Parse JSON from api.github
 	                  const github_json = JSON.parse(body);
 										if(this.config.debug){
 	                  	console.log('latest zigbee2MQTT version found on Github =', github_json.tag_name);
@@ -210,8 +209,8 @@ class ZigbeeMqttAdapter extends Adapter {
 	                  fs.readFile(this.zigbee2mqtt_package_file_path, 'utf8', (err, data) => {
 	                    if (err) {
 	                      console.log(`Error reading file from disk: ${err}`);
-	                    } else {
-	                      // parse JSON string to JSON object
+	                    
+											} else {	
 	                      const z2m_package_json = JSON.parse(data);
 	                      if(this.config.debug){
 													console.log(`local zigbee2MQTT version = ${z2m_package_json.version}`);
@@ -221,37 +220,41 @@ class ZigbeeMqttAdapter extends Adapter {
 	                        if(this.config.debug){
 														console.log('zigbee2mqtt versions are the same, no need to update zigbee2mqtt');
 													}
-	                        this.check_if_config_file_exists(this);
+													this.run_zigbee2mqtt();
+													
 	                      } else {
 	                        console.log('a new official release of zigbee2mqtt is available.',
 	                                    'Will attempt to upgrade.');
-	                        // console.log("tarball_url to download = " + github_json['tarball_url']);
 													
 													this.sendPairingPrompt("Updating Zigbee2MQTT to " + github_json.tag_name);
 													
 	                        this.delete_z2m();
-	                        this.download_z2m();
+	                        this.download_z2m(); // this also then starts zigbee2mqtt
+													
 	                      }
 	                    }
 	                  });
 
-	                  // TODO: do something with JSON
-	                  // const json = JSON.parse(body);
 	                } catch (error) {
 	                  console.error(error.message);
+										this.run_zigbee2mqtt();
 	                }
 	              });
 	            });
 
 	            req.on('error', (e) => {
 	              console.error(e);
+								this.run_zigbee2mqtt();
 	            });
 	            req.end();
 	          } catch (error) {
 	            console.error(error.message);
+							this.run_zigbee2mqtt();
 	          }
-	        } else {
-	          this.check_if_config_file_exists();
+	        } 
+					else {
+						// Skipping auto-update check
+	          this.run_zigbee2mqtt();
 	        }
 	      }
 	    }); // end of fs.access check
@@ -264,44 +267,40 @@ class ZigbeeMqttAdapter extends Adapter {
   }
 
 
-  // By having the config files outside of the zigbee2mqtt folder it becomes easier to update
-  // zigbee2mqtt
+  // By having the config files outside of the zigbee2mqtt folder it becomes easier to update zigbee2mqtt
   check_if_config_file_exists() {
     try {
       if(this.config.debug){
 				console.log('Checking if config file exists');
 			}
 
-      fs.access(this.zigbee2mqtt_configuration_file_source_path, (err) => {
-        // fs.access(this.zigbee2mqtt_configuration_file_source_path, function(err) {
+      fs.access(this.zigbee2mqtt_configuration_file_path, (err) => {
         if (err && err.code === 'ENOENT') {
           console.log('The configuration.yaml source file doesn\'t exist:',
                       this.zigbee2mqtt_configuration_file_source_path);
-        } else {
-          console.log('configuration.yaml source file existed');
-          fs.access(this.zigbee2mqtt_configuration_file_path, (err) => {
-            // fs.access(this.zigbee2mqtt_configuration_file_path, function(err) {
-            if (err && err.code === 'ENOENT') {
-              console.log('data dir configuration.yaml file doesn\'t exist yet',
-                          `(${this.zigbee2mqtt_configuration_file_path}).`,
-                          'It should be copied over.');
-              fs.copyFile(
-                this.zigbee2mqtt_configuration_file_source_path,
-                this.zigbee2mqtt_configuration_file_path,
-                (err) => {
-                  if (err) {
-                    throw err;
-                  }
-                  console.log('configuration yaml file was copied to the correct location.');
-                  this.run_zigbee2mqtt();
-                }
-              );
-            } else {
-              console.log('configuration.yaml file existed.');
-              this.run_zigbee2mqtt();
-            }
-          });
+				 
+					let base_config = 	"homeassistant: false\n" + 
+															"permit_join: false\n" + 
+															"mqtt:\n" + 
+											  			"  base_topic: zigbee2mqtt\n" + 
+											  			"  server: 'mqtt://localhost'\n" + 
+															"serial:\n" + 
+											  			"  port: /dev/ttyACM0\n" + 
+															"device_options:\n" + 
+											  			"  simulated_brightness: true\n"; 
+
+				 // write to a new file named 2pac.txt
+				 fs.writeFile(this.zigbee2mqtt_configuration_file_path, base_config, (err) => {
+				     if (err){
+							 console.log("Error writing base configuration.yaml file");
+				     }
+						 else{
+							 console.log('basic configuration.yaml file was succesfully created!');
+						 }
+				     
+				 });
         }
+				
       });
     } catch (error) {
       console.error(`Error checking if zigbee2mqtt config file exists: ${error.message}`);
@@ -321,6 +320,8 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
   run_zigbee2mqtt() {
+		this.check_if_config_file_exists();
+		
     if(this.config.debug){
 			console.log('starting zigbee2MQTT using: node ' + this.zigbee2mqtt_file_path);
  	  	console.log("initial this.config.serial_port = " + this.config.serial_port);
@@ -334,8 +335,40 @@ class ZigbeeMqttAdapter extends Adapter {
 		
 		process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_FILE = 'Zigbee2MQTT-adapter-%TIMESTAMP%.txt';
 		
+		if(typeof this.config.ikea_test_server != "undefined"){
+			process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_IKEA_OTA_USE_TEST_URL = this.config.ikea_test_server;
+		}
+		//process.env.ZIGBEE2MQTT_CONFIG_DEVICE_OPTIONS_SIMULATED_BRIGHTNESS = true; // doesn't seem to work
+		
+		/*
+		// TODO: Change Graphviz color:
+		
+		# Optional: networkmap options
+		map_options:
+		  graphviz:
+		    # Optional: Colors to be used in the graphviz network map (default: shown below)
+		    colors:
+		      fill:
+		        enddevice: '#fff8ce'
+		        coordinator: '#e04e5d'
+		        router: '#4ea3e0'
+		      font:
+		        coordinator: '#ffffff'
+		        router: '#ffffff'
+		        enddevice: '#000000'
+		      line:
+		        active: '#009900'
+		        inactive: '#994444'
+		*/
+		process.env.ZIGBEE2MQTT_CONFIG_MAP_OPTIONS_GRAPHVIZ_COLORS_FILL_COORDINATOR = '#333333';
+		process.env.ZIGBEE2MQTT_CONFIG_MAP_OPTIONS_GRAPHVIZ_COLORS_FILL_ROUTER = '#666666';
+		process.env.ZIGBEE2MQTT_CONFIG_MAP_OPTIONS_GRAPHVIZ_COLORS_FILL_ENDDEVICE = '#CCCCCC';
+		
 		if(this.config.debug){
 			process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_LEVEL = 'debug';
+		}
+		else{
+			process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_LEVEL = 'error';
 		}
 		if(typeof this.config.channel != "undefined"){
 			process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_CHANNEL = this.config.channel;
@@ -364,49 +397,45 @@ class ZigbeeMqttAdapter extends Adapter {
   			{stdio: ['ignore', 'ignore', process.stderr] });
 		}
 		
-		
-		
 	}
 
 
 
   download_z2m() {
-		
-    console.log('Downloading Zigbee2MQTT');
-    
-		try {
-      execSync(
-        `git clone --depth=1 https://github.com/Koenkk/zigbee2mqtt ${this.zigbee2mqtt_dir_path}`
-      );
-    } catch (error) {
-      console.error('Error downloading:', error);
-      return;
-    }
-
-    console.log('Installing Zigbee2MQTT. This may take up to 10 minutes.');
-    try {
-      execSync(`cd ${this.zigbee2mqtt_dir_path}; npm ci --production`);
-    } catch (error) {
-      console.error('Error installing:', error);
-    }
-	
-		this.sendPairingPrompt("Ready!");
-	
+		exec(`git clone --depth=1 https://github.com/Koenkk/zigbee2mqtt ${this.zigbee2mqtt_dir_path}`, (err, stdout, stderr) => {
+		  if (err) {
+		    console.error(err);
+		    return;
+		  }
+		  console.log(stdout);
+			console.log("-----DOWNLOAD COMPLETE, STARTING INSTALL-----");
+			exec(`cd ${this.zigbee2mqtt_dir_path}; npm ci --production`, (err, stdout, stderr) => {
+			  if (err) {
+			    console.error(err);
+			    return;
+			  }
+			  console.log(stdout);
+				console.log("-----INSTALL COMPLETE-----");
+				this.sendPairingPrompt("Ready!");
+				this.run_zigbee2mqtt();
+			});
+		});	
   }
 
 
+
   delete_z2m() {
-	    if(this.config.debug){
-				console.log('Attempting to delete local zigbee2mqtt from data folder');
-			}
-	    try {
-	      execSync(`rm -rf ${this.zigbee2mqtt_dir_path}`);
-				return true;
-	    } catch (error) {
-	      console.error('Error deleting:', error);
-				return false;
-	    }
+    if(this.config.debug){
+			console.log('Attempting to delete local zigbee2mqtt from data folder');
+		}
+    try {
+      execSync(`rm -rf ${this.zigbee2mqtt_dir_path}`);
+			return true;
+    } catch (error) {
+      console.error('Error deleting:', error);
 			return false;
+    }
+		return false;
 	}
 
 
@@ -434,7 +463,6 @@ class ZigbeeMqttAdapter extends Adapter {
 			if(this.config.debug){
 				console.log("/bridge/devices detected");
 			}
-			
 			try{
 		      for (const device of msg) {
 		        this.addDevice(device);
@@ -443,10 +471,7 @@ class ZigbeeMqttAdapter extends Adapter {
 			catch (error){
 				console.log("Error parsing /bridge/devices: " + error);
 			}
-			
 		}	
-	
-		
 	
 		// if it's not an 'internal' message, it must be a message with information about properties
     if (!topic.startsWith(this.config.prefix + '/bridge')) {
@@ -498,8 +523,6 @@ class ZigbeeMqttAdapter extends Adapter {
 						this.devices_overview[friendlyName]['update_available'] = msg[key];
 					}
 					
-					
-					
 					// Attempt to make a color compatible with the gateway's HEX color system
 					try{
 						if(key == 'color' && typeof msg[key] == "object"){
@@ -520,7 +543,6 @@ class ZigbeeMqttAdapter extends Adapter {
 						continue;
 					}
 					
-					
 					// Modify byte to a percentage
 					try{
 						if( property.options.hasOwnProperty("origin") ){
@@ -537,7 +559,6 @@ class ZigbeeMqttAdapter extends Adapter {
 						console.log(error);
 						continue;
 					}
-					
 					
 					// Check if an extra boolean property should be updated
 					try{
@@ -717,21 +738,43 @@ class ZigbeeMqttAdapter extends Adapter {
 	
 
   startPairing(_timeoutSeconds) {
-    console.log('in startPairing');
+    if(this.config.debug){
+			console.log('in startPairing');
+		}
 		
 		this.client.publish(`${this.config.prefix}/bridge/request/permit_join`,'{"value": true}');
 
     this.client.publish(`${this.config.prefix}/bridge/config/devices/get`);
     // TODO: Set permitJoin, and cancel pairing based on a separate timer so the devices have a bit longer to pair.
+		
+		
+		setTimeout(this.stopPairingCheck.bind(this), 130000); // pairing gets two minutes.
+		//setTimeout(function(){this.stopPairingCheck();},130000); // pairing gets two minutes.
+		this.last_pairing_start_time = Date.now();
+		
   }
 
+
+	stopPairingCheck(){
+		if(this.last_pairing_start_time + 120000 < Date.now() ){ // check if two minutes have passed since a pairing start was called
+			if(this.config.debug){
+				console.log("setting permitJoin back to off");
+			}
+			this.client.publish(`${this.config.prefix}/bridge/request/permit_join`,'{"value": false}'); // set permitJoin back to off
+		}
+		else{
+			if(this.config.debug){
+				console.log("not setting permitJoin back to off yet, something caused a time extension");
+			}
+		}
+	}
 
 
   cancelPairing() {
     if(this.config.debug){
-			console.log('in cancelPairing');
+			console.log('in cancelPairing (but this is not used)');
 		}
-		//this.client.publish(`${this.config.prefix}/bridge/request/permit_join`,'{"value": false}'); // timeout is too quick for some Zigbee devices
+		//this.client.publish(`${this.config.prefix}/bridge/request/permit_join`,'{"value": false}'); // The Webthings Gateway timeout is too quick for some Zigbee devices
   }
 	
 	
@@ -835,15 +878,17 @@ class MqttProperty extends Property {
           const {toMqtt = identity} = this.options;
 					
 					if(typeof this.options["type"] == "string" && this.options["title"] == "Color" ){ // https://github.com/EirikBirkeland/hex-to-xy
+						//if(this.device.adapter.config.debug){
+						//	console.log("translating HEX color to XY (cie color space)");
+						//}
+						//var cie_colors = HEXtoXY(updatedValue);
+						//const x = cie_colors[0];
+						//const y = cie_colors[1];
+						//updatedValue = {"x":x, "y":y};
+						updatedValue = {"hex":updatedValue};
+						//{"color": {"hex": HEX}}
 						if(this.device.adapter.config.debug){
-							console.log("translating HEX color to XY (cie color space)");
-						}
-						var cie_colors = HEXtoXY(updatedValue);
-						const x = cie_colors[0];
-						const y = cie_colors[1];
-						updatedValue = {"x":x, "y":y};
-						if(this.device.adapter.config.debug){
-							console.log("color translated to: " + updatedValue);
+							console.log("color value set to: " + updatedValue);
 						}
 					}
 					
@@ -895,7 +940,6 @@ function percentage_to_integer(percentage, maximum){
 
 
 function HEXtoXY(hex){ // thanks to https://stackoverflow.com/questions/20283401/php-how-to-convert-rgb-color-to-cie-1931-color-specification
-	//console.log("in HEXtoXY, hex = " + hex);
 	hex = hex.replace(/^#/, '');
   const aRgbHex = hex.match(/.{1,2}/g);
 	var red = parseInt(aRgbHex[0], 16);
@@ -910,8 +954,6 @@ function HEXtoXY(hex){ // thanks to https://stackoverflow.com/questions/20283401
   var Z = red * 0.000088 + green * 0.072310 + blue * 0.986039;
   var fx = X / (X + Y + Z);
   var fy = Y / (X + Y + Z);
-	//console.log("fx.toPrecision(2) = ");
-	//console.log( fx.toPrecision(2) );
 	
   return [fx.toPrecision(2),fy.toPrecision(2)];
 }
@@ -919,13 +961,16 @@ function HEXtoXY(hex){ // thanks to https://stackoverflow.com/questions/20283401
 
 function XYtoHEX(x, y, bri){ // and needs brightness too
   const z = 1.0 - x - y;
-
+	if(x == 0){x = 0.00001};
+	if(y == 0){y = 0.00001};
+	if(bri == 0){bri = 1};
   const Y = bri / 255.0; // Brightness of lamp
   const X = (Y / y) * x;
   const Z = (Y / y) * z;
   var r = X * 1.612 - Y * 0.203 - Z * 0.302;
   var g = -X * 0.509 + Y * 1.412 + Z * 0.066;
   var b = X * 0.026 - Y * 0.072 + Z * 0.962;
+	
   r = r <= 0.0031308 ? 12.92 * r : (1.0 + 0.055) * Math.pow(r, (1.0 / 2.4)) - 0.055;
   g = g <= 0.0031308 ? 12.92 * g : (1.0 + 0.055) * Math.pow(g, (1.0 / 2.4)) - 0.055;
   b = b <= 0.0031308 ? 12.92 * b : (1.0 + 0.055) * Math.pow(b, (1.0 / 2.4)) - 0.055;
@@ -934,20 +979,20 @@ function XYtoHEX(x, y, bri){ // and needs brightness too
   r /= maxValue;
   g /= maxValue;
   b /= maxValue;
-  r = r * 255;   if (r < 0) { r = 255 };
-  g = g * 255;   if (g < 0) { g = 255 };
-  b = b * 255;   if (b < 0) { b = 255 };
-
-  r = Math.round(r).toString(16);
-  g = Math.round(g).toString(16);
-  b = Math.round(b).toString(16);
+  r = r * 255;   if (r < 0) { r = 0 }; if (r > 255) { r = 255 };
+  g = g * 255;   if (g < 0) { g = 0 }; if (g > 255) { g = 255 };
+  b = b * 255;   if (b < 0) { b = 0 }; if (b > 255) { b = 255 };
+	
+  r = Math.floor(r).toString(16);
+  g = Math.floor(g).toString(16);
+  b = Math.floor(b).toString(16);
 	
   if (r.length < 2)
       r="0"+r;        
   if (g.length < 2)
       g="0"+g;        
   if (b.length < 2)
-      b="0"+r;
+      b="0"+b;
 	
   return "#"+r+g+b;
 }

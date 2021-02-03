@@ -27,12 +27,13 @@
   "name": "zigbee2mqtt-adapter",
   "options": {
     "default": {
-			"local_zigbee2mqtt":true,
+			"local_zigbee2mqtt": true,
       "auto_update": true,
       "mqtt": "mqtt://localhost",
       "prefix": "zigbee2mqtt",
-      "serial_port": "/dev/ttyACM0",
+      "serial_port": "",
 			"channel": 11,
+			"ikea_test_server": true,
       "debug": false
     },
     "schema": {
@@ -56,11 +57,15 @@
         },
         "serial_port": {
           "type": "string",
-          "description": "The serial port ID of the zigbee USB stick you are using. Default is '/dev/ttyACM0'."
+          "description": "The serial port ID of the zigbee USB stick you are using. If you leave it empty it will try to auto-detect the correct port. An example you could try is '/dev/ttyACM0'."
         },
         "channel": {
           "type": "string",
           "description": "The wireless channel you want to the Zigbee network to use. If you change this, you will have to pair all your devices again. Suggested options are 11, 15, 20, or 25. The default and minimum is 11. The maximum is 26, although not all Zigbee devices support that channel."
+        },
+        "ikea_test_server": {
+          "type": "boolean",
+          "description": "If you find that your IKEA devices aren't succesfully updating to the latest firmware version, then you may need to switch to the firmwares from IKEA's test server instead. In januari 2021 this is currently the case."
         },
         "debug": {
           "type": "boolean",
@@ -70,7 +75,7 @@
     }
   },
   "short_name": "zigbee2mqtt",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
