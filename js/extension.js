@@ -222,17 +222,94 @@
 		
 				// Loop over all items
 				for( var item in items ){
-					//console.log(items[item]);
+					console.log(items[item]);
 					var clone = original.cloneNode(true);
 					clone.removeAttribute('id');
 					
-					
 					try{
 						//console.log("items[item]['model_id'] = " + items[item]['model_id']);
+						if(typeof items[item]['vendor'] != "undefined"){
+							var icon_name = items[item]['vendor'].toString();
+							if(icon_name.toLowerCase() == "ikea"){
+								icon_name = "IKEA";
+							}
+							else if(icon_name.toLowerCase() == "ge"){
+								icon_name = "GE";
+							}
+							else if(icon_name.toLowerCase().includes("xiaomi")){
+								icon_name = "MI";
+							}
+							else if(icon_name.toLowerCase().includes("bitron")){
+								icon_name = "Bitron";
+							}
+							else if(icon_name.toLowerCase().includes("tuya")){
+								icon_name = "tuya";
+							}
+							else if(icon_name.toLowerCase().includes("yale")){
+								icon_name = "Yale";
+							}
+							else if(icon_name.toLowerCase().includes("gledopto")){
+								icon_name = "GLEDOPTO";
+							}
+							else if(icon_name.toLowerCase().includes("philips")){
+								icon_name = "PHILIPS";
+							}
+							else if(icon_name.toLowerCase().includes("osram")){
+								icon_name = "OSRAM";
+							}
+							else if(icon_name.toLowerCase().includes("lidl")){
+								icon_name = "LIDL";
+							}
+							else if(icon_name.toLowerCase().includes("legrand")){
+								icon_name = "legrand";
+							}
+							else if(icon_name.toLowerCase().includes("innr")){
+								icon_name = "innr";
+							}
+							else if(icon_name.toLowerCase().includes("immax")){
+								icon_name = "Immax";
+							}
+							else if(icon_name.toLowerCase().includes("hornbach")){
+								icon_name = "HORNBACH";
+							}
+							else if(icon_name.toLowerCase().includes("smart") && icon_name.toLowerCase().includes("smart")){
+								icon_name = "ECOSMART";
+							}
+							else if(icon_name.toLowerCase().includes("develco")){
+								icon_name = "DEVELCO";
+							}
+							else if(icon_name.toLowerCase().includes("centralite")){
+								icon_name = "Centralite";
+							}
+							else if(icon_name.toLowerCase().includes("aurora")){
+								icon_name = "AURORA";
+							}
+							else{
+								icon_name = '';
+							}
+						
+							var s = document.createElement("div");
+							var t = document.createTextNode( icon_name );
+							icon_name = icon_name.toLowerCase().replace(/ /g, '-');
+							const class_name = 'extension-zigbee2mqtt-adapter-icon-' + icon_name;
+							
+							s.appendChild(t);
+							s.classList.add(class_name);                   
+							clone.querySelectorAll('.extension-zigbee2mqtt-adapter-icon' )[0].appendChild(s);
+						}
+
+					}
+					catch(e){
+						console.log("error adding icon: " + e);
+					}	
+					
+					
+					try{	
+						
 						var a = document.createElement("a");
 						//s.classList.add('extension-zigbee2mqtt-adapter-description'); 
 						a.setAttribute("href", "/things/" + items[item]['friendly_name']);        
-						var t = document.createTextNode( items[item]['vendor'] + " " + items[item]['description'] );
+						var t = document.createTextNode( items[item]['description'] );
 						a.appendChild(t);                                           
 						clone.querySelectorAll('.extension-zigbee2mqtt-adapter-description' )[0].appendChild(a);
 
@@ -324,8 +401,6 @@
 							console.log("zigbee2mqtt: error in start update button handler");
 							pre.innerText = e.toString();
 						});
-						
-					
 					
 				  	});
 					

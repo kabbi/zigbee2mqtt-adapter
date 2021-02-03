@@ -316,6 +316,7 @@
 
 .extension-zigbee2mqtt-adapter-description{
 	width:100%;
+	min-width: 10rem;
 }
 
 .extension-zigbee2mqtt-adapter-description a{
@@ -364,6 +365,14 @@
 }
 
 
+.extension-zigbee2mqtt-adapter-line1{
+	display:flex;
+	flex-wrap:wrap;
+	align-items:end;
+	width:100%;
+}
+
+
 .extension-zigbee2mqtt-adapter-line2{
 	display:flex;
 	flex-wrap:wrap;
@@ -376,23 +385,95 @@
 }
 
 
+/*  ICONS  */
+
 .extension-zigbee2mqtt-adapter-icon{
-	width:4rem;
-	height:4rem;
+	width:6rem;
 	margin-right:2rem;
-	margin-bottom:1rem;
-	background-size:3rem;
-	background-position:center;
-	background-repeat:no-repeat;
+	margin-bottom:0rem;
 	flex-shrink: 0;
+	min-width:6rem;
+	box-sizing:border-box;
 }
 
-
-/*
-.extension-zigbee2mqtt-adapter-type-timer .extension-zigbee2mqtt-adapter-icon{
-	background-image:url('../images/timer.svg');
+.extension-zigbee2mqtt-adapter-icon > div{
+	display: inline-block;
+	padding: .7rem;
+	font-size: 1.4rem;
+	font-weight: bolder;
 }
-*/
+
+.extension-zigbee2mqtt-adapter-icon-ikea{
+	color:blue;
+	background-color: yellow;
+}
+.extension-zigbee2mqtt-adapter-icon-mi{
+	color:white;
+	background-color: orange;
+}
+.extension-zigbee2mqtt-adapter-icon-bitron{
+	color:white;
+	background-color: blue;
+}
+.extension-zigbee2mqtt-adapter-icon-tuya{
+	color:white;
+	background-color: orange;
+}
+.extension-zigbee2mqtt-adapter-icon-yale{
+	color:black;
+	background-color: yellow;
+}
+.extension-zigbee2mqtt-adapter-icon-philips{
+	color:blue;
+	background-color: white;
+}
+.extension-zigbee2mqtt-adapter-icon-lidl{
+	color:blue;
+	background-color: yellow;
+	border:2px solid red;
+}
+.extension-zigbee2mqtt-adapter-icon-legrand{
+	color:red;
+	background-color: white;
+}
+.extension-zigbee2mqtt-adapter-icon-innr{
+	color:DeepPink;
+	background-color: white;
+}
+.extension-zigbee2mqtt-adapter-icon-immax{
+	color:white;
+	background-image: linear-gradient(to left, violet, indigo, blue, green, yellow, orange, red);
+}
+.extension-zigbee2mqtt-adapter-icon-hornbach{
+	color:white;
+	background-color: orange;
+	-webkit-text-stroke: 1.2px black;
+}
+.extension-zigbee2mqtt-adapter-icon-ge{
+	color:blue;
+	background-color: white;
+}
+.extension-zigbee2mqtt-adapter-icon-ecosmart{
+	color:white;
+	background-color: DeepSkyBlue;
+}
+.extension-zigbee2mqtt-adapter-icon-gledopto{
+	color:black;
+	background-color: white;
+}
+.extension-zigbee2mqtt-adapter-icon-develco{
+	color:#999;
+	background-color: white;
+}
+.extension-zigbee2mqtt-adapter-icon-centralite{
+	color:DeepSkyBlue;
+	background-color: white;
+}
+.extension-zigbee2mqtt-adapter-icon-aurora{
+	color:Navy;
+	background-color: white;
+}
+
 
 
 .extension-zigbee2mqtt-adapter-spinner{
@@ -411,7 +492,7 @@
 @media screen and (min-width: 641px) {
 	.extension-zigbee2mqtt-adapter-line2{
 		width:auto;
-		margin-left:6rem;
+		margin-left:8rem;
 	}
 	.extension-zigbee2mqtt-adapter-line2 > div{
 		width:auto;
@@ -419,6 +500,10 @@
 	}
 	.extension-zigbee2mqtt-adapter-friendly-name{
 		margin-right:1rem;
+	}
+	
+	.extension-zigbee2mqtt-adapter-description{
+		width:calc(100% - 8rem);
 	}
 }
 
