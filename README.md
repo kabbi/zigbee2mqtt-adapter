@@ -7,6 +7,7 @@ This adapter for [WebThings Gateway](https://webthings.io/gateway/) allows to us
 
 
 This addon uses the "exposes" feature of Zigbee2MQTT, so in theory it supports all the devices that Zigbee2MQTT supports. You can find the list of supported devices here:
+
 https://www.zigbee2mqtt.io/information/supported_devices.html
 
 While this is done automatically, in some cases is may be worthwhile to have this addon support a device more specifically. For those cases the `devices.js` file may be used. You can add specific devices to it like this:
