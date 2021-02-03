@@ -17,8 +17,7 @@
     "url": "https://github.com/kabbi/zigbee2mqtt-adapter/issues"
   },
   "dependencies": {
-    "mqtt": "^4.2.6",
-    "serialport": "^9.0.6"
+    "mqtt": "^4.2.6"
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",
