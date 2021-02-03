@@ -60,7 +60,7 @@
         },
         "channel": {
           "type": "string",
-          "description": "The wireless channel you want to the Zigbee network to use. If you change this, you will have to pair all your devices again. Suggested options are 11, 15, 20, or 25. The default is 11."
+          "description": "The wireless channel you want to the Zigbee network to use. If you change this, you will have to pair all your devices again. Suggested options are 11, 15, 20, or 25. The default and minimum is 11. The maximum is 26, although not all Zigbee devices support that channel."
         },
         "debug": {
           "type": "boolean",
@@ -70,7 +70,7 @@
     }
   },
   "short_name": "zigbee2mqtt",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",

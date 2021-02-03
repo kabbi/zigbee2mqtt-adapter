@@ -11,14 +11,13 @@
 
 const {spawn, execSync, execFile} = require('child_process');
 const https = require('https');
+const os = require('os');
 const fs = require('fs');
 const path = require('path');
 
 const mqtt = require('mqtt');
 const {Adapter, Device, Property, Event} = require('gateway-addon');
 const Zigbee2MQTTHandler = require('./api-handler');
-
-const SerialPort = require('serialport');
 
 const Devices = require('./devices');
 const ExposesDeviceGenerator = require('./ExposesDeviceGenerator');
@@ -29,18 +28,69 @@ const identity = (v) => v;
 
 class ZigbeeMqttAdapter extends Adapter {
   constructor(addonManager, manifest) {
-    //
+    
+		//
     // STARTING THE ADDON
     //
 
     super(addonManager, 'ZigbeeMqttAdapter', manifest.name);
     this.config = manifest.moziot.config;
-    if (this.config.debug) {
+		
+		this.current_os = os.platform().toLowerCase();
+
+
+		
+		if (typeof this.config.debug == "undefined") {
+			this.config.debug = false;
+		}
+    else if (this.config.debug) {
 			console.log("Debugging is enabled");
       console.log(this.config);
+			console.log("OS: " + this.current_os);
     }
     addonManager.addAdapter(this);
     this.exposesDeviceGenerator = new ExposesDeviceGenerator(this,this.config);
+
+		
+		// Handle missing default values
+		if(typeof this.config.local_zigbee2mqtt == "undefined"){
+			this.config.local_zigbee2mqtt = true;
+		}
+		if(typeof this.config.auto_update == "undefined"){
+			this.config.auto_update = true;
+		}
+		if(typeof this.config.prefix == "undefined"){
+			this.config.prefix = "zigbee2mqtt";
+		}
+		if(typeof this.config.mqtt == "undefined"){
+			this.config.mqtt = "mqtt://localhost";
+		}
+		
+		if(typeof this.config.serial_port == "undefined" || this.config.serial_port == ""){
+			console.log("Serial port is not defined in settings. Will attempt auto-detect.");
+			if(this.current_os == 'linux'){
+				this.config.serial_port = "/dev/ttyAMA0";
+				var result = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
+				result = result.split(/\r?\n/);
+				for( const i in result ){
+					if(this.config.debug){
+						console.log("line: " + result[i]);
+					}
+					if( result[i].length == 3 && result[i].includes("->")){ // If there is only one USB device, grab what you can.
+						this.config.serial_port = "/dev/" + result[i].split("/").pop(); 
+					}
+					// In general, be picky, and look for hints that we found a viable Zigbee stick
+					if(result[i].toLowerCase().includes("cc253") || result[i].toLowerCase().includes("conbee") || result[i].toLowerCase().includes('cc26x') || result[i].toLowerCase().includes('cc265') ){ // CC26X2R1, CC253, CC2652
+						this.config.serial_port = "/dev/" + result[i].split("/").pop();
+						console.log("- USB stick spotted at: " + this.config.serial_port);
+					}
+				}
+			}
+			else{
+				this.config.serial_port = null; // fall back on Zigbee2MQTT's own auto-detect (which doesn't work on the Webthings Raspberry Pi disk image)
+			}
+		}
+		
 
     this.client = mqtt.connect(this.config.mqtt);
     this.client.on('error', (error) => console.error('mqtt error', error));
@@ -86,8 +136,6 @@ class ZigbeeMqttAdapter extends Adapter {
     this.zigbee2mqtt_configuration_log_path = path.join(this.zigbee2mqtt_data_dir_path, 'log');
     // console.log("this.zigbee2mqtt_configuration_log_path =",
     //             this.zigbee2mqtt_configuration_log_path);
-
-		// 
 
 
 		this.devices_overview = {};//new Map(); // stores all the connected devices, and if they can be updated. Could potentially also be used to force-remove devices from the network.
@@ -276,199 +324,34 @@ class ZigbeeMqttAdapter extends Adapter {
     if(this.config.debug){
 			console.log('starting zigbee2MQTT using: node ' + this.zigbee2mqtt_file_path);
  	  	console.log("initial this.config.serial_port = " + this.config.serial_port);
-		}
- 	 	this.selected_serial_port = this.config.serial_port;
-		
- 
- 	 	var ama_candidate = null;
-		var pnpid_candidate = null;
- 
- 	 
-		// auto-scan serial ports:
-		if(typeof this.config.serial_port == "undefined"){
-			
-			if(this.config.debug){
-				console.log("doing serial port scan");
-			}
-			try{
-			
-				/*
-				SerialPort.on('close', function (err) {
-				    console.log('port closed', err);  
-				});
-				*/
-			
-				SerialPort.list().then(ports => {
-					if(this.config.debug){
-						console.log("serial ports:");
-						console.log(ports);
-					}
-
-				  //if(this.selected_serial_port == "" || typeof this.selected_serial_port == "undefined"){
-						ports.forEach(function(port) {
-							if(this.config.debug){
-								console.log("__");
-						    console.log(port.path);
-						    console.log(port.pnpId);
-						    console.log(port.manufacturer);
-							}
-							if(typeof port.path == "string"){
-								if(port.path.startsWith("/dev/ttyAMA") && ama_candidate == null){
-									ama_candidate = port.path;
-								}
-							}
-						
-							if(typeof port.pnpId == "string"){
-								if( port.pnpId.includes("CC253") ){
-									if(typeof port.path == 'string'){
-										console.log("CC253 SPOTTED");
-										ama_candidate = port.path;
-									}
-								}
-								if( port.pnpId.includes("if00") ){
-									if(typeof port.path == 'string'){
-										console.log("CC26X2R1 SPOTTED");
-										ama_candidate = port.path;
-									}
-								}
-								/*
-								if( port.pnpId.includes("igbee") ){
-									pnpid_candidate = port.pnpId;
-								}
-								if( port.pnpId.includes("onbee") ){
-									pnpid_candidate = port.pnpId;
-								}*/
-							}
-					  });
-						if(this.config.debug){
-							console.log("pnpid_candidate = " + pnpid_candidate);
-							console.log("ama_candidate = " + ama_candidate);
-						}
-						/*
-						if(pnpid_candidate != null){
-							this.selected_serial_port = "/dev/serial/by-id/" + pnpid_candidate;
-						}
-						*/
-						if(ama_candidate != null){
-							this.selected_serial_port = ama_candidate
-						}
-						else{
-							this.sendPairingPrompt("No USB stick detected");
-							console.error("ERROR: No Zigbee USB stick detected. If this is wrong, then you can force this addons to select a specific USB port in the addon settings.");
-							return;
-						}
-					//}
-				
-					//console.log("this.selected_serial_port = " + this.selected_serial_port);
-
-
-
-			    try {
-						/*
-						SerialPort.close(function (err) {
-						    console.log('port closed', err);
-						});
-						*/
-					
-				    this.really_run_zigbee();
-					
-						/*
-			      this.zigbee2mqtt_subprocess = execFile(
-			        'node',
-			        [this.zigbee2mqtt_file_path],
-			        (error, stdout, stderr) => {
-			          if (error) {
-			            console.log(`error: ${error.message}`);
-			            return;
-			          }
-			          if (stderr) {
-			            console.log(`stderr: ${stderr}`);
-			            return;
-			          }
-			          console.log(`stdout: ${stdout}`);
-			        }
-			      );
-						*/
-						
-			    } catch (error) {
-			      console.error(`Error starting zigbee2mqtt: ${error.message}`);
-			    }
-				
-				
-				});
-			}
-			catch (error) {
-				console.error(error);
-				this.selected_serial_port = "/dev/ttyAMA0";
-			}
-			
-		}
-		else{
-			console.log("selected_serial_port = " + this.selected_serial_port);
-			/*
-	    process.env.ZIGBEE2MQTT_DATA = this.zigbee2mqtt_data_dir_path;
-			process.env.ZIGBEE2MQTT_CONFIG_MQTT_BASE_TOPIC = this.config.prefix;
-			process.env.ZIGBEE2MQTT_CONFIG_MQTT_SERVER = this.config.mqtt;
-			process.env.ZIGBEE2MQTT_CONFIG_SERIAL_PORT = this.config.serial_port;
-			process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_DIRECTORY = this.zigbee2mqtt_configuration_log_path;
-			process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_FILE = '%TIMESTAMP%.txt';
-			process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_LEVEL = 'debug';
-			*/
-
-	    try {
-				/*
-				SerialPort.close(function (err) {
-				    console.log('port closed', err);
-				});
-				*/
-				
-		    this.really_run_zigbee();
-				
-				/*
-	      this.zigbee2mqtt_subprocess = execFile(
-	        'node',
-	        [this.zigbee2mqtt_file_path],
-	        (error, stdout, stderr) => {
-	          if (error) {
-	            console.log(`error: ${error.message}`);
-	            return;
-	          }
-	          if (stderr) {
-	            console.log(`stderr: ${stderr}`);
-	            return;
-	          }
-	          console.log(`stdout: ${stdout}`);
-	        }
-	      );
-				*/
-					
-	    } catch (error) {
-	      console.error(`Error starting zigbee2mqtt: ${error.message}`);
-	    }
-		}
-		
-	
-  }
-
-
-	really_run_zigbee(){
-		if(this.config.debug){
-			console.log("this.selected_serial_port = " + this.selected_serial_port);
 			console.log("this.zigbee2mqtt_configuration_devices_file_path = " + this.zigbee2mqtt_configuration_devices_file_path);
 			console.log("this.zigbee2mqtt_configuration_log_path = " + this.zigbee2mqtt_configuration_log_path);
 		}
     process.env.ZIGBEE2MQTT_DATA = this.zigbee2mqtt_data_dir_path;
 		process.env.ZIGBEE2MQTT_CONFIG_MQTT_BASE_TOPIC = this.config.prefix;
 		process.env.ZIGBEE2MQTT_CONFIG_MQTT_SERVER = this.config.mqtt;
-		process.env.ZIGBEE2MQTT_CONFIG_SERIAL_PORT = this.selected_serial_port;
-		process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_DIRECTORY = this.zigbee2mqtt_configuration_log_path;
-		process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_FILE = '%TIMESTAMP%.txt';
+		process.env.ZIGBEE2MQTT_CONFIG_SERIAL_PORT = this.config.serial_port;
+		
+		process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_FILE = 'Zigbee2MQTT-adapter-%TIMESTAMP%.txt';
 		
 		if(this.config.debug){
 			process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_LEVEL = 'debug';
 		}
+		if(typeof this.config.channel != "undefined"){
+			process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_CHANNEL = this.config.channel;
+		}
 		
-		process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_CHANNEL = this.config.channel;
+		if(this.current_os == 'linux'){
+			if(this.config.debug){
+				process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_DIRECTORY = this.zigbee2mqtt_configuration_log_path;
+			}
+			else{
+				process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_DIRECTORY = '/tmp'; // for normal linux users the log file will be automatically deleted
+			}
+		}
+		else{
+			process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_DIRECTORY = this.zigbee2mqtt_configuration_log_path; // Not sure where /tmp directories are on other OS-es.
+		}
 
 		//process.env.ZIGBEE2MQTT_CONFIG_DEVICES = this.zigbee2mqtt_configuration_devices_file_path;
 		//process.env.ZIGBEE2MQTT_CONFIG_GROUPS = this.zigbee2mqtt_configuration_groups_file_path;
