@@ -8,6 +8,7 @@
 	    	this.content = 'Error loading content';
 
 			this.asked_for_map = false;
+			this.asked_for_update = false;
 			this.previous_map_data = "";
 
 			fetch(`/extensions/${this.id}/views/content.html`)
@@ -73,7 +74,7 @@
 				console.log("Graphviz error: " + error );
 			}
 			*/
-				
+			
 			this.request_devices_list();
 			
 			// }, 3000);
@@ -108,39 +109,62 @@
 			window.zigbee2mqtt_interval = setInterval(function(){
 				//console.log("tick");
 				try{
-					if( this.asked_for_map ){
+					if( this.asked_for_map || this.asked_for_update){
 						//console.log("asked for map was true");
 						
 					  	window.API.postJson(`/extensions/${this.id}/api/ajax`,
-						{"action":"waiting-for-map"}
+						{"action":"poll"}
 
 					        ).then((body) => {
-								//console.log("received waiting for map response");
-								//console.log(body);
-								if(body['map'] != this.previous_map_data && body['map'] != ""){
-									this.previous_map_data = body['map'];
-									//console.log("Received new map data!");
-									//console.log(body['map']);
+								//console.log("received poll response");
+								console.log(body);
+								if(this.asked_for_map){
+									if(body['map'] != this.previous_map_data && body['map'] != ""){
+										this.previous_map_data = body['map'];
+										//console.log("Received new map data!");
+										//console.log(body['map']);
 									
-							      	// Generate the Visualization of the Graph into "svg".
-							      	if(body['map'] != ""){
-										const svg = Viz(body['map'], "svg");
-								      	document.getElementById("extension-zigbee2mqtt-adapter-graphviz-container").innerHTML = svg;
-							      	}
+								      	// Generate the Visualization of the Graph into "svg".
+								      	if(body['map'] != ""){
+											const svg = Viz(body['map'], "svg");
+									      	document.getElementById("extension-zigbee2mqtt-adapter-graphviz-container").innerHTML = svg;
+								      	}
 									
-									// If we received the actual map, stop requesting the map data
-									if(body['map'] != 'digraph G { "Breathe in" -> "Breathe out" "Breathe out" -> "Relax"}'){
-										this.asked_for_map = false;
-										pre.innerText = "";
-										document.getElementById('extension-zigbee2mqtt-adapter-update-map-button').disabled = false;
-									}else{
-										console.log("relax");
+										// If we received the actual map, stop requesting the map data
+										if(body['map'] != 'digraph G { "Breathe in" -> "Breathe out" "Breathe out" -> "Relax"}'){
+											this.asked_for_map = false;
+											pre.innerText = "";
+											document.getElementById('extension-zigbee2mqtt-adapter-update-map-button').disabled = false;
+										}else{
+											console.log("relax");
+										}
+									}
+									else{
+										//console.log("not ok response while getting items list");
+										pre.innerText = body['status'];
 									}
 								}
-								else{
-									//console.log("not ok response while getting items list");
-									pre.innerText = body['status'];
+								
+								if(this.asked_for_update){
+									if(body['waiting_for_update'] == false){
+										
+										if(body['update_result'] == true){
+											pre.innerText = "Updated succesfully!";
+										}
+										else{
+											pre.innerText = "Update failed!";
+										}
+										
+										this.asked_for_update = false;
+										this.request_devices_list();
+										
+									}
+									else{
+										//console.log("not ok response while getting items list");
+										pre.innerText = body['status'];
+									}
 								}
+								
 
 					        }).catch((e) => {
 					  			//console.log("Error getting timer items: " + e.toString());
@@ -222,7 +246,7 @@
 		
 				// Loop over all items
 				for( var item in items ){
-					console.log(items[item]);
+					//console.log(items[item]);
 					var clone = original.cloneNode(true);
 					clone.removeAttribute('id');
 					
@@ -321,11 +345,14 @@
 						s.appendChild(t);                                   
 						clone.querySelectorAll('.extension-zigbee2mqtt-adapter-friendly-name' )[0].appendChild(s);
 						
-						var s = document.createElement("span");
-						//s.classList.add('extension-zigbee2mqtt-adapter-friendly-name');             
-						var t = document.createTextNode( "v. " +  items[item]['software_build_id'] );
-						s.appendChild(t);                                   
-						clone.querySelectorAll('.extension-zigbee2mqtt-adapter-version' )[0].appendChild(s);
+						if(typeof items[item]['software_build_id'] != "undefined"){
+							var s = document.createElement("span");
+							//s.classList.add('extension-zigbee2mqtt-adapter-friendly-name');             
+							var t = document.createTextNode( "v. " +  items[item]['software_build_id'] );
+							s.appendChild(t);                                   
+							clone.querySelectorAll('.extension-zigbee2mqtt-adapter-version' )[0].appendChild(s);
+						}
+
 						
 						
 						
@@ -353,6 +380,11 @@
 					});
 					
 					
+					const read_about_risks_button = clone.querySelectorAll('.extension-zigbee2mqtt-adapter-read-about-risks')[0];
+					read_about_risks_button.addEventListener('click', (event) => {
+						document.getElementById('extension-zigbee2mqtt-adapter-content').classList = ['extension-zigbee2mqtt-adapter-show-tab-tutorial'];
+					});
+					
 					
 					const cancel_update_button = clone.querySelectorAll('.extension-zigbee2mqtt-adapter-overlay-cancel-update-button')[0];
 					cancel_update_button.addEventListener('click', (event) => {
@@ -361,6 +393,10 @@
 						var parent3 = target.parentElement.parentElement.parentElement;
 						parent3.classList.remove("update");
 					});
+					
+					
+					
+					
 					
 					
 					const start_update_button = clone.querySelectorAll('.extension-zigbee2mqtt-adapter-overlay-start-update-button')[0];
@@ -391,21 +427,23 @@
 						// Send update request to backend
 						window.API.postJson(
 							`/extensions/${this.id}/api/ajax`,
-							{'action':'update','friendly_name':items[item]['friendly_name']}
+							{'action':'update-device','friendly_name':items[item]['friendly_name']}
 						).then((body) => { 
 							console.log("Update item reaction: ");
 							console.log(body);
 							pre.innerText = body['update'];
+							this.asked_for_update = true;
 
 						}).catch((e) => {
-							console.log("zigbee2mqtt: error in start update button handler");
+							console.log("zigbee2mqtt: postJson error while requesting update start");
 							pre.innerText = e.toString();
 						});
 					
 				  	});
 					
 
-
+					/*
+					// Force-delete device from zigbee network feature. Unfinished, may just be confusing.
 					// Add delete button click event
 					const delete_button = clone.querySelectorAll('.extension-zigbee2mqtt-adapter-item-delete-button')[0];
 					delete_button.addEventListener('click', (event) => {
@@ -433,6 +471,7 @@
 					
 					
 				  	});
+					*/
 					
 					//clone.classList.add('extension-zigbee2mqtt-type-' + type);
 					//clone.querySelectorAll('.extension-zigbee2mqtt-type' )[0].classList.add('extension-zigbee2mqtt-icon-' + type);
@@ -444,10 +483,12 @@
 					list.append(clone);
 				} // end of for loop
 			
+				/*
 				try{
 					const reading_list = document.getElementsByClassName('extension-zigbee2mqtt-adapter-read-about-risks');
 					for( var link in reading_list ){
-						reading_list[link].addEventListener('click', (event) => {
+						const element = reading_list[link]
+						element.addEventListener('click', (event) => {
 							//console.log(event);
 							document.getElementById('extension-zigbee2mqtt-adapter-content').classList = ['extension-zigbee2mqtt-adapter-show-tab-tutorial'];
 						});
@@ -457,6 +498,7 @@
 					// statements to handle any exceptions
 					console.log("error creating reading list items: " + e); // pass exception object to error handler
 				}
+				*/
 			
 			}
 			catch (e) {
