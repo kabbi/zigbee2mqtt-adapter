@@ -169,7 +169,7 @@ class Zigbee2MQTTHandler extends APIHandler {
 						"force": true
 					};
 					//console.log("delete message: " + delete_message);
-					this.adapter.publishMessage(update_topic, delete_message);
+					this.adapter.publishMessage(delete_topic, delete_message);
 
 					return new APIResponse({
 						status: 200,
