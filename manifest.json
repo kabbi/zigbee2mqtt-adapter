@@ -8,7 +8,7 @@
       ],
       "js": [
         "js/extension.js",
-				"js/graphviz.js"
+        "js/graphviz.js"
       ]
     }
   ],
@@ -27,13 +27,13 @@
   "name": "zigbee2mqtt-adapter",
   "options": {
     "default": {
-			"local_zigbee2mqtt": true,
+      "local_zigbee2mqtt": true,
       "auto_update": true,
       "mqtt": "mqtt://localhost",
       "prefix": "zigbee2mqtt",
       "serial_port": "",
-			"channel": 11,
-			"ikea_test_server": true,
+      "channel": 11,
+      "ikea_test_server": true,
       "debug": false
     },
     "schema": {
@@ -60,7 +60,9 @@
           "description": "The serial port ID of the zigbee USB stick you are using. If you leave it empty it will try to auto-detect the correct port. An example you could try is '/dev/ttyACM0'."
         },
         "channel": {
-          "type": "string",
+          "type": "integer",
+          "minumum": 11,
+          "maximum": 26,
           "description": "The wireless channel you want to the Zigbee network to use. If you change this, you will have to pair all your devices again. Suggested options are 11, 15, 20, or 25. The default and minimum is 11. The maximum is 26, although not all Zigbee devices support that channel."
         },
         "ikea_test_server": {
@@ -79,8 +81,8 @@
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
-		"images/*.png",
-		"images/*.gif",
+    "images/*.png",
+    "images/*.gif",
     "js/*.js",
     "views/*.html"
   ]
