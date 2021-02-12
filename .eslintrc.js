@@ -54,7 +54,7 @@ module.exports = {
     ],
     'indent': [
       'error',
-      2,
+      'tab',
       {
         'ArrayExpression': 'first',
         'CallExpression': {
