@@ -196,51 +196,51 @@ class ExposesDeviceGenerator {
 			switch (expose.type) {
 				// Generic type binary
 				case 'binary':
-				if (expose.access === this.ACCESS_MASK_ACTION) {
-					device.actions[expose.name] = this.binaryPropertyToBooleanAction(expose);
-				} else {
-					device.properties[expose.name] = this.binaryPropertyToBooleanProperty(expose);
-				}
-				break;
+    				if (expose.access === this.ACCESS_MASK_ACTION) {
+    					device.actions[expose.name] = this.binaryPropertyToBooleanAction(expose);
+    				} else {
+    					device.properties[expose.name] = this.binaryPropertyToBooleanProperty(expose);
+    				}
+    				break;
 			
 				
 				// Generic type numeric - integer variant
 				case 'numeric':
-				if (expose.access === this.ACCESS_MASK_ACTION) {
-					device.actions[expose.name] = this.numericPropertyToIntegerAction(expose);
-				} else {
-					device.properties[expose.name] = this.numericPropertyToIntegerProperty(expose);
-				}
-				break;
+    				if (expose.access === this.ACCESS_MASK_ACTION) {
+    					device.actions[expose.name] = this.numericPropertyToIntegerAction(expose);
+    				} else {
+    					device.properties[expose.name] = this.numericPropertyToIntegerProperty(expose);
+    				}
+    				break;
 				
 				
 				case 'float':
-				if (expose.access === this.ACCESS_MASK_ACTION) {
-					device.actions[expose.name] = this.numericPropertyToFloatAction(expose);
-				} else {
-					device.properties[expose.name] = this.numericPropertyToFloatProperty(expose);
-				}
-				break;
+    				if (expose.access === this.ACCESS_MASK_ACTION) {
+    					device.actions[expose.name] = this.numericPropertyToFloatAction(expose);
+    				} else {
+    					device.properties[expose.name] = this.numericPropertyToFloatProperty(expose);
+    				}
+    				break;
 			
 			
 				// Generic type enum
 				case 'enum':					
-				if (expose.access === this.ACCESS_MASK_ACTION) {
-					device.actions[expose.name] = this.enumPropertyToStringAction(expose);
-				} else {
-					device.properties[expose.name] = this.enumPropertyToStringProperty(expose);
-				}
-				break;
+    				if (expose.access === this.ACCESS_MASK_ACTION) {
+    					device.actions[expose.name] = this.enumPropertyToStringAction(expose);
+    				} else {
+    					device.properties[expose.name] = this.enumPropertyToStringProperty(expose);
+    				}
+    				break;
 			
 			
 				// Generic type text
 				case 'text':
-				if (expose.access === this.ACCESS_MASK_ACTION) {
-					device.actions[expose.name] = this.textPropertyToStringAction(expose);
-				} else {
-					device.properties[expose.name] = this.textPropertyToStringProperty(expose);
-				}
-				break;
+    				if (expose.access === this.ACCESS_MASK_ACTION) {
+    					device.actions[expose.name] = this.textPropertyToStringAction(expose);
+    				} else {
+    					device.properties[expose.name] = this.textPropertyToStringProperty(expose);
+    				}
+    				break;
 			
 			}
 			

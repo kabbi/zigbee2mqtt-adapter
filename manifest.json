@@ -8,7 +8,7 @@
       ],
       "js": [
         "js/extension.js",
-				"js/graphviz.js"
+        "js/graphviz.js"
       ]
     }
   ],
@@ -27,13 +27,13 @@
   "name": "zigbee2mqtt-adapter",
   "options": {
     "default": {
-			"local_zigbee2mqtt": true,
+      "local_zigbee2mqtt": true,
       "auto_update": true,
       "mqtt": "mqtt://localhost",
       "prefix": "zigbee2mqtt",
       "serial_port": "",
-			"channel": 11,
-			"ikea_test_server": true,
+      "channel": 11,
+      "ikea_test_server": true,
       "debug": false
     },
     "schema": {
@@ -46,6 +46,15 @@
         "auto_update": {
           "type": "boolean",
           "description": "If the addon manages its own version of Zigbee2MQTT, then enabling this will allow it to try and keep zigbee2MQTT updated to the latest version. This may allow the latest Zigbee devices to be supported. It does come with a small risk that if there would be something wrong with Zigbee2MQTT, then this addon may not start properly."
+        },
+        "manual_toggle_response": {
+          "description": "If you manually power off a light bulb, the lightbulb can be either set to a 'disconnected' state (while still showing its state as ON), or it could simply show the lightbulb as OFF instead. The two can also be combined, where the device is both toggled off, and then set as disconnected. The default is 'both'.",
+          "enum": [
+            "disconnected",
+            "toggle off",
+            "both"
+          ],
+          "type": "string"
         },
         "mqtt": {
           "type": "string",
@@ -60,8 +69,26 @@
           "description": "The serial port ID of the zigbee USB stick you are using. If you leave it empty it will try to auto-detect the correct port. An example you could try is '/dev/ttyACM0'."
         },
         "channel": {
-          "type": "string",
-          "description": "The wireless channel you want to the Zigbee network to use. If you change this, you will have to pair all your devices again. Suggested options are 11, 15, 20, or 25. The default and minimum is 11. The maximum is 26, although not all Zigbee devices support that channel."
+          "description": "The wireless channel you want to the Zigbee network to use. If you change this, you will have to pair all your devices again. Suggested options are 11, 15, 20, or 25. The default and minimum is 11. The maximum is 26, although not all Zigbee devices support that channel.",
+          "enum": [
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21",
+            "22",
+            "23",
+            "24",
+            "25",
+            "26",
+          ],
+          "type": "string"
         },
         "ikea_test_server": {
           "type": "boolean",
@@ -75,12 +102,12 @@
     }
   },
   "short_name": "zigbee2mqtt",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
-		"images/*.png",
-		"images/*.gif",
+    "images/*.png",
+    "images/*.gif",
     "js/*.js",
     "views/*.html"
   ]
