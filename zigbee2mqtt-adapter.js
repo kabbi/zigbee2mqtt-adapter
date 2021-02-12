@@ -636,11 +636,13 @@ class ZigbeeMqttAdapter extends Adapter {
                 
                 const data_transmission_property = device.findProperty('data_transmission');
                 if (!data_transmission_property) {
-                    console.log("- strange, data transmission property not found");
+                    if (this.config.debug) {
+                        console.log("- strange, data transmission property not found");
+                    }
                 }
                 else{
-                    console.log("data_transmission_property value:");
-                    console.log(data_transmission_property.value);
+                    //console.log("data_transmission_property value:");
+                    //console.log(data_transmission_property.value);
                     if(data_transmission_property.value == false){
                         if (this.config.debug) {
                             console.log("receiving data has been prevented by data transmission feature");
