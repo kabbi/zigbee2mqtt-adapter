@@ -997,11 +997,11 @@ class ZigbeeMqttAdapter extends Adapter {
                 'value': value
     		};
 
-            if (this.config.debug) {
+            //if (this.config.debug) {
                 //console.log("new property details:");
                 //console.log(desc);
                 //console.log("initial value: " + value);
-            }
+            //}
     		var device = this.getDevice(device_id);
     		const property = new MqttProperty(device, key, desc);
     		device.properties.set(key, property);
@@ -1009,10 +1009,10 @@ class ZigbeeMqttAdapter extends Adapter {
     			console.log("new property should now be generated");
     		}
 
-    		//this.handleDeviceAdded(device);
-    		//if (this.config.debug) {
-    		//	console.log("- handleDeviceAdded has been called again");
-    		//}
+    		this.handleDeviceAdded(device);
+    		if (this.config.debug) {
+    			console.log("- handleDeviceAdded has been called again");
+    		}
             
 		}
         catch (error){
