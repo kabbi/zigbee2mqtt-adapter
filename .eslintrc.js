@@ -121,7 +121,6 @@ module.exports = {
     'no-self-compare': 'error',
     'no-sequences': 'error',
     'no-shadow-restricted-names': 'error',
-    'no-tabs': 'error',
     'no-trailing-spaces': 'error',
     'no-undefined': 'error',
     'no-unmodified-loop-condition': 'error',
