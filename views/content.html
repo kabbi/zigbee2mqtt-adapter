@@ -26,7 +26,7 @@
 							<div class="extension-zigbee2mqtt-adapter-description"></div>
 						</div>
 						<div class="extension-zigbee2mqtt-adapter-line2">
-							<div class="extension-zigbee2mqtt-adapter-friendly-name"></div>
+							<div class="extension-zigbee2mqtt-adapter-zigbee-id"></div>
 							<div class="extension-zigbee2mqtt-adapter-version"></div>
 						</div>
 					</div>
@@ -98,8 +98,12 @@
 					<p>Any interruption of the update process could damage your device. It's recommended to install fresh batteries in a device before you start a firmware update. Also make sure you don't turn off your Webthings Gateway during the proces.</p>
 					<p style="font-style:italic">This addon is not associated with any manufacturer of Zigbee devices. Use the update functionality at your own risk.</p>
 					<p>&nbsp;</p>
-					<h4>Removing devices from your network</h4>
-					<p>In theory, when you remove a thing from the gateway, it will also be unpaired from your Zigbee network. However, your Zigbee device will likely still contain your Zigbee network settings. If you want to sell your device, make sure to do a full reset. Details on how to do this may be found on the website of the manufacturer.</p>
+					<h4>Further details</h4>
+					<!--<p>In theory, when you remove a thing from the gateway, it will also be unpaired from your Zigbee network. However, your Zigbee device will likely still contain your Zigbee network settings. If you want to sell your device, make sure to do a full reset. Details on how to do this may be found on the website of the manufacturer.</p>-->
+                    <ul>
+                        <li>A Link quality below 20 is considered bad.</li>
+                        <li>If you disable data transission, any data coming from the device will be ignored. This is a privacy feature, allowing you to stop recording data for a while.</li>
+                    </ul>
 					
 				</div>
 			</div>

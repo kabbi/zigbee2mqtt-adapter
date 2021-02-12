@@ -551,8 +551,6 @@
 }
 
 
-
-
 @media screen and (min-width: 641px) {
 	.extension-zigbee2mqtt-adapter-line2{
 		width:auto;
@@ -562,7 +560,7 @@
 		width:auto;
 		min-width: 200px;
 	}
-	.extension-zigbee2mqtt-adapter-friendly-name{
+	.extension-zigbee2mqtt-adapter-zigbee-id{
 		margin-right:1rem;
 	}
 	

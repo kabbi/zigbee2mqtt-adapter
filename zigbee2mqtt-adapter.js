@@ -215,6 +215,7 @@ class ZigbeeMqttAdapter extends Adapter {
 								port: 443,
 								path: '/repos/Koenkk/zigbee2mqtt/releases/latest',
 								method: 'GET',
+                                timeout: 3000,
 								headers: {
 									'X-Forwarded-For': 'xxx',
 									'User-Agent': 'Node',
@@ -313,6 +314,8 @@ class ZigbeeMqttAdapter extends Adapter {
 
 					let base_config = "homeassistant: false\n" +
 						"permit_join: false\n" +
+                        "devices: devices.yaml\n" +
+                        "groups: groups.yaml\n" +
 						"mqtt:\n" +
 						"  base_topic: zigbee2mqtt\n" +
 						"  server: 'mqtt://localhost'\n" +
@@ -320,11 +323,15 @@ class ZigbeeMqttAdapter extends Adapter {
 						"  port: /dev/ttyACM0\n" +
 						"advanced:\n" +
 						"  availability_timeout: " + this.availability_interval + "\n" +
+                        //"  log_output: []\n" +
+                        "  legacy_api: false\n" +
 						"device_options:\n" +
-						"  simulated_brightness: true\n"; +
-					    "    delta: 2\n"; +
-					    "    interval:100\n"; +
+						"  simulated_brightness:\n" +
+					    "    delta: 2\n" +
+					    "    interval: 100\n" +
 					    "  legacy: false\n";
+                        //"  filtered_attributes: ['Data transmission']";
+                        
 
 					fs.writeFile(this.zigbee2mqtt_configuration_file_path, base_config, (err) => {
 						if (err) {
@@ -355,9 +362,12 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 	run_zigbee2mqtt() {
+        if (this.config.debug) {
+            console.log("in run_zigbee2mqtt");
+        }
 		this.check_if_config_file_exists();
 		setTimeout(this.really_run_zigbee2mqtt.bind(this), 10000); // wait 10 seconds before really starting Zigbee2MQTT, to make sure serial port has been released.
-	}
+    }
 
 
 
@@ -373,6 +383,7 @@ class ZigbeeMqttAdapter extends Adapter {
 		process.env.ZIGBEE2MQTT_CONFIG_MQTT_SERVER = this.config.mqtt;
 		process.env.ZIGBEE2MQTT_CONFIG_SERIAL_PORT = this.config.serial_port;
 		process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LEGACY_API = false;
+        process.env.ZIGBEE2MQTT_CONFIG_MQTT_BASE_TOPIC = this.config.prefix;
 
 		process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_FILE = 'Zigbee2MQTT-adapter-%TIMESTAMP%.txt';
 
@@ -511,13 +522,13 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 			if (data == "offline" || data == "online") {
-				var friendly_name = topic.split('/')[1];
-				//console.log("Received availability message. " + friendly_name + " is now " + data);
+				const zigbee_id = topic.split('/')[1];
+                const device_id = 'z2m-' + zigbee_id;
 
-				const device = this.getDevice(friendly_name); // try to get the device
+				const device = this.getDevice(device_id); // try to get the device
 				if (!device) {
 					if (this.config.debug) {
-						console.log("- strange, got availability data for a device that wasn't created yet: " + friendly_name);
+						console.log("- strange, got availability data for a device that wasn't created yet: " + device_id);
 					}
 					return;
 				} else {
@@ -529,9 +540,9 @@ class ZigbeeMqttAdapter extends Adapter {
 					/*
 					else{
 						console.log("Device DID have a state property");
-						if (this.ignored_first_availability_device_list.indexOf(friendly_name) == -1) { // the first incoming availability message may be wrong, so ignore it.
+						if (this.ignored_first_availability_device_list.indexOf(zigbee_id) == -1) { // the first incoming availability message may be wrong, so ignore it.
 							console.log("- Adding to ignored_first_availability_device_list, and ignoring this availability update.");
-							this.ignored_first_availability_device_list.push(friendly_name);
+							this.ignored_first_availability_device_list.push(zigbee_id);
 							return;
 						}
 					}
@@ -554,7 +565,7 @@ class ZigbeeMqttAdapter extends Adapter {
 						// Set to disconnected
 						if (this.config.manual_toggle_response == "disconnected" || this.config.manual_toggle_response == "both") {
 							//console.log("setting device.connected to false");
-							this.devices[friendly_name].connected = false;
+							this.devices[device_id].connected = false;
 							device.connectedNotify(false);
 						}
 
@@ -564,9 +575,9 @@ class ZigbeeMqttAdapter extends Adapter {
 						}
 						//console.log("setting device.connected to truey");
 
-						this.devices[friendly_name].connected = true;
+						this.devices[device_id].connected = true;
 						device.connectedNotify(true);
-						this.publishMessage(`${friendly_name}/get`, { // TODO: does this need a check to see if the thing even has the 'state' property? Or is shooting first and asking questions later fine?
+						this.publishMessage(`${zigbee_id}/get`, { // TODO: does this need a check to see if the thing even has the 'state' property? Or is shooting first and asking questions later fine?
 							"state": ""
 						});
 
@@ -606,17 +617,37 @@ class ZigbeeMqttAdapter extends Adapter {
 		if (!topic.startsWith(this.config.prefix + '/bridge')) {
 			try {
 
-				const friendly_name = topic.replace(this.config.prefix + '/', ''); // extract the target device ID
+				const zigbee_id = topic.split('/')[1];
+                const device_id = 'z2m-' + zigbee_id;
 				if (this.config.debug) {
-					console.log("- friendly_name = " + friendly_name);
+					console.log("- zigbee_id = " + zigbee_id);
 				}
-				const device = this.getDevice(friendly_name); // try to get the device
+				const device = this.getDevice(device_id); // try to get the device
 				if (!device) {
 					if (this.config.debug) {
-						console.log("- strange, that device could not be found: " + friendly_name);
+						console.log("- strange, that device could not be found: " + device_id);
 					}
 					return;
 				}
+                
+                // data transmission allowed check
+                //console.log(device);
+                
+                const data_transmission_property = device.findProperty('data_transmission');
+                if (!data_transmission_property) {
+                    console.log("- strange, data transmission property not found");
+                }
+                else{
+                    console.log("data_transmission_property value:");
+                    console.log(data_transmission_property.value);
+                    if(data_transmission_property.value == false){
+                        if (this.config.debug) {
+                            console.log("receiving data has been prevented by data transmission feature");
+                        }
+                        return;
+                    }
+                }
+                
 				if (msg.action && device.events.get(msg.action)) { // if there's an action (event), and the action exists in the device
 					const event = new Event(
 						device,
@@ -629,13 +660,14 @@ class ZigbeeMqttAdapter extends Adapter {
 					var property = device.findProperty(key);
 					if (!property) {
 						if (this.config.debug) {
-							console.log("- strange, that property could not be found: " + key);
+							console.log("- that property could not be found: " + key);
 						}
+                        
 						if (key != "update" && typeof msg[key] != "object") { // && key != "update_available"
 							if (this.config.debug) {
 								console.log("- attempting to create missing property");
 							}
-							this.attempt_new_property(friendly_name, key, msg[key]);
+							this.attempt_new_property(device_id, key, msg[key]);
 						} else {
 							if (this.config.debug) {
 								console.log("- ignoring update property");
@@ -658,7 +690,7 @@ class ZigbeeMqttAdapter extends Adapter {
 					if (key == 'update_available') {
 						//console.log("found update_available information, storing in device_overview.");
 						if (!this.waiting_for_update) {
-							this.devices_overview[friendly_name]['update_available'] = msg[key];
+							this.devices_overview[zigbee_id]['update_available'] = msg[key];
 						}
 
 					}
@@ -742,7 +774,7 @@ class ZigbeeMqttAdapter extends Adapter {
 					device.notifyPropertyChanged(property);
 				}
 
-				this.devices[friendly_name].connected = true;
+				this.devices[device_id].connected = true;
 				device.connectedNotify(true);
 
 
@@ -783,8 +815,8 @@ class ZigbeeMqttAdapter extends Adapter {
 		else if (topic.endsWith('/bridge/response/device/ota_update/update')) {
 			if (msg['status'] == 'ok') {
 				if (msg['data']['from']['software_build_id'] != msg['data']['to']['software_build_id']) {
-					const friendly = msg['data']['id'];
-					this.devices_overview[friendly]['update_available'] = false;
+					const zigbee_id = msg['data']['id'];
+					this.devices_overview[zigbee_id]['update_available'] = false;
 					this.update_result = 'ok';
 				} else {
 					this.update_result = 'failed';
@@ -802,6 +834,10 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 	publishMessage(topic, msg) {
+        if(topic.startsWith('z2m-')){
+            topic = topic.replace('z2m-','');
+        }
+        
 		if (this.config.debug) {
 			console.log('in pubmsg. Topic & message: ' + topic);
 			console.log(msg);
@@ -815,12 +851,12 @@ class ZigbeeMqttAdapter extends Adapter {
 		try {
 			if (this.config.debug) {
 				console.log('in addDevice.');
-				//console.log(info);
-				console.log("subscribing to: " + this.config.prefix + "/" + info.friendly_name);
+				console.log(info);
+				console.log("subscribing to: " + this.config.prefix + "/" + info.ieee_address);
 			}
-			this.client.subscribe(`${this.config.prefix}/${info.friendly_name}`);
-			this.client.subscribe(`${this.config.prefix}/${info.friendly_name}/availability`);
-			//this.client.subscribe(this.config.prefix + "/" + info.friendly_name);
+			this.client.subscribe(`${this.config.prefix}/${info.ieee_address}`);
+			this.client.subscribe(`${this.config.prefix}/${info.ieee_address}/availability`);
+			//this.client.subscribe(this.config.prefix + "/" + info.ieee_address);
 
 		} catch (error) {
 			console.log("Early error in addDevice: " + error);
@@ -829,9 +865,9 @@ class ZigbeeMqttAdapter extends Adapter {
 
 		try {
 
-			if (info.hasOwnProperty('model_id') && !this.devices_overview.hasOwnProperty(info.friendly_name)) {
-				this.devices_overview[info.friendly_name] = {
-					'friendly_name': info.friendly_name,
+			if (info.hasOwnProperty('model_id') && !this.devices_overview.hasOwnProperty('z2m-' + info.ieee_address)) {
+				this.devices_overview[info.ieee_address] = { // This data is eventually sent to the UI
+					'zigbee_id': info.ieee_address,
 					'update_available': false,
 					'model_id': info.model_id,
 					'description': info.definition.description,
@@ -840,11 +876,11 @@ class ZigbeeMqttAdapter extends Adapter {
 				};
 			}
 
-			const existingDevice = this.getDevice(info.friendly_name);
+			const existingDevice = this.getDevice('z2m-' + info.ieee_address);
 			if (existingDevice && existingDevice.modelId === info.model_id) {
 				if (this.config.debug) {
-					console.info(`Device ${info.friendly_name} already exists`);
-					this.try_getting_state(info.friendly_name);
+					console.info(`Device z2m-${info.ieee_address} already exists`);
+					//this.try_getting_state(info.ieee_address);
 				}
 				return;
 			}
@@ -856,23 +892,31 @@ class ZigbeeMqttAdapter extends Adapter {
 				if (detectedDevice) {
 					deviceDefinition = detectedDevice;
 					if (this.config.debug) {
-						console.info(`Device ${info.friendly_name} created from Exposes API`);
+						console.info(`Device z2m-${info.ieee_address} created from Exposes API`);
 					}
 				}
-			} else {
+			} 
+            else {
 				if (this.config.debug) {
-					console.info(`Device ${info.friendly_name} created from devices.js`);
+					console.info(`Device z2m-${info.ieee_address} created from devices.js`);
 				}
 			}
 
 			if (deviceDefinition) {
-				const device = new MqttDevice(this, info.friendly_name, info.model_id, deviceDefinition);
+				const device = new MqttDevice(this, 'z2m-' + info.ieee_address, info.model_id, deviceDefinition);
 				this.handleDeviceAdded(device);
+                const zigbee_id = info.ieee_address;
 				if (deviceDefinition.properties.state) { // If the device has a state property, then initially set it to disconnected.
 					device.connectedNotify(false);
-					const nice_name = info.friendly_name;
-					let timerId = setTimeout(() => this.try_getting_state(nice_name), 11000); // 11 seconds after creating the device, an extra /get will be used to try and get the actual state
+					let timerId = setTimeout(() => this.try_getting_state(zigbee_id), 11000); // 11 seconds after creating the device, an extra /get will be used to try and get the actual state
 				}
+                
+                // Add data transmission property
+                if (this.config.debug) {
+                    console.log("adding data transmission property");
+                }
+                this.attempt_new_property('z2m-' + zigbee_id, "data_transmission", true, false); // device name, property name, value (true) and readOnly (false)
+                    
 			}
 
 		} catch (error) {
@@ -883,12 +927,12 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 
-	try_getting_state(friendly_name) {
+	try_getting_state(zigbee_id) {
 		try {
 			if (this.config.debug) {
-				console.log("in try_getting_state for device, with friendly_name: " + friendly_name);
+				console.log("in try_getting_state for device, with zigbee_id: " + zigbee_id);
 			}
-			const existingDevice = this.getDevice(friendly_name);
+			const existingDevice = this.getDevice('z2m-' + zigbee_id);
 			if (existingDevice) {
 				//console.log("-device existed");
 				//console.log(existingDevice);
@@ -899,7 +943,7 @@ class ZigbeeMqttAdapter extends Adapter {
 						if (this.config.debug) {
 							console.log("- this device has a state property, so will request it's actual state from zigbee2mqtt");
 						}
-						this.publishMessage(`${friendly_name}/get`, {
+						this.publishMessage(`${zigbee_id}/get`, {
 							"state": ""
 						});
 					}
@@ -915,37 +959,52 @@ class ZigbeeMqttAdapter extends Adapter {
 
 	// Sometimes incoming date has values that are not reflected in existing properties. 
 	// In those cases, this will attempts to add the missing properties.
-	attempt_new_property(device_id, key, value) {
-		if (this.config.debug) {
-			console.log("in attempt_new_property for device: " + device_id + " and key: " + key);
-			console.log(value);
-		}
+	attempt_new_property(device_id, key, value, read_only = true) {
+		try{
+            if (this.config.debug) {
+    			console.log("in attempt_new_property for device: " + device_id + " and key: " + key);
+    			console.log(value);
+    		}
 
-		var type = "string";
-		if (Number.isFinite(value)) {
-			type = "number";
-		} else if (typeof value === 'boolean') {
-			type = "boolean";
-		}
+    		var type = "string";
+    		if (Number.isFinite(value)) {
+    			type = "number";
+    		} 
+            else if (typeof value === 'boolean') {
+    			type = "boolean";
+    		}
 
-		var desc = {
-			'title': this.applySentenceCase(key),
-			'description': key,
-			'readOnly': true,
-			'type': type
-		};
+    		var desc = {
+                'name': key,
+    			'title': this.applySentenceCase(key),
+    			'description': this.applySentenceCase(key),
+    			'readOnly': read_only,
+    			'type': type,
+                'value': value
+    		};
 
-		var device = this.getDevice(device_id);
-		const property = new MqttProperty(device, key, desc);
-		device.properties.set(key, property);
-		if (this.config.debug) {
-			console.log("new property should now be generated");
-		}
+            if (this.config.debug) {
+                console.log("new property details:");
+                console.log(desc);
+                console.log("initial value: " + value);
+            }
+    		var device = this.getDevice(device_id);
+    		const property = new MqttProperty(device, key, desc);
+    		device.properties.set(key, property);
+    		if (this.config.debug) {
+    			console.log("new property should now be generated");
+    		}
 
-		this.handleDeviceAdded(device);
-		if (this.config.debug) {
-			console.log("- handleDeviceAdded has been called again");
+    		this.handleDeviceAdded(device);
+    		if (this.config.debug) {
+    			console.log("- handleDeviceAdded has been called again");
+    		}
+            
 		}
+        catch (error){
+            console.log("Error in attempt_new_property: " + error);
+        }
+        
 	}
 
 
@@ -961,13 +1020,16 @@ class ZigbeeMqttAdapter extends Adapter {
 				resolve(device);
 
 				try {
-					this.client.publish(`${this.config.prefix}/bridge/request/device/remove`, '{"id": "' + deviceId + '"}');
+                    if(deviceId.startsWith('z2m-')){
+                        const zigbee_id = deviceId.replace('z2m-','');
+                        this.client.publish(`${this.config.prefix}/bridge/request/device/remove`, '{"id": "' + zigbee_id + '"}');
+                    }
 				} catch (error) {
 					console.log(error);
 				}
 
-
-			} else {
+			} 
+            else {
 				reject(`Device: ${deviceId} not found.`);
 			}
 		});
@@ -999,7 +1061,8 @@ class ZigbeeMqttAdapter extends Adapter {
 				console.log("setting permitJoin back to off");
 			}
 			this.client.publish(`${this.config.prefix}/bridge/request/permit_join`, '{"value": false}'); // set permitJoin back to off
-		} else {
+		} 
+        else {
 			if (this.config.debug) {
 				console.log("not setting permitJoin back to off yet, something caused a time extension");
 			}
@@ -1017,6 +1080,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 	async unload() {
+        this.z2m_started = false;
 		if (this.config.debug) {
 			console.log("in unload");
 		}
@@ -1155,10 +1219,14 @@ class MqttProperty extends Property {
 							}
 						}
 					}
+                    
+                    // Publish to Zigbee network
+                    if(this.name != "data_transmission"){ // all properties except the data_transmission property
+    					this.device.adapter.publishMessage(`${this.device.id}/set`, {
+    						[this.name]: toMqtt(updatedValue),
+    					});
+                    }
 
-					this.device.adapter.publishMessage(`${this.device.id}/set`, {
-						[this.name]: toMqtt(updatedValue),
-					});
 					resolve(updatedValue);
 					this.device.notifyPropertyChanged(this);
 				})

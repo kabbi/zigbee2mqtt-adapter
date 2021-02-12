@@ -161,9 +161,7 @@ class ExposesDeviceGenerator {
 	
 	parse_property(expose, device, property_names_list){
 		//console.log("+");
-		//console.log(expose);
 		if(typeof expose['type'] != "undefined"){
-			//console.log("++");
 			
 			// Decide between float and integer
 			if(expose['type'] == "numeric"){
@@ -187,11 +185,6 @@ class ExposesDeviceGenerator {
 				}
 				
 			}
-			
-			
-			//console.log("  EXPOSE ADDED??");
-			//device.properties[expose.name]['origin'] = "expose";
-			//console.log(device.properties[expose.name]);
 			
 			switch (expose.type) {
 				// Generic type binary
@@ -374,90 +367,6 @@ class ExposesDeviceGenerator {
 			//console.log("= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = ");
 			//console.log("new_device is now:");
 			//console.log(device);
-		
-		
-			/*
-			for (const expose of info.definition.exposes) {
-				switch (expose.type) {
-					// Generic type binary
-					case 'binary':
-					if (expose.access === this.ACCESS_MASK_ACTION) {
-						device.actions[expose.name] = this.binaryPropertyToBooleanAction(expose);
-					} else {
-						device.properties[expose.name] = this.binaryPropertyToBooleanProperty(expose);
-					}
-					break;
-				
-					// Generic type numeric
-					case 'numeric':
-					if (expose.access === this.ACCESS_MASK_ACTION) {
-						device.actions[expose.name] = this.numericPropertyToIntegerAction(expose);
-					} else {
-						device.properties[expose.name] = this.numericPropertyToIntegerProperty(expose);
-					}
-					break;
-				
-					// Generic type enum
-					case 'enum':
-					if (expose.access === this.ACCESS_MASK_ACTION) {
-						device.actions[expose.name] = this.enumPropertyToStringAction(expose);
-					} else {
-						device.properties[expose.name] = this.enumPropertyToStringProperty(expose);
-					}
-					break;
-				
-					// Generic type text
-					case 'text':
-					if (expose.access === this.ACCESS_MASK_ACTION) {
-						device.actions[expose.name] = this.textPropertyToStringAction(expose);
-					} else {
-						device.properties[expose.name] = this.textPropertyToStringProperty(expose);
-					}
-					break;
-				
-					// Specific type light
-					case 'light':
-					device['@type'].push('Light');
-					for (const feature of expose.features) {
-						switch (feature.name) {
-							case 'state':
-							device.properties[feature.property] = this.binaryPropertyToBooleanProperty(feature);
-							device.properties[feature.property]['@type'] = 'OnOffProperty';
-							break;
-							case 'brightness':
-							device.properties[feature.property] =
-							this.numericPropertyToIntegerProperty(feature);
-							device.properties[feature.property]['@type'] = 'BrightnessProperty';
-							break;
-							case 'color_temp':
-							device.properties[feature.property] =
-							this.numericPropertyToIntegerProperty(feature);
-							device.properties[feature.property]['@type'] = 'ColorTemperatureProperty';
-							break;
-						}
-					}
-					break;
-				
-					// Specific type switch
-					case 'switch':
-					device['@type'].push('OnOffSwitch');
-					for (const feature of expose.features) {
-						switch (feature.name) {
-							case 'state':
-							device.properties[feature.property] = this.binaryPropertyToBooleanProperty(feature);
-							device.properties[feature.property]['@type'] = 'OnOffProperty';
-							break;
-						}
-					}
-					break;
-				
-					default:
-					console.info(`Property of type ${expose.type} not yet supported`);
-					break;
-				}
-			}
-			*/
-			
 			
 	  }
 	  catch (error){

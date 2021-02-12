@@ -124,7 +124,7 @@ class Zigbee2MQTTHandler extends APIHandler {
 					});
 				} else if (action == "update-device") {
 					if (this.config.debug) {
-						console.log("in update device, with friendly_name:" + request.body.friendly_name);
+						console.log("in update device, with zigbee_id:" + request.body.zigbee_id);
 					}
 
 
@@ -135,7 +135,7 @@ class Zigbee2MQTTHandler extends APIHandler {
 						const update_topic = 'bridge/request/device/ota_update/update';
 						console.log("update device topic: " + update_topic);
 						const update_message = {
-							"id": request.body.friendly_name
+							"id": request.body.zigbee_id
 						};
 						console.log("update device message: " + update_message);
 						this.adapter.publishMessage(update_topic, update_message);
@@ -159,13 +159,13 @@ class Zigbee2MQTTHandler extends APIHandler {
 
 				} else if (action == "delete") { // This feature is currently disabled. It allows a 'force delete' from the zigbee network
 					if (this.config.debug) {
-						console.log("in delete, with friendly_name:" + request.body.friendly_name);
+						console.log("in delete, with zigbee_id:" + request.body.zigbee_id);
 					}
 
 					const delete_topic = 'bridge/request/device/remove';
 					//console.log("delete topic: " + delete_topic);
 					const delete_message = {
-						"id": request.body.friendly_name,
+						"id": request.body.zigbee_id,
 						"force": true
 					};
 					//console.log("delete message: " + delete_message);

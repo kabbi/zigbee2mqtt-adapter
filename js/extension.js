@@ -332,22 +332,22 @@
 						
 						var a = document.createElement("a");
 						//s.classList.add('extension-zigbee2mqtt-adapter-description'); 
-						a.setAttribute("href", "/things/" + items[item]['friendly_name']);        
+						a.setAttribute("href", "/things/z2m-" + items[item]['zigbee_id']);        
 						var t = document.createTextNode( items[item]['description'] );
 						a.appendChild(t);                                           
 						clone.querySelectorAll('.extension-zigbee2mqtt-adapter-description' )[0].appendChild(a);
 
 						
 						var s = document.createElement("a");
-						//s.classList.add('extension-zigbee2mqtt-adapter-friendly-name');  
-						s.setAttribute("href", "/things/" + items[item]['friendly_name']);              
-						var t = document.createTextNode( items[item]['friendly_name'] );
+						//s.classList.add('extension-zigbee2mqtt-adapter-zigbee-id');  
+						s.setAttribute("href", "/things/z2m-" + items[item]['zigbee_id']);              
+						var t = document.createTextNode( items[item]['zigbee_id'] );
 						s.appendChild(t);                                   
-						clone.querySelectorAll('.extension-zigbee2mqtt-adapter-friendly-name' )[0].appendChild(s);
+						clone.querySelectorAll('.extension-zigbee2mqtt-adapter-zigbee-id' )[0].appendChild(s);
 						
 						if(typeof items[item]['software_build_id'] != "undefined"){
 							var s = document.createElement("span");
-							//s.classList.add('extension-zigbee2mqtt-adapter-friendly-name');             
+							//s.classList.add('extension-zigbee2mqtt-adapter-zigbee-id');             
 							var t = document.createTextNode( "v. " +  items[item]['software_build_id'] );
 							s.appendChild(t);                                   
 							clone.querySelectorAll('.extension-zigbee2mqtt-adapter-version' )[0].appendChild(s);
@@ -427,7 +427,7 @@
 						// Send update request to backend
 						window.API.postJson(
 							`/extensions/${this.id}/api/ajax`,
-							{'action':'update-device','friendly_name':items[item]['friendly_name']}
+							{'action':'update-device','zigbee_id':items[item]['zigbee_id']}
 						).then((body) => { 
 							console.log("Update item reaction: ");
 							console.log(body);
@@ -456,7 +456,7 @@
 						// Send new values to backend
 						window.API.postJson(
 							`/extensions/${this.id}/api/ajax`,
-							{'action':'delete','friendly_name':items[item]['friendly_name']}
+							{'action':'delete','zigbee_id':items[item]['zigbee_id']}
 						).then((body) => { 
 							//console.log("delete item reaction: ");
 							//console.log(body); 
