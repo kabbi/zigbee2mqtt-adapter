@@ -157,7 +157,7 @@ class Zigbee2MQTTHandler extends APIHandler {
 					}
 
 
-				} else if (action == "delete") {
+				} else if (action == "delete") { // This feature is currently disabled. It allows a 'force delete' from the zigbee network
 					if (this.config.debug) {
 						console.log("in delete, with friendly_name:" + request.body.friendly_name);
 					}
@@ -169,7 +169,7 @@ class Zigbee2MQTTHandler extends APIHandler {
 						"force": true
 					};
 					//console.log("delete message: " + delete_message);
-					this.adapter.publishMessage(update_topic, delete_message);
+					this.adapter.publishMessage(delete_topic, delete_message);
 
 					return new APIResponse({
 						status: 200,
