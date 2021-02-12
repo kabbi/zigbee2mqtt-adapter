@@ -479,6 +479,7 @@ class ZigbeeMqttAdapter extends Adapter {
 		}
 		try {
 			execSync(`rm -rf ${this.zigbee2mqtt_dir_path}`);
+            execSync(`rm ${this.zigbee2mqtt_configuration_file_path}`);
 			return true;
 		} catch (error) {
 			console.error('Error deleting:', error);
@@ -851,7 +852,7 @@ class ZigbeeMqttAdapter extends Adapter {
 		try {
 			if (this.config.debug) {
 				console.log('in addDevice.');
-				console.log(info);
+				//console.log(info);
 				console.log("subscribing to: " + this.config.prefix + "/" + info.ieee_address);
 			}
 			this.client.subscribe(`${this.config.prefix}/${info.ieee_address}`);
@@ -984,9 +985,9 @@ class ZigbeeMqttAdapter extends Adapter {
     		};
 
             if (this.config.debug) {
-                console.log("new property details:");
-                console.log(desc);
-                console.log("initial value: " + value);
+                //console.log("new property details:");
+                //console.log(desc);
+                //console.log("initial value: " + value);
             }
     		var device = this.getDevice(device_id);
     		const property = new MqttProperty(device, key, desc);
