@@ -206,7 +206,7 @@ class ZigbeeMqttAdapter extends Adapter {
 					}
 
 					if (this.config.auto_update) {
-						console.log('Auto-update is enabled. Checking if zigbee2mqtt should be updated...');
+						console.log('Auto-update is enabled. Checking if Zigbee2MQTT should be updated...');
 						// downloads json from https://api.github.com/repos/Koenkk/zigbee2mqtt/releases/latest;
 
 						try {
@@ -777,8 +777,19 @@ class ZigbeeMqttAdapter extends Adapter {
 					device.notifyPropertyChanged(property);
 				}
 
-				this.devices[device_id].connected = true;
-				device.connectedNotify(true);
+
+
+    			if (Date.now() < this.addon_start_time + (this.availability_ignore_period * 1000)) {
+    				if (this.config.debug) {
+    					console.log("early info message, ignoring");
+    				}
+    			}
+                else{
+    				this.devices[device_id].connected = true;
+    				device.connectedNotify(true);
+                }
+
+				
 
 
 			} catch (error) {
@@ -998,10 +1009,10 @@ class ZigbeeMqttAdapter extends Adapter {
     			console.log("new property should now be generated");
     		}
 
-    		this.handleDeviceAdded(device);
-    		if (this.config.debug) {
-    			console.log("- handleDeviceAdded has been called again");
-    		}
+    		//this.handleDeviceAdded(device);
+    		//if (this.config.debug) {
+    		//	console.log("- handleDeviceAdded has been called again");
+    		//}
             
 		}
         catch (error){
