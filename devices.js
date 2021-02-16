@@ -273,6 +273,91 @@ module.exports = {
       },
     },
   },
+  'lumi.sensor_wleak.aq1': {
+    name: 'Xiaomi Aqara Water Leak Sensor',
+    '@type': ['LeakSensor'],
+    properties: {
+      battery: {
+        type: 'integer',
+        unit: 'percent',
+        label: 'Battery',
+        minimum: 0,
+        maximum: 100,
+        readOnly: true,
+      },
+      voltage: {
+        type: 'integer',
+        '@type': 'VoltageProperty',
+        unit: 'volt',
+        readOnly: true,
+      },
+      water_leak: {
+        type: 'boolean',
+        '@type': 'LeakProperty',
+        readOnly: true,
+      },
+      tamper: {
+        type: 'boolean',
+        label: 'Tamper',
+        '@type': 'BinaryProperty',
+        readOnly: true,
+      },
+      battery_low: {
+        type: 'boolean',
+        label: 'Battery low',
+        '@type': 'BinaryProperty',
+        readOnly: true,
+      },
+      linkquality: {
+        label: 'Link Quality',
+        type: 'integer',
+        readOnly: true,
+      },
+    },
+  },
+  'DS01': {
+    name: 'Sonoff Window/Door proximity Sensor',
+    '@type': ['DoorSensor'],
+    properties: {
+      battery: {
+        type: 'integer',
+        unit: 'percent',
+        label: 'Battery',
+        minimum: 0,
+        maximum: 100,
+        readOnly: true,
+      },
+      voltage: {
+        type: 'integer',
+        '@type': 'VoltageProperty',
+        unit: 'volt',
+        readOnly: true,
+      },
+      contact: {
+        type: 'boolean',
+        '@type': 'OpenProperty',
+        fromMqtt: (v) => !v,
+        readOnly: true,
+      },
+      tamper: {
+        type: 'boolean',
+        label: 'Tamper',
+        '@type': 'BinaryProperty',
+        readOnly: true,
+      },
+      battery_low: {
+        type: 'boolean',
+        label: 'Battery low',
+        '@type': 'BinaryProperty',
+        readOnly: true,
+      },
+      linkquality: {
+        label: 'Link Quality',
+        type: 'integer',
+        readOnly: true,
+      },
+    },
+  },
   'RC 110': {
     name: 'Innr RC 110 Remote',
     '@type': ['PushButton'],
