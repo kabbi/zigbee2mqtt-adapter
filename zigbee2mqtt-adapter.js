@@ -332,7 +332,7 @@ class ZigbeeMqttAdapter extends Adapter {
 					    "    interval: 100\n" +
 					    "  legacy: false\n";
                         //"  filtered_attributes: ['Data transmission']";
-                        
+
 
 					fs.writeFile(this.zigbee2mqtt_configuration_file_path, base_config, (err) => {
 						if (err) {
@@ -631,10 +631,10 @@ class ZigbeeMqttAdapter extends Adapter {
 					}
 					return;
 				}
-                
+
                 // data transmission allowed check
                 //console.log(device);
-                
+
                 const data_transmission_property = device.findProperty('data_transmission');
                 if (!data_transmission_property) {
                     if (this.config.debug) {
@@ -651,7 +651,7 @@ class ZigbeeMqttAdapter extends Adapter {
                         return;
                     }
                 }
-                
+
 				if (msg.action && device.events.get(msg.action)) { // if there's an action (event), and the action exists in the device
 					const event = new Event(
 						device,
@@ -666,7 +666,7 @@ class ZigbeeMqttAdapter extends Adapter {
 						if (this.config.debug) {
 							console.log("- that property could not be found: " + key);
 						}
-                        
+
 						if (key != "update" && typeof msg[key] != "object") { // && key != "update_available"
 							if (this.config.debug) {
 								console.log("- attempting to create missing property");
@@ -709,8 +709,14 @@ class ZigbeeMqttAdapter extends Adapter {
 							if ('brightness' in msg) {
 								brightness = msg['brightness'];
 							}
-							if (Object.keys(msg[key]).length == 2) {
+							if (msg[key].hasOwnProperty('x') && msg[key].hasOwnProperty('y')) {
 								msg[key] = XYtoHEX(msg[key]['x'], msg[key]['y'], brightness); // turn x+y coordinates into hex color
+							}
+							else {
+								// when a nested color payload was sent, but x or y is missing.
+								// Otherwise the gateway framework will throw exceptions and the device won't work,
+								// when it tries to split the color object.
+								msg[key] = '#FFFFFF';
 							}
 						}
 					} catch (error) {
@@ -790,7 +796,7 @@ class ZigbeeMqttAdapter extends Adapter {
     				device.connectedNotify(true);
                 }
 
-				
+
 
 
 			} catch (error) {
@@ -812,8 +818,8 @@ class ZigbeeMqttAdapter extends Adapter {
 				catch (error){
 					console.log("Error while trying to get state from announced device");
 				}
-				
-				
+
+
 			}
 		}
 		*/
@@ -852,7 +858,7 @@ class ZigbeeMqttAdapter extends Adapter {
         if(topic.startsWith('z2m-')){
             topic = topic.replace('z2m-','');
         }
-        
+
 		if (this.config.debug) {
 			console.log('in pubmsg. Topic & message: ' + topic);
 			console.log(msg);
@@ -910,7 +916,7 @@ class ZigbeeMqttAdapter extends Adapter {
 						console.info(`Device z2m-${info.ieee_address} created from Exposes API`);
 					}
 				}
-			} 
+			}
             else {
 				if (this.config.debug) {
 					console.info(`Device z2m-${info.ieee_address} created from devices.js`);
@@ -925,13 +931,13 @@ class ZigbeeMqttAdapter extends Adapter {
 					device.connectedNotify(false);
 					let timerId = setTimeout(() => this.try_getting_state(zigbee_id), 11000); // 11 seconds after creating the device, an extra /get will be used to try and get the actual state
 				}
-                
+
                 // Add data transmission property
                 if (this.config.debug) {
                     console.log("adding data transmission property");
                 }
                 this.attempt_new_property('z2m-' + zigbee_id, "data_transmission", true, false); // device name, property name, value (true) and readOnly (false)
-                    
+
 			}
 
 		} catch (error) {
@@ -972,7 +978,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 
-	// Sometimes incoming date has values that are not reflected in existing properties. 
+	// Sometimes incoming date has values that are not reflected in existing properties.
 	// In those cases, this will attempts to add the missing properties.
 	attempt_new_property(device_id, key, value, read_only = true) {
 		try{
@@ -984,7 +990,7 @@ class ZigbeeMqttAdapter extends Adapter {
     		var type = "string";
     		if (Number.isFinite(value)) {
     			type = "number";
-    		} 
+    		}
             else if (typeof value === 'boolean') {
     			type = "boolean";
     		}
@@ -1014,12 +1020,12 @@ class ZigbeeMqttAdapter extends Adapter {
     		if (this.config.debug) {
     			console.log("- handleDeviceAdded has been called again");
     		}
-            
+
 		}
         catch (error){
             console.log("Error in attempt_new_property: " + error);
         }
-        
+
 	}
 
 
@@ -1043,7 +1049,7 @@ class ZigbeeMqttAdapter extends Adapter {
 					console.log(error);
 				}
 
-			} 
+			}
             else {
 				reject(`Device: ${deviceId} not found.`);
 			}
@@ -1076,7 +1082,7 @@ class ZigbeeMqttAdapter extends Adapter {
 				console.log("setting permitJoin back to off");
 			}
 			this.client.publish(`${this.config.prefix}/bridge/request/permit_join`, '{"value": false}'); // set permitJoin back to off
-		} 
+		}
         else {
 			if (this.config.debug) {
 				console.log("not setting permitJoin back to off yet, something caused a time extension");
@@ -1192,7 +1198,7 @@ class MqttProperty extends Property {
 			}
 			extra_value
 			if(value.toLowerCase() == 'on'){
-				
+
 			}
       const {fromMqtt = identity} = property.options;
       property.setCachedValue(fromMqtt(msg[key]));
@@ -1234,7 +1240,7 @@ class MqttProperty extends Property {
 							}
 						}
 					}
-                    
+
                     // Publish to Zigbee network
                     if(this.name != "data_transmission"){ // all properties except the data_transmission property
     					this.device.adapter.publishMessage(`${this.device.id}/set`, {
