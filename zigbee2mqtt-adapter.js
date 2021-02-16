@@ -296,6 +296,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
 		} else {
 			console.log("Not using built-in zigbee2mqtt");
+			this.z2m_started = true;
 		}
 
 	}
