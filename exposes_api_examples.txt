@@ -1,0 +1,217 @@
+// Examples of Expose API output for a few devices
+
+
+{
+  "date_code": "20190308",
+  "definition": {
+    "description": "TRADFRI motion sensor",
+    "exposes": [
+      {
+        "access": 1,
+        "description": "Remaining battery in %",
+        "name": "battery",
+        "property": "battery",
+        "type": "numeric",
+        "unit": "%",
+        "value_max": 100,
+        "value_min": 0
+      },
+      {
+        "access": 1,
+        "description": "Indicates whether the device detected occupancy",
+        "name": "occupancy",
+        "property": "occupancy",
+        "type": "binary",
+        "value_off": false,
+        "value_on": true
+      },
+      {
+        "access": 1,
+        "name": "requested_brightness_level",
+        "property": "requested_brightness_level",
+        "type": "numeric",
+        "value_max": 254,
+        "value_min": 76
+      },
+      {
+        "access": 1,
+        "name": "requested_brightness_percent",
+        "property": "requested_brightness_percent",
+        "type": "numeric",
+        "value_max": 100,
+        "value_min": 30
+      },
+      {
+        "access": 1,
+        "description": "Link quality (signal strength)",
+        "name": "linkquality",
+        "property": "linkquality",
+        "type": "numeric",
+        "unit": "lqi",
+        "value_max": 255,
+        "value_min": 0
+      }
+    ],
+    "model": "E1525/E1745",
+    "vendor": "IKEA"
+  },
+  "endpoints": {
+    "1": {
+      "bindings": [
+        {
+          "cluster": "genPowerCfg",
+          "target": {
+            "endpoint": 1,
+            "ieee_address": "0x00124b0018XXXXXX",
+            "type": "endpoint"
+          }
+        }
+      ],
+      "clusters": {
+        "input": [
+          "genBasic",
+          "genPowerCfg",
+          "genIdentify",
+          "genAlarms",
+          "genPollCtrl",
+          "touchlink"
+        ],
+        "output": [
+          "genIdentify",
+          "genGroups",
+          "genOnOff",
+          "genLevelCtrl",
+          "genOta",
+          "touchlink"
+        ]
+      },
+      "configured_reportings": [
+        {
+          "attribute": "batteryPercentageRemaining",
+          "cluster": "genPowerCfg",
+          "maximum_report_interval": 62000,
+          "minimum_report_interval": 3600,
+          "reportable_change": 0
+        }
+      ]
+    }
+  },
+  "friendly_name": "0x680ae2fffeXXXXXX",
+  "ieee_address": "0x680ae2fffeXXXXXX",
+  "interview_completed": true,
+  "interviewing": false,
+  "model_id": "TRADFRI motion sensor",
+  "network_address": 20150,
+  "power_source": "Battery",
+  "software_build_id": "2.0.022",
+  "supported": true,
+  "type": "EndDevice"
+}
+
+
+
+
+
+{
+    "date_code": "20190723",
+    "definition": {
+        "description": "TRADFRI ON\/OFF switch",
+        "exposes": [
+            {
+                "access": 1,
+                "description": "Remaining battery in %",
+                "name": "battery",
+                "property": "battery",
+                "type": "numeric",
+                "unit": "%",
+                "value_max": 100,
+                "value_min": 0
+            },
+            {
+                "access": 1,
+                "description": "Triggered action (e.g. a button click)",
+                "name": "action",
+                "property": "action",
+                "type": "enum",
+                "values": [
+                    "on",
+                    "off",
+                    "brightness_move_down",
+                    "brightness_move_up",
+                    "brightness_stop"
+                ]
+            },
+            {
+                "access": 1,
+                "description": "Link quality (signal strength)",
+                "name": "linkquality",
+                "property": "linkquality",
+                "type": "numeric",
+                "unit": "lqi",
+                "value_max": 255,
+                "value_min": 0
+            }
+        ],
+        "model": "E1743",
+        "vendor": "IKEA"
+    },
+    "endpoints": {
+        "1": {
+            "bindings": [
+                {
+                    "cluster": "genOnOff",
+                    "target": {
+                        "id": 901,
+                        "type": "group"
+                    }
+                },
+                {
+                    "cluster": "genPowerCfg",
+                    "target": {
+                        "endpoint": 1,
+                        "ieee_address": "0x00124b0018XXXXXX",
+                        "type": "endpoint"
+                    }
+                }
+            ],
+            "clusters": {
+                "input": [
+                    "genBasic",
+                    "genPowerCfg",
+                    "genIdentify",
+                    "genAlarms",
+                    "genPollCtrl",
+                    "touchlink"
+                ],
+                "output": [
+                    "genIdentify",
+                    "genGroups",
+                    "genOnOff",
+                    "genLevelCtrl",
+                    "genOta",
+                    "closuresWindowCovering",
+                    "touchlink"
+                ]
+            },
+            "configured_reportings": [
+                {
+                    "attribute": "batteryPercentageRemaining",
+                    "cluster": "genPowerCfg",
+                    "maximum_report_interval": 62000,
+                    "minimum_report_interval": 3600,
+                    "reportable_change": 0
+                }
+            ]
+        }
+    },
+    "friendly_name": "0xec1bbdfffeXXXXXX",
+    "ieee_address": "0xec1bbdfffeXXXXXX",
+    "interview_completed": true,
+    "interviewing": false,
+    "model_id": "TRADFRI on\/off switch",
+    "network_address": 16852,
+    "power_source": "Battery",
+    "software_build_id": "2.2.010",
+    "supported": true,
+    "type": "EndDevice"
+}
