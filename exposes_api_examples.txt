@@ -215,3 +215,79 @@
     "supported": true,
     "type": "EndDevice"
 }
+
+
+
+// IKEA color light (without the outer level of data)
+
+[
+    {
+        "features": [
+            {
+                "access": 7,
+                "description": "On\/off state of this light",
+                "name": "state",
+                "property": "state",
+                "type": "binary",
+                "value_off": "OFF",
+                "value_on": "ON",
+                "value_toggle": "TOGGLE"
+            },
+            {
+                "access": 7,
+                "description": "Brightness of this light",
+                "name": "brightness",
+                "property": "brightness",
+                "type": "numeric",
+                "value_max": 254,
+                "value_min": 0
+            },
+            {
+                "description": "Color of this light in the CIE 1931 color space (x\/y)",
+                "features": [
+                    {
+                        "access": 7,
+                        "name": "x",
+                        "property": "x",
+                        "type": "numeric"
+                    },
+                    {
+                        "access": 7,
+                        "name": "y",
+                        "property": "y",
+                        "type": "numeric"
+                    }
+                ],
+                "name": "color_xy",
+                "property": "color",
+                "type": "composite"
+            }
+        ],
+        "type": "light"
+    },
+    {
+        "access": 2,
+        "description": "Triggers an effect on the light (e.g. make light blink for a few seconds)",
+        "name": "effect",
+        "property": "effect",
+        "type": "enum",
+        "values": [
+            "blink",
+            "breathe",
+            "okay",
+            "channel_change",
+            "finish_effect",
+            "stop_effect"
+        ]
+    },
+    {
+        "access": 1,
+        "description": "Link quality (signal strength)",
+        "name": "linkquality",
+        "property": "linkquality",
+        "type": "numeric",
+        "unit": "lqi",
+        "value_max": 255,
+        "value_min": 0
+    }
+]
