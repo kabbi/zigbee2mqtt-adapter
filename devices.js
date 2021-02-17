@@ -273,4 +273,231 @@ module.exports = {
       },
     },
   },
+  'lumi.sensor_wleak.aq1': {
+    name: 'Xiaomi Aqara Water Leak Sensor',
+    '@type': ['LeakSensor'],
+    properties: {
+      battery: {
+        type: 'integer',
+        unit: 'percent',
+        label: 'Battery',
+        minimum: 0,
+        maximum: 100,
+        readOnly: true,
+      },
+      voltage: {
+        type: 'integer',
+        '@type': 'VoltageProperty',
+        unit: 'volt',
+        readOnly: true,
+      },
+      water_leak: {
+        type: 'boolean',
+        '@type': 'LeakProperty',
+        readOnly: true,
+      },
+      tamper: {
+        type: 'boolean',
+        label: 'Tamper',
+        '@type': 'BinaryProperty',
+        readOnly: true,
+      },
+      battery_low: {
+        type: 'boolean',
+        label: 'Battery low',
+        '@type': 'BinaryProperty',
+        readOnly: true,
+      },
+      linkquality: {
+        label: 'Link Quality',
+        type: 'integer',
+        readOnly: true,
+      },
+    },
+  },
+  'DS01': {
+    name: 'Sonoff Window/Door proximity Sensor',
+    '@type': ['DoorSensor'],
+    properties: {
+      battery: {
+        type: 'integer',
+        unit: 'percent',
+        label: 'Battery',
+        minimum: 0,
+        maximum: 100,
+        readOnly: true,
+      },
+      voltage: {
+        type: 'integer',
+        '@type': 'VoltageProperty',
+        unit: 'volt',
+        readOnly: true,
+      },
+      contact: {
+        type: 'boolean',
+        '@type': 'OpenProperty',
+        fromMqtt: (v) => !v,
+        readOnly: true,
+      },
+      tamper: {
+        type: 'boolean',
+        label: 'Tamper',
+        '@type': 'BinaryProperty',
+        readOnly: true,
+      },
+      battery_low: {
+        type: 'boolean',
+        label: 'Battery low',
+        '@type': 'BinaryProperty',
+        readOnly: true,
+      },
+      linkquality: {
+        label: 'Link Quality',
+        type: 'integer',
+        readOnly: true,
+      },
+    },
+  },
+  'RC 110': {
+    name: 'Innr RC 110 Remote',
+    '@type': ['PushButton'],
+    properties: {
+      state_main: {
+        '@type': 'OnOffProperty',
+        type: 'boolean',
+        label: 'Main',
+        fromMqtt: (v) => v === 'ON',
+        readOnly: true
+      },
+      brightness_main: {
+        '@type': 'LevelProperty',
+        type: 'number',
+        label: 'Scene',
+        minimum: 0,
+        maximum: 100,
+        fromMqtt: (v) => (v / 255) * 100,
+        readOnly: true,
+      },
+      state_l1: {
+        '@type': 'OnOffProperty',
+        type: 'boolean',
+        label: 'State 1',
+        fromMqtt: (v) => v === 'ON',
+        readOnly: true
+      },
+      brightness_l1: {
+        '@type': 'LevelProperty',
+        type: 'number',
+        label: 'Level 1',
+        minimum: 0,
+        maximum: 100,
+        fromMqtt: (v) => (v / 255) * 100,
+        readOnly: true,
+      },
+      state_l2: {
+        '@type': 'OnOffProperty',
+        type: 'boolean',
+        label: 'State 2',
+        fromMqtt: (v) => v === 'ON',
+        readOnly: true
+      },
+      brightness_l2: {
+        '@type': 'LevelProperty',
+        type: 'number',
+        label: 'Level 2',
+        minimum: 0,
+        maximum: 100,
+        fromMqtt: (v) => (v / 255) * 100,
+        readOnly: true,
+      },
+      state_l3: {
+        '@type': 'OnOffProperty',
+        type: 'boolean',
+        label: 'State 3',
+        fromMqtt: (v) => v === 'ON',
+        readOnly: true
+      },
+      brightness_l3: {
+        '@type': 'LevelProperty',
+        type: 'number',
+        label: 'Level 3',
+        minimum: 0,
+        maximum: 100,
+        fromMqtt: (v) => (v / 255) * 100,
+        readOnly: true,
+      },
+      state_l4: {
+        '@type': 'OnOffProperty',
+        type: 'boolean',
+        label: 'State 4',
+        fromMqtt: (v) => v === 'ON',
+        readOnly: true
+      },
+      brightness_l4: {
+        '@type': 'LevelProperty',
+        type: 'number',
+        label: 'Level 4',
+        minimum: 0,
+        maximum: 100,
+        fromMqtt: (v) => (v / 255) * 100,
+        readOnly: true,
+      },
+      state_l5: {
+        '@type': 'OnOffProperty',
+        type: 'boolean',
+        label: 'State 5',
+        fromMqtt: (v) => v === 'ON',
+        readOnly: true
+      },
+      brightness_l5: {
+        '@type': 'LevelProperty',
+        type: 'number',
+        label: 'Level 5',
+        minimum: 0,
+        maximum: 100,
+        fromMqtt: (v) => (v / 255) * 100,
+        readOnly: true,
+      },
+      state_l6: {
+        '@type': 'OnOffProperty',
+        label: 'State 6',
+        type: 'boolean',
+        fromMqtt: (v) => v === 'ON',
+        readOnly: true
+      },
+      brightness_l6: {
+        '@type': 'LevelProperty',
+        type: 'number',
+        label: 'Level 6',
+        minimum: 0,
+        maximum: 100,
+        fromMqtt: (v) => (v / 255) * 100,
+        readOnly: true,
+      },
+      linkquality: {
+        type: 'integer',
+        readOnly: true,
+      },
+    },
+    events: {
+      scene_1: {
+        '@type': 'PressedEvent',
+      },
+      scene_2: {
+        '@type': 'PressedEvent',
+      },
+      scene_3: {
+        '@type': 'PressedEvent',
+      },
+      scene_4: {
+        '@type': 'PressedEvent',
+      },
+      scene_5: {
+        '@type': 'PressedEvent',
+      },
+      scene_6: {
+        '@type': 'PressedEvent',
+      },
+    }
+  },
 };
