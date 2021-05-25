@@ -98,6 +98,28 @@ module.exports = {
       },
     },
   },
+  "lumi.sensor_magnet.aq2": {
+    name: 'Xiaomi Magnet Contact Sensor',
+    '@type': ['BinarySensor'],
+    properties: {
+      battery: {
+        type: 'integer',
+        unit: 'percent',
+        minimum: 0,
+        maximum: 100,
+        readOnly: true,
+      },
+      linkquality: {
+        type: 'integer',
+        readOnly: true,
+      },
+      contact: {
+        type: 'boolean',
+        '@type': 'BooleanProperty',
+        readOnly: true,
+      },
+    },
+  },
   'lumi.sens': {
     name: 'Xiaomi Temperature & Humidity Sensor',
     '@type': ['TemperatureSensor'],
@@ -288,6 +310,38 @@ module.exports = {
         type: 'number',
         unit: 'hPa',
 	      multipleOf: 0.5,
+        readOnly: true,
+      },
+    },
+  },
+  "lumi.sensor_smoke": {
+    name: 'MiJia Honeywell smoke detector',
+    '@type': ['BinarySensor'],
+    properties: {
+      battery: {
+        type: 'integer',
+        unit: 'percent',
+        minimum: 0,
+        maximum: 100,
+        readOnly: true,
+      },
+      voltage: {
+        type: 'integer',
+        '@type': 'VoltageProperty',
+        unit: 'volt',
+        readOnly: true,
+      },
+      "smoke_density": {
+        type: 'integer',
+        readOnly: true,
+      },
+      "smoke": {
+        type: 'boolean',
+        '@type': 'BooleanProperty',
+        readOnly: true,
+      },
+      linkquality: {
+        type: 'integer',
         readOnly: true,
       },
     },

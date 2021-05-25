@@ -80,15 +80,7 @@ class ZigbeeMqttAdapter extends Adapter {
         this.addDevice(device);
       }
     }
-    /* //  the original code
-    if (!topic.startsWith(`${this.config.prefix}/bridge`)) {      
-      const device = this.getDevice(msg);
-
-      if (!device) return;
-
-      const description = Devices[msg.device.modelId || msg.device.model];
-      if (msg.action && description.events[msg.action]) {
-      */
+    
     if (!topic.startsWith(`${this.config.prefix}/bridge`)) {
       const topicElements = topic.split('/');
       const friendlyName = topicElements[topicElements.length - 1]; 
@@ -116,12 +108,7 @@ class ZigbeeMqttAdapter extends Adapter {
     }
   }
 
-  getDevice(msg) {
-    const friendlyName = msg.device.friendlyName || msg.device.friendly_name;
-    const device = this.devices[friendlyName];
-    if (!device) {
-      this.addDevice(msg.device);
-    }
+  getDevice(friendlyName) {
     return this.devices[friendlyName];
   }
 
@@ -130,20 +117,6 @@ class ZigbeeMqttAdapter extends Adapter {
   }
 
   addDevice(info) {
-/* // the original code
-    const modelId = info.modelId || info.model;
-    const description = Devices[modelId];
-    if (!description) {
-      console.warn(`Failed to add new device. There is no description for ${modelId} model.`);
-      return;
-    }
-    const friendlyName = info.friendlyName || info.friendly_name;
-    if (friendlyName in this.devices) {
-      console.info(`Device model:${modelId}, friendlyName:${friendlyName} already exists. Skip adding.`);
-      return;
-    }
-    const device = new MqttDevice(this, friendlyName, description);
-*/
     if (!Devices[info.modelID]) {
       // No definition for the given model ID. Skipping.
       return;
