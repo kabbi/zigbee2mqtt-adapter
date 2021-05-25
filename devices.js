@@ -223,6 +223,41 @@ module.exports = {
     },
   },
   "MCCGQ01LM": {
+    name: 'MiJia door & window contact sensor',
+    '@type': ['BinarySensor'],
+    properties: {
+      battery: {
+        type: 'integer',
+        unit: 'percent',
+        minimum: 0,
+        maximum: 100,
+        readOnly: true,
+      },
+      voltage: {
+        type: 'integer',
+        '@type': 'VoltageProperty',
+        unit: 'volt',
+        readOnly: true,
+      },
+      "contact": {
+        type: 'boolean',
+        '@type': 'BooleanProperty',
+        readOnly: true,
+      },
+      linkquality: {
+        type: 'integer',
+	      multipleOf: 0.5,
+        readOnly: true,
+      },
+      pressure: {
+        type: 'number',
+        unit: 'hPa',
+	      multipleOf: 0.5,
+        readOnly: true,
+      },
+    },
+  },
+  "MCCGQ11LM": {
     name: 'Aqara door & window contact sensor',
     '@type': ['BinarySensor'],
     properties: {
