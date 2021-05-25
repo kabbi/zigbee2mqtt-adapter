@@ -131,7 +131,7 @@ class ZigbeeMqttAdapter extends Adapter {
     this.client.subscribe(`${this.config.prefix}/${info.friendly_name}`);
 
     this.handleDeviceAdded(device);
-    console.info(`New device model:${modelId}, friendlyName:${friendlyName} is added.`);
+    console.info(`New device model:${info.modelID}, friendlyName:${info.friendly_name} is added.`);
   }
 
   startPairing(_timeoutSeconds) {
