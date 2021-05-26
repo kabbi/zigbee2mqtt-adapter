@@ -77,7 +77,7 @@ module.exports = {
     },
   },
   'lumi.sensor_magnet': {
-    name: 'Xiaomi Magnet Contact Sensor',
+    name: 'MiJia door & window contact sensor',
     '@type': ['BinarySensor'],
     properties: {
       battery: {
@@ -87,8 +87,15 @@ module.exports = {
         maximum: 100,
         readOnly: true,
       },
+      voltage: {
+        type: 'integer',
+        '@type': 'VoltageProperty',
+        unit: 'volt',
+        readOnly: true,
+      },
       linkquality: {
         type: 'integer',
+	      multipleOf: 0.5,
         readOnly: true,
       },
       contact: {
@@ -99,7 +106,7 @@ module.exports = {
     },
   },
   "lumi.sensor_magnet.aq2": {
-    name: 'Xiaomi Magnet Contact Sensor',
+    name: 'Aqara door & window contact sensor',
     '@type': ['BinarySensor'],
     properties: {
       battery: {
@@ -109,8 +116,15 @@ module.exports = {
         maximum: 100,
         readOnly: true,
       },
+      voltage: {
+        type: 'integer',
+        '@type': 'VoltageProperty',
+        unit: 'volt',
+        readOnly: true,
+      },
       linkquality: {
         type: 'integer',
+	      multipleOf: 0.5,
         readOnly: true,
       },
       contact: {
@@ -148,40 +162,6 @@ module.exports = {
       },
     },
   },
-  'WSDCGQ11LM': {
-    name: 'Xiaomi Temperature & Humidity Sensor',
-    '@type': ['TemperatureSensor'],
-    properties: {
-      battery: {
-        type: 'integer',
-        unit: 'percent',
-        minimum: 0,
-        maximum: 100,
-        readOnly: true,
-      },
-      linkquality: {
-        type: 'integer',
-        readOnly: true,
-      },
-      temperature: {
-        type: 'number',
-        '@type': 'TemperatureProperty',
-        unit: 'degree celsius',
-	      multipleOf: 0.1,
-        readOnly: true,
-      },
-      humidity: {
-        type: 'number',
-        unit: 'percent',
-        readOnly: true,
-      },
-      pressure: {
-        type: 'integer',
-        unit: 'hPa',
-        readOnly: true,
-      }
-    },
-  },
   'lumi.weather': {
     name: 'Xiaomi Aquara Temperature & Humidity & Pressure Sensor',
     '@type': ['TemperatureSensor'],
@@ -216,8 +196,8 @@ module.exports = {
       }
     },
   },
-  "SJCGQ11LM": {
-    name: 'Xiaomi Aqara Water Leak Sensor',
+  "lumi.sensor_wleak.aq1": {
+    name: 'Aqara water leak sensor',
     '@type': ['BinarySensor'],
     properties: {
       battery: {
@@ -244,109 +224,7 @@ module.exports = {
       },
     },
   },
-  "MCCGQ01LM": {
-    name: 'MiJia door & window contact sensor',
-    '@type': ['BinarySensor'],
-    properties: {
-      battery: {
-        type: 'integer',
-        unit: 'percent',
-        minimum: 0,
-        maximum: 100,
-        readOnly: true,
-      },
-      voltage: {
-        type: 'integer',
-        '@type': 'VoltageProperty',
-        unit: 'volt',
-        readOnly: true,
-      },
-      "contact": {
-        type: 'boolean',
-        '@type': 'BooleanProperty',
-        readOnly: true,
-      },
-      linkquality: {
-        type: 'integer',
-	      multipleOf: 0.5,
-        readOnly: true,
-      },
-      pressure: {
-        type: 'number',
-        unit: 'hPa',
-	      multipleOf: 0.5,
-        readOnly: true,
-      },
-    },
-  },
-  "MCCGQ11LM": {
-    name: 'Aqara door & window contact sensor',
-    '@type': ['BinarySensor'],
-    properties: {
-      battery: {
-        type: 'integer',
-        unit: 'percent',
-        minimum: 0,
-        maximum: 100,
-        readOnly: true,
-      },
-      voltage: {
-        type: 'integer',
-        '@type': 'VoltageProperty',
-        unit: 'volt',
-        readOnly: true,
-      },
-      "contact": {
-        type: 'boolean',
-        '@type': 'BooleanProperty',
-        readOnly: true,
-      },
-      linkquality: {
-        type: 'integer',
-	      multipleOf: 0.5,
-        readOnly: true,
-      },
-      pressure: {
-        type: 'number',
-        unit: 'hPa',
-	      multipleOf: 0.5,
-        readOnly: true,
-      },
-    },
-  },
   "lumi.sensor_smoke": {
-    name: 'MiJia Honeywell smoke detector',
-    '@type': ['BinarySensor'],
-    properties: {
-      battery: {
-        type: 'integer',
-        unit: 'percent',
-        minimum: 0,
-        maximum: 100,
-        readOnly: true,
-      },
-      voltage: {
-        type: 'integer',
-        '@type': 'VoltageProperty',
-        unit: 'volt',
-        readOnly: true,
-      },
-      "smoke_density": {
-        type: 'integer',
-        readOnly: true,
-      },
-      "smoke": {
-        type: 'boolean',
-        '@type': 'BooleanProperty',
-        readOnly: true,
-      },
-      linkquality: {
-        type: 'integer',
-        readOnly: true,
-      },
-    },
-  },
-  "JTYJ-GD-01LM/BW": {
     name: 'MiJia Honeywell smoke detector',
     '@type': ['BinarySensor'],
     properties: {
