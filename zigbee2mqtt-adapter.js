@@ -130,27 +130,20 @@ class ZigbeeMqttAdapter extends Adapter {
 		this.availability_interval = 10; // polls devices on the zigbee network every 10 seconds. Used to discover if lightbulb have been powered down manually.
 
 
-		// Start MQTT connection
-		this.client = mqtt.connect(this.config.mqtt);
-		this.client.on('error', (error) => console.error('mqtt error:', error));
-		this.client.on('message', this.handleIncomingMessage.bind(this));
-		this.client.subscribe(`${this.config.prefix}/bridge/devices`);
-		//this.client.subscribe(`${this.config.prefix}/bridge/event`); // in practise these messages hardly ever appear, and were useless. Used availability instead.
-		this.client.subscribe(`${this.config.prefix}/bridge/response/networkmap`);
-		this.client.subscribe(`${this.config.prefix}/bridge/response/device/ota_update/update`);
-
-
-		//this.client.subscribe(`${this.config.prefix}/#`);
-
+        this.mqtt_connection_attempted = false;
+        
 		// configuration file location
 		this.zigbee2mqtt_data_dir_path =
 			path.join(path.resolve('../..'), '.webthings', 'data', 'zigbee2mqtt-adapter');
 		if (this.config.debug) {
-			console.log("this.zigbee2mqtt_data_dir_path =", this.zigbee2mqtt_data_dir_path);
+			console.log("this.zigbee2mqtt_data_dir_path = ", this.zigbee2mqtt_data_dir_path);
 		}
-
+        
+        
 		// actual zigbee2mqt location
 		this.zigbee2mqtt_dir_path = path.join(this.zigbee2mqtt_data_dir_path, 'zigbee2mqtt');
+
+        console.log("this.zigbee2mqtt_dir_path = ", this.zigbee2mqtt_dir_path);
 
 		// index.js file to be started by node
 		this.zigbee2mqtt_file_path = path.join(this.zigbee2mqtt_dir_path, 'index.js');
@@ -205,6 +198,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
 			fs.access(this.zigbee2mqtt_dir_path, (err) => {
 				if (err && err.code === 'ENOENT') {
+                    console.log("zigbee2mqtt folder was missing, should download and install");
 					this.download_z2m(); // this also then starts zigbee2mqtt
 				} else {
 					if (this.config.debug) {
@@ -308,6 +302,22 @@ class ZigbeeMqttAdapter extends Adapter {
 	}
 
 
+    connect_to_mqtt(){
+        console.log("attempting to latch onto MQTT");
+		// Start MQTT connection
+		this.client = mqtt.connect(this.config.mqtt);
+		this.client.on('error', (error) => console.error('mqtt error:', error));
+		this.client.on('message', this.handleIncomingMessage.bind(this));
+		this.client.subscribe(`${this.config.prefix}/bridge/devices`);
+		//this.client.subscribe(`${this.config.prefix}/bridge/event`); // in practise these messages hardly ever appear, and were useless. Used availability instead.
+		this.client.subscribe(`${this.config.prefix}/bridge/response/networkmap`);
+		this.client.subscribe(`${this.config.prefix}/bridge/response/device/ota_update/update`);
+        this.mqtt_connection_attempted = true;
+
+		//this.client.subscribe(`${this.config.prefix}/#`);
+    }
+
+
 	// By having the config files outside of the zigbee2mqtt folder it becomes easier to update zigbee2mqtt
 	check_if_config_file_exists() {
 		try {
@@ -387,6 +397,11 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 	really_run_zigbee2mqtt() {
+        
+        if(this.mqtt_connection_attempted == false){
+            this.connect_to_mqtt();
+        }
+        
 		if (this.config.debug) {
 			console.log('starting zigbee2MQTT using: node ' + this.zigbee2mqtt_file_path);
 			console.log("initial this.config.serial_port = " + this.config.serial_port);
@@ -460,41 +475,76 @@ class ZigbeeMqttAdapter extends Adapter {
 		}
         */
         
-        this.zigbee2mqtt_subprocess = spawn('node', [this.zigbee2mqtt_file_path]);
-        
-        this.zigbee2mqtt_subprocess.stdout.setEncoding('utf8');
-        this.zigbee2mqtt_subprocess.stdout.on('data', function(data) {
-            //Here is where the output goes
-
-            console.log('ola stdout: ' + data);
+        try{
+            var parent_scope = this;
             
-            data=data.toString();
-            //if(data.includes("Cannot lock port") ){
-            if(data.includes("ailed to start") ){
-                console.log("Yikes, failed to start Zigbee2MQTT. Try again later?");
-                execSync("pkill 'zigbee2mqtt-adapter/zigbee2mqtt/index.js'");
-                run_zigbee2mqtt(61); // wait 61 seconds before retrying
-            }
-            //scriptOutput+=data;
-        });
+            this.zigbee2mqtt_subprocess = spawn('node', [this.zigbee2mqtt_file_path]);
         
-        this.zigbee2mqtt_subprocess.stderr.setEncoding('utf8');
-        this.zigbee2mqtt_subprocess.stderr.on('data', function(data) {
-            //Here is where the error output goes
+            this.zigbee2mqtt_subprocess.stdout.setEncoding('utf8');
+            this.zigbee2mqtt_subprocess.stdout.on('data', function(data) { // 
+                //Here is where the output goes
 
-            console.log('ola stderr: ' + data);
+                console.log('ola running stdout: ' + data);
+                //console.log('parent_scope: ', parent_scope);
+                
+                data=data.toString();
+                
+                if( data.includes("ailed to start") ){
+                    console.log("Yikes, failed to start Zigbee2MQTT. Try again later?");
+                    try{
+                        execSync("pkill 'zigbee2mqtt-adapter/zigbee2mqtt/index.js'");
+                    }
+                    catch(e){
+                        console.log("pkill error: " + e);
+                    }
+                    parent_scope.run_zigbee2mqtt(61); // wait 61 seconds before retrying
+                }
+                else if( data.includes(", failed") ){
+                
+                
+                    const zigbee2mqtt_dir = path.join(path.resolve('../..'), '.webthings', 'data', 'zigbee2mqtt-adapter','zigbee2mqtt');
+                    console.log("Yikes, Zigbee2MQTT may not be installed ok. Dir: " + zigbee2mqtt_dir);
+                
+        			exec(`cd ${zigbee2mqtt_dir}; npm i --save-dev @types/node; npm ci --production`, (err, stdout, stderr) => {
+        				if (err) {
+        					console.error(err);
+        					return;
+        				}
+        				if (this.config.debug) {
+        					console.log(stdout);
+        				}
+        				console.log("-----INSTALL FIX ATTEMPT COMPLETE-----");
+    				
+        				parent_scope.run_zigbee2mqtt();
+        			});
+                    
+                
+                }
+                //scriptOutput+=data;
+            });
+        
+            this.zigbee2mqtt_subprocess.stderr.setEncoding('utf8');
+            this.zigbee2mqtt_subprocess.stderr.on('data', function(data) {
+                //Here is where the error output goes
 
-            data=data.toString();
-            //scriptOutput+=data;
-        });
+                console.log('ola stderr: ' + data);
 
-        this.zigbee2mqtt_subprocess.on('close', function(code) {
-            //Here you can get the exit code of the script
+                data=data.toString();
+                //scriptOutput+=data;
+            });
 
-            console.log('ola closing code: ' + code);
+            this.zigbee2mqtt_subprocess.on('close', function(code) {
+                //Here you can get the exit code of the script
 
-            //console.log('Full output of script: ',scriptOutput);
-        });
+                console.log('ola closing code: ' + code);
+
+                //console.log('Full output of script: ',scriptOutput);
+            });
+            
+        }
+        catch(e){
+            console.log("Error in really_run:",e);
+        }
 
 	}
 
@@ -512,7 +562,9 @@ class ZigbeeMqttAdapter extends Adapter {
     			}
     			console.log("-----DOWNLOAD COMPLETE, STARTING INSTALL-----");
                 
-    			exec(`cd ${this.zigbee2mqtt_dir_path}; npm install -g typescript; npm i --save-dev @types/node; npm ci --production`, (err, stdout, stderr) => {
+                const command_to_run = `cd ${this.zigbee2mqtt_dir_path}; npm install -g typescript; npm i --save-dev @types/node; npm ci`; //npm ci --production
+                console.log(command_to_run);
+    			exec(command_to_run, (err, stdout, stderr) => { // npm ci --production
     				if (err) {
     					console.error(err);
     					return;
@@ -1124,11 +1176,13 @@ class ZigbeeMqttAdapter extends Adapter {
 	// Sometimes incoming date has values that are not reflected in existing properties.
 	// In those cases, this will attempts to add the missing properties.
 	attempt_new_property(device_id, key, value, read_only = true, percentage = false) {
-        console.log("in attempt_new_property for device: " + device_id + " and key: " + key);
+        if (this.config.debug) {
+            console.log("in attempt_new_property for device: " + device_id + " and key: " + key);
+        }
 		try{
             if (this.config.debug) {
     			//console.log("in attempt_new_property for device: " + device_id + " and key: " + key);
-    			console.log(value);
+    			console.log("attempt value: " + value);
     		}
 
     		var type = "string";
@@ -1305,18 +1359,18 @@ class ZigbeeMqttAdapter extends Adapter {
     
     
     save_devices(){
-        console.log("saving complete this.devices:");
+        //console.log("saving complete this.devices:");
         //console.log(this.devices);
         
         for (var key in this.devices) {
-            console.log(key);
+            //console.log(key);
             // check if the property/key is defined in the object itself, not in parent
             if (this.devices.hasOwnProperty(key)) {           
                 //console.log(key, this.devices[key]);
                 const device = this.getDevice(key);
                 const properties = device.properties;
                 for (var prop in properties) {
-                    console.log("property = " + prop);
+                    //console.log("property = " + prop);
                 }
             }
         }
