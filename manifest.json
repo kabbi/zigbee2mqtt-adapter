@@ -28,12 +28,13 @@
   "options": {
     "default": {
       "local_zigbee2mqtt": true,
-      "auto_update": true,
+      "auto_update": false,
       "mqtt": "mqtt://localhost",
       "prefix": "zigbee2mqtt",
       "serial_port": "",
       "channel": "11",
       "ikea_test_server": true,
+	  "virtual_brightness_alternative": true,
       "debug": false
     },
     "schema": {
@@ -94,6 +95,10 @@
           "type": "boolean",
           "description": "If you find that your IKEA devices aren't succesfully updating to the latest firmware version, then you may need to switch to the firmwares from IKEA's test server instead. In januari 2021 this is currently the case."
         },
+        "virtual_brightness_alternative": {
+          "type": "boolean",
+          "description": "Allow the addon to calculate brightness levels generated from pressing buttons or turning knobs."
+        },
         "debug": {
           "type": "boolean",
           "description": "Used to find issues if this addon isn't working properly. If enabled, you can find more details about its functioning in the internal log (found under settings -> development)."
@@ -102,7 +107,7 @@
     }
   },
   "short_name": "zigbee2mqtt",
-  "version": "0.6.2",
+  "version": "0.6.5",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
