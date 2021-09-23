@@ -19,7 +19,7 @@
   "dependencies": {
     "gateway-addon": "file:../../../mozilla-iot/gateway/node_modules/gateway-addon",
     "mqtt": "^4.2.6",
-	"barometer-trend":"^2.1.2"
+    "barometer-trend":"^2.1.2"
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",
