@@ -1,6 +1,6 @@
 {
   "name": "zigbee2mqtt-adapter",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "Brings all your Zigbee devices to the gateway through MQTT bridge",
   "scripts": {
     "lint": "eslint ."
@@ -18,7 +18,8 @@
   },
   "dependencies": {
     "gateway-addon": "file:../../../mozilla-iot/gateway/node_modules/gateway-addon",
-    "mqtt": "^4.2.6"
+    "mqtt": "^4.2.6",
+	"barometer-trend":"^2.1.2"
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",
