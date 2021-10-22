@@ -498,6 +498,42 @@ module.exports = {
 			scene_6: {
 				'@type': 'PressedEvent',
 			},
+			on_l1: {
+				'@type': 'PressedEvent',
+			},
+			on_l2: {
+				'@type': 'PressedEvent',
+			},
+			on_l3: {
+				'@type': 'PressedEvent',
+			},
+			on_l4: {
+				'@type': 'PressedEvent',
+			},
+			on_l5: {
+				'@type': 'PressedEvent',
+			},
+			on_l6: {
+				'@type': 'PressedEvent',
+			},
+			off_l1: {
+				'@type': 'PressedEvent',
+			},
+			off_l2: {
+				'@type': 'PressedEvent',
+			},
+			off_l3: {
+				'@type': 'PressedEvent',
+			},
+			off_l4: {
+				'@type': 'PressedEvent',
+			},
+			off_l5: {
+				'@type': 'PressedEvent',
+			},
+			off_l6: {
+				'@type': 'PressedEvent',
+			},
 		},
 	},
 };
