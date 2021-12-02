@@ -42,7 +42,7 @@ This addon is able to 'generically' handle Zigbee devices, so there is no need t
 
 ## Installation
 
-You can install this addon by simply selecting it in the WebThings Gateway.
+You can install this addon by simply selecting it in the WebThings Gateway. After adding it, it will need 30 minutes to fully install itself. Please give it some time.
 
 
 Alternatively, you can install it manually:
@@ -63,3 +63,14 @@ Combine the now complete software into a package
 `npm pack`
 
 Then, reboot the WebThings gateway.
+
+## Troubleshooting
+
+"Resource temporarily unavailable Cannot lock port" means that something else is using your USB stick. Make sure you disable the other Zigbee addon.
+
+"Cannot find module". We're not sure what causes this yet, but make sure you give the addon at least 30 minutes to install itself.
+
+If you want to fully uninstall the addon:
+- remove the addon in the interface
+- run this command using the Seashell addon: `rm -rf ~/.webthings/data/zigbee2mqtt-adapter`
+- reboot
