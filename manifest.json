@@ -33,8 +33,8 @@
       "prefix": "zigbee2mqtt",
       "serial_port": "",
       "channel": "11",
-      "ikea_test_server": true,
-	  "virtual_brightness_alternative": true,
+      "ikea_test_server": false,
+	  "virtual_brightness_alternative": false,
       "debug": false
     },
     "schema": {
@@ -46,10 +46,10 @@
         },
         "auto_update": {
           "type": "boolean",
-          "description": "If the addon manages its own version of Zigbee2MQTT, then enabling this will allow it to try and keep zigbee2MQTT updated to the latest version. This may allow the latest Zigbee devices to be supported. It does come with a small risk that if there would be something wrong with Zigbee2MQTT, then this addon may not start properly."
+          "description": "Advanced. If the addon manages its own version of Zigbee2MQTT, then enabling this will allow it to try and keep zigbee2MQTT updated to the latest version. This may allow the latest Zigbee devices to be supported. It does come with a risk that if there would be something wrong or incompatible in Zigbee2MQTT's update, then this addon may not start properly. It's recommended to keep this disabled."
         },
         "manual_toggle_response": {
-          "description": "If you manually power off a light bulb, the lightbulb can be either set to a 'disconnected' state (while still showing its state as ON), or it could simply show the lightbulb as OFF instead. The two can also be combined, where the device is both toggled off, and then set as disconnected. The default is 'both'.",
+          "description": "If you manually power off a light bulb, the lightbulb can be either shown as 'disconnected' (while still showing its state as ON), or it could simply switch the lightbulb to OFF instead, but keep showing the device as connected. The two can also be combined, where the device is both toggled off, and then set as disconnected. The default is 'both'.",
           "enum": [
             "disconnected",
             "toggle off",
@@ -97,7 +97,7 @@
         },
         "virtual_brightness_alternative": {
           "type": "boolean",
-          "description": "Allow the addon to calculate brightness levels generated from pressing buttons or turning knobs."
+          "description": "Allow the addon to calculate brightness levels generated from pressing buttons or turning knobs. It's recommended to keep this disabled, as it is work in progress."
         },
         "debug": {
           "type": "boolean",
@@ -107,7 +107,7 @@
     }
   },
   "short_name": "zigbee2mqtt",
-  "version": "0.6.5",
+  "version": "0.7.0",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
