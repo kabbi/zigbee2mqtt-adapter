@@ -406,7 +406,6 @@ class ZigbeeMqttAdapter extends Adapter {
         				if (err && err.code === 'ENOENT') {
     						console.log('WARNING: zigbee2mqtt security file did not exist, cannot add extra security.');
         				} else {
-                            console.log("NO FILE ERROR");
         					if (this.config.debug) {
         						console.log('zigbee2mqtt security file existed, adding extra security');
         					}
@@ -475,7 +474,8 @@ class ZigbeeMqttAdapter extends Adapter {
         if (this.config.debug) {
             console.log("in run_zigbee2mqtt");
         }
-		this.check_if_config_file_exists();
+		
+        setTimeout(this.check_if_config_file_exists.bind(this), 4000);
 		setTimeout(this.really_run_zigbee2mqtt.bind(this), delay * 1000); // wait 10 seconds before really starting Zigbee2MQTT, to make sure serial port has been released.
     }
 
