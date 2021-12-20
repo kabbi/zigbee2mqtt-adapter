@@ -261,7 +261,7 @@
                 console.log("list2:",list2);
                 
                 if(body.installed == false){
-                    console.log("STIL INSTALLING");
+                    console.log("STILL INSTALLING");
 			        
     				if(typeof list2 != 'undefined'){
                         list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Still installing...</h2><br/><img src="/extensions/zigbee2mqtt-adapter/images/spinner.gif" width="32" height="32" alt="Installing..."/ style="opacity:.5"><br/><p>It takes about 30 minutes for Zigbee2MQTT to be fully downloaded and installed.</p><p>Come back a little later. If this message is gone, then intallation has finished.</p><p style="font-style:italic">Do not unplug or restart this controller until installation is complete!</p></div>';
@@ -552,6 +552,9 @@
 					list.append(clone);
 				} // end of for loop
 			
+                if(list.innerHTML == ""){
+                    list.innerHTML = '<h2>No Zigbee devices paired yet</h2><p>Go to the Things page and click on the (+) button if you want to connect a new Zigbee device.</p>';
+                }
 				/*
 				try{
 					const reading_list = document.getElementsByClassName('extension-zigbee2mqtt-adapter-read-about-risks');
