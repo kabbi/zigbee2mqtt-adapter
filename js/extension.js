@@ -264,7 +264,7 @@
                     console.log("STIL INSTALLING");
 			        
     				if(typeof list2 != 'undefined'){
-                        list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Still installing...</h2><p>It takes another 30 minutes or so for Zigbee2MQTT to be fully downloaded and installed.</p><p>Come back a little later. If this message is gone, then intallation has completed.</p><p style="font-style:italic">Do not restart this controller until installation is complete!</p></div>';
+                        list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Still installing...</h2><br/><img src="/extensions/zigbee2mqtt-adapter/images/spinner.gif" width="32" height="32" alt="Installing..."/ style="opacity:.5"><br/><p>It takes about 30 minutes for Zigbee2MQTT to be fully downloaded and installed.</p><p>Come back a little later. If this message is gone, then intallation has finished.</p><p style="font-style:italic">Do not unplug or restart this controller until installation is complete!</p></div>';
     				    return;
     				}
                     else{
