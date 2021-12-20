@@ -167,6 +167,14 @@ class Zigbee2MQTTHandler extends APIHandler {
             					});
                             }
                         });
+                        
+    					return new APIResponse({
+    						status: 200,
+    						contentType: 'application/json',
+    						content: JSON.stringify({
+    							'status': 'New security values should be saved.'
+    						}),
+    					});
                     }
                     else{
     					return new APIResponse({
@@ -178,6 +186,7 @@ class Zigbee2MQTTHandler extends APIHandler {
     					});
                     }
                     
+
                     
                     
 
