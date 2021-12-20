@@ -391,7 +391,7 @@ class ZigbeeMqttAdapter extends Adapter {
                 console.log("this.config.disable_improved_security = " + this.config.disable_improved_security);
                 
                 // adding extra security
-                if(this.config.disable_improved_security == false){
+                if(this.config.disable_improved_security == true){
                     console.log('WARNING: (extra) security has been manually disabled.');
                 }
                 else{
