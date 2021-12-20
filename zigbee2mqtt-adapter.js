@@ -400,6 +400,7 @@ class ZigbeeMqttAdapter extends Adapter {
         				if (err && err.code === 'ENOENT') {
     						console.log('WARNING: zigbee2mqtt security file did not exist, cannot add extra security.');
         				} else {
+                            console.log("NO FILE ERROR");
         					if (this.config.debug) {
         						console.log('zigbee2mqtt security file existed, adding extra security');
         					}
