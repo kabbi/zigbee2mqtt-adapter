@@ -138,12 +138,12 @@ class Zigbee2MQTTHandler extends APIHandler {
                 
                 else if (action == "save-security") {
 					if (this.config.debug) {
-						console.log("in save security, with pan_id:" + request.body.pan_id);
+						console.log("in save security, with pan_id:" + request.body.pan_id + " and network key:" + request.body.network_key);
                         this.adapter.security.pan_id = request.body.pan_id;
                         this.adapter.security.network_key = request.body.network_key;
 					}
                     
-                    fs.writeFile( this.adapter.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.adapter.security ), "utf8" , function(err, result) {
+                    fs.writeFile( this.adapter.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.adapter.security ), "utf8" , (err, result) => {
                         if(err){
                             console.log('file write error:', err);
         					return new APIResponse({
