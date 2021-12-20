@@ -123,7 +123,7 @@
                     
     		        window.API.postJson(
     		         "/extensions/zigbee2mqtt-adapter/api/ajax",
-    					{"action":"save-security","pan_id":new_pan_id,"new_network_key":new_network_key}
+    					{"action":"save-security","pan_id":new_pan_id,"network_key":new_network_key}
 
     		        ).then((body) => {
                         console.log("new values have been saved");

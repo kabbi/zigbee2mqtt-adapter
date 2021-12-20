@@ -188,7 +188,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 
-        // Create new security file
+        // Check security file
         try {
 			fs.access(this.zigbee2mqtt_configuration_security_file_path, (err) => {
 				if (err && err.code === 'ENOENT') {
@@ -206,14 +206,18 @@ class ZigbeeMqttAdapter extends Adapter {
                         if (error){
                             console.log("Error reading security file: " + error);
                         }
-                        console.log("READING SECURITY DATA NOW from data: ", data);
-                        this.security = JSON.parse(data);
-                        console.log(this.security);
+                        else{
+                            this.security = JSON.parse(data);
+                            if (this.config.debug) {
+                                console.log("Security settings have been loaded from file: ", this.security);
+                            }
+                        }
+                        //console.log("READING SECURITY DATA NOW from data: ", data);
+                        
+                        //console.log(this.security);
                     });
                     
-                    if (this.config.debug) {
-                        console.log("this.security: ", this.security);
-                    }
+
                 }
             });
 		} 
