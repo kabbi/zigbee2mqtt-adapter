@@ -668,7 +668,9 @@ class ZigbeeMqttAdapter extends Adapter {
                                 if(err) console.log('file write error:', err);
                             });
                     
-        				} else {
+        				} 
+                        /*
+                        else {
         					if (this.config.debug) {
         						console.log('zigbee2mqtt security file existed:');
         					}
@@ -687,6 +689,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                 console.log("this.security: ", this.security);
                             }
                         }
+                        */
                     });
     			} 
                 catch (error) {

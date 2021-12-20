@@ -553,7 +553,7 @@
 				} // end of for loop
 			
                 if(list.innerHTML == ""){
-                    list.innerHTML = '<h2>No Zigbee devices paired yet</h2><p>Go to the Things page and click on the (+) button if you want to connect a new Zigbee device.</p>';
+                    list.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>No Zigbee devices paired yet</h2><br/><p>Go to the Things page and click on the (+) button if you want to connect a new Zigbee device.</p></div>';
                 }
 				/*
 				try{
