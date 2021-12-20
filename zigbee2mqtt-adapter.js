@@ -139,7 +139,7 @@ class ZigbeeMqttAdapter extends Adapter {
         this.mqtt_connection_attempted = false;
         
         const homedir = require('os').homedir();
-        console.log("homedir = " + homedir);
+        //console.log("homedir = " + homedir);
         
 		// configuration file location
 		this.zigbee2mqtt_data_dir_path =
@@ -151,9 +151,9 @@ class ZigbeeMqttAdapter extends Adapter {
         
 		// actual zigbee2mqt location
 		this.zigbee2mqtt_dir_path = path.join(this.zigbee2mqtt_data_dir_path, 'zigbee2mqtt');
-
-        console.log("this.zigbee2mqtt_dir_path = ", this.zigbee2mqtt_dir_path);
-
+        if (this.config.debug) {
+            console.log("this.zigbee2mqtt_dir_path = ", this.zigbee2mqtt_dir_path);
+        }
 		// index.js file to be started by node
 		this.zigbee2mqtt_file_path = path.join(this.zigbee2mqtt_dir_path, 'index.js');
 		// console.log("this.zigbee2mqtt_dir_path =", this.zigbee2mqtt_dir_path);
@@ -378,13 +378,14 @@ class ZigbeeMqttAdapter extends Adapter {
 						"  port: " + this.config.serial_port + "\n" +
 						"advanced:\n";
                         
+                
+                console.log("this.config.disable_improved_security = " + this.config.disable_improved_security);
+                
                 // adding extra security
                 if(!this.config.disable_improved_security){
         			fs.access(this.zigbee2mqtt_configuration_security_file_path, (err) => {
         				if (err && err.code === 'ENOENT') {
-        					if (this.config.debug) {
-        						console.log('zigbee2mqtt security file did not exist, can not add extra security.');
-        					}
+    						console.log('WARNING: zigbee2mqtt security file did not exist, cannot add extra security.');
         				} else {
         					if (this.config.debug) {
         						console.log('zigbee2mqtt security file existed, adding extra security');
@@ -394,6 +395,9 @@ class ZigbeeMqttAdapter extends Adapter {
                             "  network_key: " + this.security.network_key + "\n";
                         }
                     });
+                }
+                else{
+                    console.log('WARNING: (extra) security has been manually disabled.');
                 }
                         
                         
