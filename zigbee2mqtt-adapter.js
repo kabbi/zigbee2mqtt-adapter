@@ -637,7 +637,9 @@ class ZigbeeMqttAdapter extends Adapter {
                             };
                             console.log("new security details: ", this.security)
 					
-                            fs.writeFile( this.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.security ), "utf8" );
+                            fs.writeFile( this.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.security ), "utf8", function(err, result) {
+                                if(err) console.log('file write error:', err);
+                            });
                     
         				} else {
         					if (this.config.debug) {

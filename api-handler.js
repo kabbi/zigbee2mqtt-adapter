@@ -140,15 +140,27 @@ class Zigbee2MQTTHandler extends APIHandler {
                         this.adapter.security.network_key = request.body.network_key;
 					}
                     
-                    fs.writeFile( this.adapter.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.adapter.security ), "utf8" );
-
-					return new APIResponse({
-						status: 200,
-						contentType: 'application/json',
-						content: JSON.stringify({
-							'status': 'Security settings were saved. If you changed them, you will need to restart the system for changes to take effect.'
-						}),
-					});
+                    fs.writeFile( this.adapter.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.adapter.security ), "utf8" , function(err, result) {
+                        if(err){
+                            console.log('file write error:', err);
+        					return new APIResponse({
+        						status: 200,
+        						contentType: 'application/json',
+        						content: JSON.stringify({
+        							'status': 'Error: security settings could not be saved.'
+        						}),
+        					});
+                        }
+                        else{
+        					return new APIResponse({
+        						status: 200,
+        						contentType: 'application/json',
+        						content: JSON.stringify({
+        							'status': 'Security settings were saved. If you changed them, you will need to restart the system for changes to take effect.'
+        						}),
+        					});
+                        }
+                    });
 
 				} 
                 
