@@ -133,7 +133,7 @@ class ZigbeeMqttAdapter extends Adapter {
 		//this.ignored_first_availability_device_list = []; // For now this has been replaced with just ignoring availabiliy messages for 10 seconds.
 		this.addon_start_time = Date.now(); // During the first 10 second after Zigbee2MQTT starts, the availability messages are ignored.
 		this.availability_ignore_period = 10;
-		this.availability_interval = 10; // polls devices on the zigbee network every 10 seconds. Used to discover if lightbulb have been powered down manually.
+		this.availability_interval = 2; // polls devices on the zigbee network every X minutes. Used to discover if lightbulb have been powered down manually.
 
 
         this.mqtt_connection_attempted = false;
@@ -386,6 +386,11 @@ class ZigbeeMqttAdapter extends Adapter {
 						"  server: 'mqtt://localhost'\n" +
 						"serial:\n" +
 						"  port: " + this.config.serial_port + "\n" +
+                        "availability:\n" +
+                        "  active:\n" +
+                        "    timeout: " + this.availability_interval + "\n" +
+                        "  passive:\n" +
+                        "    timeout: 1500\n" +
 						"advanced:\n";
                         
                 
