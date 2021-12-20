@@ -28,6 +28,7 @@
   "options": {
     "default": {
       "local_zigbee2mqtt": true,
+	  "disable_improved_security": false,
       "auto_update": false,
       "mqtt": "mqtt://localhost",
       "prefix": "zigbee2mqtt",
@@ -43,6 +44,10 @@
         "local_zigbee2mqtt": {
           "type": "boolean",
           "description": "If enabled, this addon will install and use its own version of Zigbee2MQTT. Disable this if you have already manually installed Zigbee2MQTT on your system."
+        },
+        "disable_improved_security": {
+          "type": "boolean",
+          "description": "Advanced. Since version 0.7.0 of this addon, a random PAN ID and security key are generated when the addon is first installed. This does mean you will have to re-pair all your devices. If you want to delay this, you can disable this extra security (for now). Be advised: anyone running Zigbee2MQTT in default settings will have the same security key, so they may access your devices, or your network might not even want to start if it detects another dongle with the same settings nearby."
         },
         "auto_update": {
           "type": "boolean",

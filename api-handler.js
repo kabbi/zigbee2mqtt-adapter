@@ -69,6 +69,7 @@ class Zigbee2MQTTHandler extends APIHandler {
 						content: JSON.stringify({
 							'status': 'ok',
 							'devices': devices_as_list,
+                            'security': this.adapter.security,
                             'installed': this.adapter.z2m_installed_succesfully
 						}),
 					});

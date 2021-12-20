@@ -18,6 +18,7 @@ const https = require('https');
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const mqtt = require('mqtt');
 const {
@@ -116,6 +117,8 @@ class ZigbeeMqttAdapter extends Adapter {
 			}
 		}
 
+        this.security = {pan_id: "0x1a66", network_key: [7, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 11, 12, 13]};
+
         this.z2m_installed_succesfully = false;
 		this.z2m_started = false;
 		this.waiting_for_map = false;
@@ -165,6 +168,8 @@ class ZigbeeMqttAdapter extends Adapter {
 			path.join(this.zigbee2mqtt_data_dir_path, 'devices.yaml');
 		this.zigbee2mqtt_configuration_groups_file_path =
 			path.join(this.zigbee2mqtt_data_dir_path, 'groups.yaml');
+		this.zigbee2mqtt_configuration_security_file_path =
+			path.join(this.zigbee2mqtt_data_dir_path, 'security.yaml');
 		// console.log("this.zigbee2mqtt_configuration_devices_file_path =",
 		//             this.zigbee2mqtt_configuration_devices_file_path);
 
@@ -199,7 +204,7 @@ class ZigbeeMqttAdapter extends Adapter {
 			console.log("this.config.local_zigbee2mqtt = " + this.config.local_zigbee2mqtt);
 		}
 		if (this.config.local_zigbee2mqtt == true) {
-
+            
 			fs.access(this.zigbee2mqtt_dir_path, (err) => {
 				if (err && err.code === 'ENOENT') {
                     console.log("zigbee2mqtt folder was missing, should download and install");
@@ -334,7 +339,7 @@ class ZigbeeMqttAdapter extends Adapter {
 			fs.access(this.zigbee2mqtt_configuration_file_path, (err) => {
 							
                 
-                let base_config = "homeassistant: true\n" +
+                var base_config = "homeassistant: true\n" +
 				        "permit_join: false\n" +
                         "devices: devices.yaml\n" +
                         "groups: groups.yaml\n" +
@@ -343,8 +348,28 @@ class ZigbeeMqttAdapter extends Adapter {
 						"  server: 'mqtt://localhost'\n" +
 						"serial:\n" +
 						"  port: " + this.config.serial_port + "\n" +
-						"advanced:\n" +
-						"  availability_timeout: " + this.availability_interval + "\n" +
+						"advanced:\n";
+                        
+                // adding extra security
+                if(!this.config.disable_improved_security){
+        			fs.access(this.zigbee2mqtt_configuration_security_file_path, (err) => {
+        				if (err && err.code === 'ENOENT') {
+        					if (this.config.debug) {
+        						console.log('zigbee2mqtt security file did not exist, can not add extra security.');
+        					}
+        				} else {
+        					if (this.config.debug) {
+        						console.log('zigbee2mqtt security file existed, adding extra security');
+        					}
+                        
+                            base_config += "  pan_id: " + this.security.pan_id + "\n" +
+                            "  network_key: " + this.security.network_key + "\n";
+                        }
+                    });
+                }
+                        
+                        
+				base_config += "  availability_timeout: " + this.availability_interval + "\n" +
                         //"  log_output: []\n" +
                         "  legacy_api: false\n" +
 						"device_options:\n" +
@@ -568,6 +593,38 @@ class ZigbeeMqttAdapter extends Adapter {
     				console.log(stdout);
     			}
     			console.log("-----DOWNLOAD COMPLETE, STARTING INSTALL-----");
+                
+                // Create new security file
+                try {
+        			fs.access(this.zigbee2mqtt_configuration_security_file_path, (err) => {
+        				if (err && err.code === 'ENOENT') {
+        					if (this.config.debug) {
+        						console.log('zigbee2mqtt security file did not exist yet.');
+        					}
+                    
+                            this.security = {
+                                pan_id: rand_hex(2),
+                                network_key: generate_security_key()
+                            };
+                            console.log("new security details: ", this.security)
+					
+                            fs.writeFile( this.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.security ), "utf8" );
+                    
+        				} else {
+        					if (this.config.debug) {
+        						console.log('zigbee2mqtt security file existed:');
+        					}
+                            this.security = require( this.zigbee2mqtt_configuration_security_file_path );
+                            if (this.config.debug) {
+                                console.log("this.security: ", this.security);
+                            }
+                        }
+                    });
+    			} 
+                catch (error) {
+    				console.error("Error while checking/opening security file: " + error.message);
+    			}
+                
                 
                 const command_to_run = `cd ${this.zigbee2mqtt_dir_path}; npm install -g typescript; npm i --save-dev @types/node; npm ci`; //npm ci --production
                 console.log(command_to_run);
@@ -1638,6 +1695,48 @@ function XYtoHEX(x, y, bri) { // and needs brightness too
 	return "#" + r + g + b;
 }
 
+
+function rand_hex(n) {
+    if (n <= 0) {
+        return '';
+    }
+    var rs = '';
+    try {
+        rs = crypto.randomBytes(Math.ceil(n/2)).toString('hex').slice(0,n);
+        /* note: could do this non-blocking, but still might fail */
+    }
+    catch(ex) {
+        /* known exception cause: depletion of entropy info for randomBytes */
+        console.error('Exception generating random string: ' + ex);
+        /* weaker random fallback */
+        rs = '';
+        var r = n % 8, q = (n-r)/8, i;
+        for(i = 0; i < q; i++) {
+            rs += Math.random().toString(16).slice(2);
+        }
+        if(r > 0){
+            rs += Math.random().toString(16).slice(2,i);
+        }
+    }
+    return rs;
+}
+
+
+function generate_security_key(){
+    // e.g. [7, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 11, 12, 13]
+    try{
+        const secret = Array.from({length: 16}, () => crypto.randomInt(255));
+        return secret;
+    }
+    catch(e){
+        console.log("Error while generating cryptographic Zigbee security key: " + e);
+        console.log("Fallback: generating a less secure key.");
+        const secret = Array.from({length: 16}, () => Math.floor(Math.random() * 255));
+        return secret;
+    }
+    
+    
+}
 
 
 module.exports = loadAdapter;
