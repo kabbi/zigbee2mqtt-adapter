@@ -139,31 +139,47 @@ class Zigbee2MQTTHandler extends APIHandler {
                 else if (action == "save-security") {
 					if (this.config.debug) {
 						console.log("in save security, with pan_id:" + request.body.pan_id + " and network key:" + request.body.network_key);
-                        this.adapter.security.pan_id = request.body.pan_id;
-                        this.adapter.security.network_key = request.body.network_key;
 					}
                     
-                    fs.writeFile( this.adapter.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.adapter.security ), "utf8" , (err, result) => {
-                        if(err){
-                            console.log('file write error:', err);
-        					return new APIResponse({
-        						status: 200,
-        						contentType: 'application/json',
-        						content: JSON.stringify({
-        							'status': 'Error: security settings could not be saved.'
-        						}),
-        					});
-                        }
-                        else{
-        					return new APIResponse({
-        						status: 200,
-        						contentType: 'application/json',
-        						content: JSON.stringify({
-        							'status': 'Security settings were saved. If you changed them, you will need to restart the system for changes to take effect.'
-        						}),
-        					});
-                        }
-                    });
+                    if(typeof request.body.pan_id != 'undefined' && typeof request.body.network_key != 'undefined'){
+                        this.adapter.security.pan_id = request.body.pan_id;
+                        this.adapter.security.network_key = JSON.parse("[" + request.body.network_key + "]");
+                        console.log("this.adapter.security.network_key array: " + this.adapter.security.network_key);
+                        fs.writeFile( this.adapter.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.adapter.security ), "utf8" , (err, result) => {
+                            if(err){
+                                console.log('file write error:', err);
+            					return new APIResponse({
+            						status: 200,
+            						contentType: 'application/json',
+            						content: JSON.stringify({
+            							'status': 'Error: security settings could not be saved.'
+            						}),
+            					});
+                            }
+                            else{
+                                console.log('Security file has been written');
+            					return new APIResponse({
+            						status: 200,
+            						contentType: 'application/json',
+            						content: JSON.stringify({
+            							'status': 'Security settings were saved. If you changed them, you will need to restart the system for changes to take effect.'
+            						}),
+            					});
+                            }
+                        });
+                    }
+                    else{
+    					return new APIResponse({
+    						status: 200,
+    						contentType: 'application/json',
+    						content: JSON.stringify({
+    							'status': 'Error, no security values provided.'
+    						}),
+    					});
+                    }
+                    
+                    
+                    
 
 				} 
                 
