@@ -1,9 +1,12 @@
 'use strict';
 
+const fs = require('fs');
+
 const {
 	APIHandler,
 	APIResponse
 } = require('gateway-addon');
+
 const manifest = require('./manifest.json');
 
 class Zigbee2MQTTHandler extends APIHandler {
