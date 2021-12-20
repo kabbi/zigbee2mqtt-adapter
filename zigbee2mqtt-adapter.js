@@ -667,7 +667,17 @@ class ZigbeeMqttAdapter extends Adapter {
         					if (this.config.debug) {
         						console.log('zigbee2mqtt security file existed:');
         					}
-                            this.security = require( this.zigbee2mqtt_configuration_security_file_path );
+                            //this.security = require( this.zigbee2mqtt_configuration_security_file_path );
+                            
+                            fs.readFile(this.zigbee2mqtt_configuration_security_file_path, 'utf8', (error, data) => {
+                                if (error){
+                                    console.log("Error reading security file: " + error);
+                                }
+                                console.log("READING SECURITY DATA NOW from data: ", data);
+                                this.security = JSON.parse(data);
+                                console.log(this.security);
+                            });
+                            
                             if (this.config.debug) {
                                 console.log("this.security: ", this.security);
                             }
