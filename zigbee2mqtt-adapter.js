@@ -632,7 +632,7 @@ class ZigbeeMqttAdapter extends Adapter {
         					}
                     
                             this.security = {
-                                pan_id: rand_hex(2),
+                                pan_id: rand_hex(4),
                                 network_key: generate_security_key()
                             };
                             console.log("new security details: ", this.security)
@@ -1749,7 +1749,7 @@ function rand_hex(n) {
             rs += Math.random().toString(16).slice(2,i);
         }
     }
-    return rs;
+    return "0x" + rs;
 }
 
 
