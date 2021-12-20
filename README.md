@@ -50,16 +50,13 @@ Alternatively, you can install it manually:
 Download the addon
 `git clone https://github.com/kabbi/zigbee2mqtt-adapter ~/.webthings/addons/zigbee2mqtt-adapter`
 
-Update NPM, the package manager for NodeJS
-`npm install -g npm`
-
 Go to the addon folder
 `cd ~/.webthings/addons/zigbee2mqtt-adapter`
 
 Get the addon to download the software it depends on
 `npm install`
 
-Combine the now complete software into a package
+Optional: combine the now complete software into a package
 `npm pack`
 
 Then, reboot the WebThings gateway.
@@ -74,3 +71,8 @@ If you want to fully uninstall the addon:
 - remove the addon in the interface
 - run this command using the Seashell addon: `rm -rf ~/.webthings/data/zigbee2mqtt-adapter`
 - reboot
+
+Before a manual installation you may want to update NPM, the package manager for NodeJS
+`npm install -g npm`
+
+
