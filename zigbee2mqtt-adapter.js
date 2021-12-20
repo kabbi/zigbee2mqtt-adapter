@@ -102,7 +102,7 @@ class ZigbeeMqttAdapter extends Adapter {
 								this.config.serial_port = "/dev/" + result[i].split("/").pop();
 							}
 							// In general, be picky, and look for hints that we found a viable Zigbee stick
-							if (result[i].toLowerCase().includes("cc253") || result[i].toLowerCase().includes("conbee") || result[i].toLowerCase().includes('cc26x') || result[i].toLowerCase().includes('cc265')) || result[i].toLowerCase().includes('igbee')){ // CC26X2R1, CC253, CC2652
+							if (result[i].toLowerCase().includes("cc253") || result[i].toLowerCase().includes("conbee") || result[i].toLowerCase().includes('cc26x') || result[i].toLowerCase().includes('cc265') || result[i].toLowerCase().includes('igbee') ){ // CC26X2R1, CC253, CC2652
 								this.config.serial_port = "/dev/" + result[i].split("/").pop();
 								console.log("- USB stick spotted at: " + this.config.serial_port);
 							}
