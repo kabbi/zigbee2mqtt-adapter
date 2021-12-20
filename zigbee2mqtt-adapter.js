@@ -395,6 +395,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     console.log('WARNING: (extra) security has been manually disabled.');
                 }
                 else{
+                    console.log('Adding extra security.');
         			fs.access(this.zigbee2mqtt_configuration_security_file_path, (err) => {
         				if (err && err.code === 'ENOENT') {
     						console.log('WARNING: zigbee2mqtt security file did not exist, cannot add extra security.');
@@ -402,9 +403,11 @@ class ZigbeeMqttAdapter extends Adapter {
         					if (this.config.debug) {
         						console.log('zigbee2mqtt security file existed, adding extra security');
         					}
-                        
-                            base_config += "  pan_id: " + this.security.pan_id + "\n" +
-                            "  network_key: " + this.security.network_key + "\n";
+                            if(this.security.pan_id != ""){
+                                base_config += "  pan_id: " + this.security.pan_id + "\n" +
+                                "  network_key: " + this.security.network_key + "\n";
+                            }
+                            
                         }
                     });
                 }
