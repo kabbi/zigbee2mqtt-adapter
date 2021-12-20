@@ -74,7 +74,10 @@ class Zigbee2MQTTHandler extends APIHandler {
 						}),
 					});
 
-				} else if (action == "update-map") {
+				} 
+                
+                
+                else if (action == "update-map") {
 
 					if (!this.adapter.waiting_for_map || this.last_map_request_time + this.time_delay < Date.now()) {
 						if (this.config.debug) {
@@ -113,7 +116,10 @@ class Zigbee2MQTTHandler extends APIHandler {
 					}
 
 
-				} else if (action == "poll") {
+				} 
+                
+                
+                else if (action == "poll") {
 					return new APIResponse({
 						status: 200,
 						contentType: 'application/json',
@@ -124,7 +130,29 @@ class Zigbee2MQTTHandler extends APIHandler {
 							'update_result': this.adapter.update_result
 						}),
 					});
-				} else if (action == "update-device") {
+				} 
+                
+                
+                else if (action == "save-security") {
+					if (this.config.debug) {
+						console.log("in save security, with pan_id:" + request.body.pan_id);
+                        this.adapter.security.pan_id = request.body.pan_id;
+                        this.adapter.security.network_key = request.body.network_key;
+					}
+                    
+                    fs.writeFile( this.adapter.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.adapter.security ), "utf8" );
+
+					return new APIResponse({
+						status: 200,
+						contentType: 'application/json',
+						content: JSON.stringify({
+							'status': 'Security settings were saved. If you changed them, you will need to restart the system for changes to take effect.'
+						}),
+					});
+
+				} 
+                
+                else if (action == "update-device") {
 					if (this.config.debug) {
 						console.log("in update device, with zigbee_id:" + request.body.zigbee_id);
 					}
@@ -158,8 +186,10 @@ class Zigbee2MQTTHandler extends APIHandler {
 						});
 					}
 
-
-				} else if (action == "delete") { // This feature is currently disabled. It allows a 'force delete' from the zigbee network
+				} 
+                
+                
+                else if (action == "delete") { // This feature is currently disabled. It allows a 'force delete' from the zigbee network
 					if (this.config.debug) {
 						console.log("in delete, with zigbee_id:" + request.body.zigbee_id);
 					}

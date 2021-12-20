@@ -7,6 +7,7 @@
 		<div class="extension-zigbee2mqtt-adapter-tab-buttons">
             <button id="extension-zigbee2mqtt-adapter-tab-button-things" class="extension-zigbee2mqtt-adapter-main-tab-button">Things</button>
 			<button id="extension-zigbee2mqtt-adapter-tab-button-map" class="extension-zigbee2mqtt-adapter-main-tab-button">Map</button>
+            <button id="extension-zigbee2mqtt-adapter-tab-button-security" class="extension-zigbee2mqtt-adapter-main-tab-button">Security</button>
             <button id="extension-zigbee2mqtt-adapter-tab-button-tutorial" class="extension-zigbee2mqtt-adapter-main-tab-button">?</button>
         </div>
 		
@@ -39,35 +40,35 @@
 						</div>
 					</div>
 					<!--
-          <div class="extension-zigbee2mqtt-adapter-overlay rule-edit-overlay delete">
-              <div class="rule-delete-dialog">
-                  <p>Are you sure you want to force-remove this device from the Zigbee network?</p>
-                  <input class="rule-delete-cancel-button" type="button" data-l10n-id="rule-delete-cancel-button" value="Cancel">
-                  <input class="rule-delete-confirm-button" type="button" value="Force remove">
-              </div>
-          </div>
-					-->
-          <div class="extension-zigbee2mqtt-adapter-overlay rule-edit-overlay update">
-              <div class="rule-delete-dialog">
-                  <p>Are you sure you want to update the firmware of this device? Please <span class="extension-zigbee2mqtt-adapter-read-about-risks">read about the risks</a> first.</p>
-                  <input class="extension-zigbee2mqtt-adapter-overlay-cancel-update-button rule-delete-cancel-button" type="button" data-l10n-id="rule-delete-cancel-button" value="Cancel">
-                  <input class="extension-zigbee2mqtt-adapter-overlay-start-update-button rule-delete-confirm-button" type="button" value="Update">
-              </div>
-          </div>
+                    <div class="extension-zigbee2mqtt-adapter-overlay rule-edit-overlay delete">
+                        <div class="rule-delete-dialog">
+                            <p>Are you sure you want to force-remove this device from the Zigbee network?</p>
+                            <input class="rule-delete-cancel-button" type="button" data-l10n-id="rule-delete-cancel-button" value="Cancel">
+                            <input class="rule-delete-confirm-button" type="button" value="Force remove">
+                        </div>
+                    </div>
+          					-->
+                    <div class="extension-zigbee2mqtt-adapter-overlay rule-edit-overlay update">
+                        <div class="rule-delete-dialog">
+                            <p>Are you sure you want to update the firmware of this device? Please <span class="extension-zigbee2mqtt-adapter-read-about-risks">read about the risks</a> first.</p>
+                            <input class="extension-zigbee2mqtt-adapter-overlay-cancel-update-button rule-delete-cancel-button" type="button" data-l10n-id="rule-delete-cancel-button" value="Cancel">
+                            <input class="extension-zigbee2mqtt-adapter-overlay-start-update-button rule-delete-confirm-button" type="button" value="Update">
+                        </div>
+                    </div>
 					
-          <div class="extension-zigbee2mqtt-adapter-overlay rule-edit-overlay updating">
-              <div class="rule-delete-dialog">
-				  <div class="extension-zigbee2mqtt-adapter-updating-text-container">
-                  	<img class="extension-zigbee2mqtt-adapter-update-spinner" src="/extensions/zigbee2mqtt-adapter/images/spinner.gif"><p>Updating. Please wait 10 minutes before updating another device.</p>
-			  	</div>
-				  <!--
-				  <div class="extension-zigbee2mqtt-adapter-update-progress-bar-container">
-					  <div class="extension-zigbee2mqtt-adapter-update-progress-bar"></div>
-				  </div>
-				  -->
+                    <div class="extension-zigbee2mqtt-adapter-overlay rule-edit-overlay updating">
+                        <div class="rule-delete-dialog">
+          				  <div class="extension-zigbee2mqtt-adapter-updating-text-container">
+                            	<img class="extension-zigbee2mqtt-adapter-update-spinner" src="/extensions/zigbee2mqtt-adapter/images/spinner.gif"><p>Updating. Please wait 10 minutes before updating another device.</p>
+          			  	</div>
+          				  <!--
+          				  <div class="extension-zigbee2mqtt-adapter-update-progress-bar-container">
+          					  <div class="extension-zigbee2mqtt-adapter-update-progress-bar"></div>
+          				  </div>
+          				  -->
                   
-              </div>
-          </div>
+                        </div>
+                    </div>
 				</div>
 				
 			</div>
@@ -79,6 +80,25 @@
 				<div id="extension-zigbee2mqtt-adapter-map" class="extension-zigbee2mqtt-adapter-centered-page">
 					<p>Here you can find out how your Zigbee devices have organised themselves into a network. Depending on the size of your network, updating the map can take up to two minutes. During this time your Zigbee network may be very unresponsive.</p> 
 					<button id="extension-zigbee2mqtt-adapter-update-map-button">Update map</button>
+
+				</div>
+
+			</div>
+
+
+			<div id="extension-zigbee2mqtt-adapter-tab-security" class="extension-zigbee2mqtt-adapter-tab">
+				<div id="extension-zigbee2mqtt-adapter-security-container">
+				</div>
+				<div id="extension-zigbee2mqtt-adapter-security-form" class="extension-zigbee2mqtt-adapter-centered-page">
+					<p>The addon will have generated a random network ID and network password when it was installed. You might want to write these down. Whenever these are changed, you will need to re-pair all your devices.</p> 
+					<label for="extension-zigbee2mqtt-adapter-security-pan-id">PAN ID</label><br/>
+                    <input id="extension-zigbee2mqtt-adapter-security-pan-id" type="text" name="extension-zigbee2mqtt-adapter-security-pan-id" value=""/>
+                    <br/><br/>
+					<label for="extension-zigbee2mqtt-adapter-security-network-key">Network key</label><br/>
+                    <input id="extension-zigbee2mqtt-adapter-security-network-key" type="text" name="extension-zigbee2mqtt-adapter-security-network-key" value=""/>
+                    <br/><br/>
+                    <button id="extension-zigbee2mqtt-adapter-save-security-button">SAVE</button>
+
 
 				</div>
 

@@ -104,6 +104,41 @@
 		        });
 			});
 
+
+            
+
+
+            // Save new network security values
+            document.getElementById('extension-zigbee2mqtt-adapter-save-security-button').addEventListener('click', (event) => {
+                console.log("save zigbee security button clicked");
+                const new_pan_id = document.getElementById("extension-zigbee2mqtt-adapter-security-pan-id").value;
+                const new_network_key = document.getElementById("extension-zigbee2mqtt-adapter-security-network-key").value;
+                console.log(new_pan_id,new_network_key);
+                
+                if(new_pan_id == "" || new_network_key == ""){
+                    alert("security values cannot be empty");
+                    return;
+                }
+                if( confirm("Are you sure you want to set these security values?") ){
+                    
+    		        window.API.postJson(
+    		         "/extensions/zigbee2mqtt-adapter/api/ajax",
+    					{"action":"save-security","pan_id":new_pan_id,"new_network_key":new_network_key}
+
+    		        ).then((body) => {
+                        console.log("new values have been saved");
+                        alert("The security values were saved");
+    							//console.log(body);
+    							//document.getElementById("extension-zigbee2mqtt-adapter-graphviz-container").innerHTML = body.status;
+
+    		        }).catch((e) => {
+    		  				console.log("Error sending security values: " + e.toString());
+    		        });
+                    
+                }
+                
+            });
+
 		
 		
 			window.zigbee2mqtt_interval = setInterval(function(){
@@ -193,6 +228,10 @@
 				//console.log(event);
 				document.getElementById('extension-zigbee2mqtt-adapter-content').classList = ['extension-zigbee2mqtt-adapter-show-tab-map'];
 			});
+			document.getElementById('extension-zigbee2mqtt-adapter-tab-button-security').addEventListener('click', (event) => {
+				//console.log(event);
+				document.getElementById('extension-zigbee2mqtt-adapter-content').classList = ['extension-zigbee2mqtt-adapter-show-tab-security'];
+			});
 			document.getElementById('extension-zigbee2mqtt-adapter-tab-button-tutorial').addEventListener('click', (event) => {
 				//console.log(event);
 				document.getElementById('extension-zigbee2mqtt-adapter-content').classList = ['extension-zigbee2mqtt-adapter-show-tab-tutorial'];
@@ -240,6 +279,12 @@
                     else{
                         console.log("Zigbee2MQTT: the target element no longer exists. User has likely switched to another page.");
                     }
+                }
+                
+                if(typeof body.security != 'undefined'){
+                    console.log("security values were present in init data. pan_id: " + body.security.pan_id);
+                    document.getElementById('extension-zigbee2mqtt-adapter-security-pan-id').value = body.security.pan_id;
+                    document.getElementById('extension-zigbee2mqtt-adapter-security-network-key').value = body.security.network_key;
                 }
 				
 

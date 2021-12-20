@@ -265,12 +265,14 @@
 
 #extension-zigbee2mqtt-adapter-content.extension-zigbee2mqtt-adapter-show-tab-things #extension-zigbee2mqtt-adapter-tab-button-things,
 #extension-zigbee2mqtt-adapter-content.extension-zigbee2mqtt-adapter-show-tab-map #extension-zigbee2mqtt-adapter-tab-button-map,
+#extension-zigbee2mqtt-adapter-content.extension-zigbee2mqtt-adapter-show-tab-security #extension-zigbee2mqtt-adapter-tab-button-security,
 #extension-zigbee2mqtt-adapter-content.extension-zigbee2mqtt-adapter-show-tab-tutorial #extension-zigbee2mqtt-adapter-tab-button-tutorial{
 	color: white;
     background-color: rgba(0,0,0,0.18);
 }
 #extension-zigbee2mqtt-adapter-content.extension-zigbee2mqtt-adapter-show-tab-things #extension-zigbee2mqtt-adapter-tab-things,
 #extension-zigbee2mqtt-adapter-content.extension-zigbee2mqtt-adapter-show-tab-map #extension-zigbee2mqtt-adapter-tab-map,
+#extension-zigbee2mqtt-adapter-content.extension-zigbee2mqtt-adapter-show-tab-security #extension-zigbee2mqtt-adapter-tab-security,
 #extension-zigbee2mqtt-adapter-content.extension-zigbee2mqtt-adapter-show-tab-tutorial #extension-zigbee2mqtt-adapter-tab-tutorial{
 	display:block;
 }

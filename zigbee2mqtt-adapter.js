@@ -117,7 +117,9 @@ class ZigbeeMqttAdapter extends Adapter {
 			}
 		}
 
-        this.security = {pan_id: "0x1a66", network_key: [7, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 11, 12, 13]};
+        //this.security = {pan_id: "0x1a66", network_key: [7, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 11, 12, 13]};
+        this.security = {pan_id: "", network_key: ""};
+
 
         this.z2m_installed_succesfully = false;
 		this.z2m_started = false;
@@ -183,6 +185,32 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 		this.devices_overview = {}; //new Map(); // stores all the connected devices, and if they can be updated. Could potentially also be used to force-remove devices from the network.
+
+
+
+        // Create new security file
+        try {
+			fs.access(this.zigbee2mqtt_configuration_security_file_path, (err) => {
+				if (err && err.code === 'ENOENT') {
+					if (this.config.debug) {
+						console.log('zigbee2mqtt security file did not exist.');
+					}
+            
+				} else {
+					if (this.config.debug) {
+						console.log('zigbee2mqtt security file existed:');
+					}
+                    this.security = require( this.zigbee2mqtt_configuration_security_file_path );
+                    if (this.config.debug) {
+                        console.log("this.security: ", this.security);
+                    }
+                }
+            });
+		} 
+        catch (error) {
+			console.error("Error while checking/opening security file: " + error.message);
+		}
+        
 
 
 		// Allow UI to connect
@@ -514,8 +542,9 @@ class ZigbeeMqttAdapter extends Adapter {
             this.zigbee2mqtt_subprocess.stdout.setEncoding('utf8');
             this.zigbee2mqtt_subprocess.stdout.on('data', function(data) { // 
                 //Here is where the output goes
-
-                console.log('ola running stdout: ' + data);
+                
+                console.log('z2m stdout: ' + data);
+                
                 //console.log('parent_scope: ', parent_scope);
                 
                 data=data.toString();
@@ -534,7 +563,7 @@ class ZigbeeMqttAdapter extends Adapter {
                 
                 
                     const zigbee2mqtt_dir = path.join(path.resolve('../..'), '.webthings', 'data', 'zigbee2mqtt-adapter','zigbee2mqtt');
-                    console.log("Yikes, Zigbee2MQTT may not be installed ok. Dir: " + zigbee2mqtt_dir);
+                    console.log("Yikes, Zigbee2MQTT may not be installed ok. Will attempt to fix. Dir: " + zigbee2mqtt_dir);
                 
         			exec(`cd ${zigbee2mqtt_dir}; npm i --save-dev @types/node; npm ci --production`, (err, stdout, stderr) => {
         				if (err) {
@@ -557,8 +586,8 @@ class ZigbeeMqttAdapter extends Adapter {
             this.zigbee2mqtt_subprocess.stderr.setEncoding('utf8');
             this.zigbee2mqtt_subprocess.stderr.on('data', function(data) {
                 //Here is where the error output goes
-
-                console.log('ola stderr: ' + data);
+                
+                console.log('z2m stderr: ' + data);
 
                 data=data.toString();
                 //scriptOutput+=data;
@@ -567,7 +596,7 @@ class ZigbeeMqttAdapter extends Adapter {
             this.zigbee2mqtt_subprocess.on('close', function(code) {
                 //Here you can get the exit code of the script
 
-                console.log('ola closing code: ' + code);
+                console.log('z2m closing code: ' + code);
 
                 //console.log('Full output of script: ',scriptOutput);
             });

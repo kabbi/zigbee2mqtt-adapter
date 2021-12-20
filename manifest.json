@@ -43,11 +43,11 @@
       "properties": {
         "local_zigbee2mqtt": {
           "type": "boolean",
-          "description": "If enabled, this addon will install and use its own version of Zigbee2MQTT. Disable this if you have already manually installed Zigbee2MQTT on your system."
+          "description": "Advanced. If enabled, this addon will install and use its own version of Zigbee2MQTT. Disable this if you have already manually installed Zigbee2MQTT on your system."
         },
         "disable_improved_security": {
           "type": "boolean",
-          "description": "Advanced. Since version 0.7.0 of this addon, a random PAN ID and security key are generated when the addon is first installed. This does mean you will have to re-pair all your devices. If you want to delay this, you can disable this extra security (for now). Be advised: anyone running Zigbee2MQTT in default settings will have the same security key, so they may access your devices, or your network might not even want to start if it detects another dongle with the same settings nearby."
+          "description": "Advanced. Since version 0.7.0 of this addon, a random PAN ID and network key (a bit like a password) are generated when the addon is first installed. This does mean you will have to re-pair all your devices. If you want to delay this, you can disable this extra security (for now). Zigbee2MQTT will then use default security settings. These are the same for all Zigbee2MQTT networks! This means others could access your devices, or your network might not even want to start if it detects another dongle with the same settings nearby."
         },
         "auto_update": {
           "type": "boolean",
@@ -64,18 +64,18 @@
         },
         "mqtt": {
           "type": "string",
-          "description": "Mosquitto or other mqtt server host/port to connect to. Default is 'mqtt://localhost'."
+          "description": "Advanced. Mosquitto or other mqtt server host/port to connect to. Default is 'mqtt://localhost'."
         },
         "prefix": {
           "type": "string",
-          "description": "Mqtt topic prefix for zigbee2mqtt. Default is 'zigbee2mqtt'."
+          "description": "Advanced. Mqtt topic prefix for zigbee2mqtt. Default is 'zigbee2mqtt'."
         },
         "serial_port": {
           "type": "string",
-          "description": "The serial port ID of the zigbee USB stick you are using. If you leave it empty it will try to auto-detect the correct port. An example you could try is '/dev/ttyACM0'."
+          "description": "Advanced. The serial port ID of the zigbee USB stick you are using. If you leave it empty it will try to auto-detect the correct port. An example you could try is '/dev/ttyACM0'."
         },
         "channel": {
-          "description": "The wireless channel you want to the Zigbee network to use. If you change this, you will have to pair all your devices again. Suggested options are 11, 15, 20, or 25. The default and minimum is 11. The maximum is 26, although not all Zigbee devices support that channel.",
+          "description": "Advanced. The wireless channel you want to the Zigbee network to use. If you change this, you will have to pair all your devices again. Suggested options are 11, 15, 20, or 25. The default and minimum is 11. The maximum is 26, although not all Zigbee devices support that channel.",
           "enum": [
             "11",
             "12",
@@ -98,15 +98,15 @@
         },
         "ikea_test_server": {
           "type": "boolean",
-          "description": "If you find that your IKEA devices aren't succesfully updating to the latest firmware version, then you may need to switch to the firmwares from IKEA's test server instead. In januari 2021 this is currently the case."
+          "description": "Advanced. If you find that your IKEA devices aren't succesfully updating to the latest firmware version, then you may need to switch to the firmwares from IKEA's test server instead. In januari 2021 this is currently the case."
         },
         "virtual_brightness_alternative": {
           "type": "boolean",
-          "description": "Allow the addon to calculate brightness levels generated from pressing buttons or turning knobs. It's recommended to keep this disabled, as it is work in progress."
+          "description": "Advanced. Allow the addon to calculate brightness levels generated from pressing buttons or turning knobs. It's recommended to keep this disabled, as it is work in progress."
         },
         "debug": {
           "type": "boolean",
-          "description": "Used to find issues if this addon isn't working properly. If enabled, you can find more details about its functioning in the internal log (found under settings -> development)."
+          "description": "Advanced. Used to find issues if this addon isn't working properly. If enabled, you can find more details about its functioning in the internal log (found under settings -> development)."
         }
       }
     }
