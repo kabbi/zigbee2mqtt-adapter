@@ -205,9 +205,10 @@ class ZigbeeMqttAdapter extends Adapter {
                     fs.readFile(this.zigbee2mqtt_configuration_security_file_path, 'utf8', (error, data) => {
                         if (error){
                             console.log("Error reading security file: " + error);
-                            return;
                         }
+                        console.log("READING SECURITY DATA NOW from data: ", data);
                         this.security = JSON.parse(data);
+                        console.log(this.security);
                     });
                     
                     if (this.config.debug) {
@@ -404,9 +405,13 @@ class ZigbeeMqttAdapter extends Adapter {
         					if (this.config.debug) {
         						console.log('zigbee2mqtt security file existed, adding extra security');
         					}
+                            console.log("this.security.pan_id = " + this.security.pan_id);
                             if(this.security.pan_id != ""){
                                 base_config += "  pan_id: " + this.security.pan_id + "\n" +
                                 "  network_key: " + this.security.network_key + "\n";
+                            }
+                            else{
+                                console.log('security pan_id was empty!');
                             }
                             
                         }
