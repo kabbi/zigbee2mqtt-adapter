@@ -142,39 +142,60 @@ class Zigbee2MQTTHandler extends APIHandler {
 					}
                     
                     if(typeof request.body.pan_id != 'undefined' && typeof request.body.network_key != 'undefined'){
-                        this.adapter.security.pan_id = request.body.pan_id;
-                        this.adapter.security.network_key = JSON.parse("[" + request.body.network_key + "]");
-                        console.log("this.adapter.security.network_key array: " + this.adapter.security.network_key);
-                        fs.writeFile( this.adapter.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.adapter.security ), "utf8" , (err, result) => {
-                            if(err){
-                                console.log('file write error:', err);
-            					return new APIResponse({
-            						status: 200,
-            						contentType: 'application/json',
-            						content: JSON.stringify({
-            							'status': 'Error: security settings could not be saved.'
-            						}),
-            					});
-                            }
-                            else{
-                                console.log('Security file has been written');
-            					return new APIResponse({
-            						status: 200,
-            						contentType: 'application/json',
-            						content: JSON.stringify({
-            							'status': 'Security settings were saved. If you changed them, you will need to restart the system for changes to take effect.'
-            						}),
-            					});
-                            }
-                        });
                         
-    					return new APIResponse({
-    						status: 200,
-    						contentType: 'application/json',
-    						content: JSON.stringify({
-    							'status': 'New security values should be saved.'
-    						}),
-    					});
+                        if(this.adapter.security.pan_id != request.body.pan_id){
+                            this.adapter.security.pan_id = request.body.pan_id;
+                            this.adapter.security.network_key = JSON.parse("[" + request.body.network_key + "]");
+                            console.log("this.adapter.security.network_key array: " + this.adapter.security.network_key);
+                            
+                            fs.writeFile( this.adapter.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.adapter.security ), "utf8" , (err, result) => {
+                                if(err){
+                                    console.log('file write error:', err);
+                					return new APIResponse({
+                						status: 200,
+                						contentType: 'application/json',
+                						content: JSON.stringify({
+                							'status': 'Error: security settings could not be saved.'
+                						}),
+                					});
+                                }
+                                else{
+                                    console.log('Security file has been written');
+                					return new APIResponse({
+                						status: 200,
+                						contentType: 'application/json',
+                						content: JSON.stringify({
+                							'status': 'Security settings were saved. If you changed them, you will need to restart the system for changes to take effect.'
+                						}),
+                					});
+                                }
+                            });
+                            
+                            fs.unlink( this.adapter.zigbee2mqtt_coordinator_backup_json_file_path ,function(err){
+                                    if(err) return console.log(err);
+                                    console.log('old backup coordinator file deleted successfully');
+                            });
+                            
+        					return new APIResponse({
+        						status: 200,
+        						contentType: 'application/json',
+        						content: JSON.stringify({
+        							'status': 'New security values should be saved.'
+        						}),
+        					});
+                        }
+                        else{
+                            console.log("seems to be the same pan_id that was already set.");
+        					return new APIResponse({
+        						status: 200,
+        						contentType: 'application/json',
+        						content: JSON.stringify({
+        							'status': 'PAN_ID was the same as the one already set, so no changes were made.'
+        						}),
+        					});
+                        }
+                        
+                        
                     }
                     else{
     					return new APIResponse({

@@ -175,6 +175,9 @@ class ZigbeeMqttAdapter extends Adapter {
 		// console.log("this.zigbee2mqtt_configuration_devices_file_path =",
 		//             this.zigbee2mqtt_configuration_devices_file_path);
 
+        this.zigbee2mqtt_coordinator_backup_json_file_path =
+            path.join(this.zigbee2mqtt_data_dir_path, 'coordinator_backup.json');
+
 		this.zigbee2mqtt_package_file_path =
 			path.join(this.zigbee2mqtt_data_dir_path, 'zigbee2mqtt', 'package.json');
 		// console.log("this.zigbee2mqtt_package_file_path =", this.zigbee2mqtt_package_file_path);
