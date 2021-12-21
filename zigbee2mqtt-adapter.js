@@ -392,6 +392,9 @@ class ZigbeeMqttAdapter extends Adapter {
             
 			fs.access(this.zigbee2mqtt_configuration_file_path, (err) => {
 							
+                if (err && err.code === 'ENOENT') {
+					console.log('The configuration.yaml source file didn\'t exist yet:', this.zigbee2mqtt_configuration_file_source_path);
+				}
                 
                 var base_config = "homeassistant: true\n" +
 				        "permit_join: false\n" +
@@ -443,9 +446,11 @@ class ZigbeeMqttAdapter extends Adapter {
 					"    interval: 100\n";
                 }
                 
-                if (err && err.code === 'ENOENT') {
-					console.log('The configuration.yaml source file didn\'t exist:', this.zigbee2mqtt_configuration_file_source_path);
-				}
+                if (this.config.debug) {
+                    console.log("- - -");
+                    console.log(base_config);
+                    console.log("- - -");
+                }
                 
 				fs.writeFile(this.zigbee2mqtt_configuration_file_path, base_config, (err) => {
 					if (err) {
@@ -453,7 +458,6 @@ class ZigbeeMqttAdapter extends Adapter {
 					} else {
 						console.log('basic configuration.yaml file was succesfully created at: ' + this.zigbee2mqtt_configuration_file_path);
 					}
-
 				});
 
 			});
@@ -461,7 +465,6 @@ class ZigbeeMqttAdapter extends Adapter {
 			console.error(`Error checking if zigbee2mqtt config file exists: ${error.message}`);
 		}
 	}
-
 
 
 	stop_zigbee2mqtt() {
@@ -476,7 +479,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
 	run_zigbee2mqtt(delay = 10) {
         if (this.config.debug) {
-            console.log("in run_zigbee2mqtt");
+            console.log("in run_zigbee2mqtt. Will really start in a few seconds.");
         }
 		
         setTimeout(this.check_if_config_file_exists.bind(this), 4000);
@@ -492,7 +495,7 @@ class ZigbeeMqttAdapter extends Adapter {
         }
         
 		if (this.config.debug) {
-			console.log('starting zigbee2MQTT using: node ' + this.zigbee2mqtt_file_path);
+			console.log('really starting zigbee2MQTT using: node ' + this.zigbee2mqtt_file_path);
 			console.log("initial this.config.serial_port = " + this.config.serial_port);
 			console.log("this.zigbee2mqtt_configuration_devices_file_path = " + this.zigbee2mqtt_configuration_devices_file_path);
 			console.log("this.zigbee2mqtt_configuration_log_path = " + this.zigbee2mqtt_configuration_log_path);
