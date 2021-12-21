@@ -433,9 +433,7 @@ class ZigbeeMqttAdapter extends Adapter {
                 }
                         
                         
-				base_config += "  availability_timeout: " + this.availability_interval + "\n" +
-                        //"  log_output: []\n" +
-                        "  legacy_api: false\n" +
+				base_config += "  legacy_api: false\n" +
 						"device_options:\n" +
                         //"  debounce: 1\n" +
                         //"  debounce_ignore: action\n" +
