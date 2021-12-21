@@ -250,7 +250,10 @@ class Zigbee2MQTTHandler extends APIHandler {
 							'status': 'Attempted a force-remove of the device'
 						}),
 					});
-				} else {
+				} 
+                
+                
+                else {
 					console.log("unhandled API action");
 					return new APIResponse({
 						status: 200,
@@ -267,7 +270,11 @@ class Zigbee2MQTTHandler extends APIHandler {
 		}
 
 		return new APIResponse({
-			status: 201
+			status: 200,
+			contentType: 'application/json',
+			content: JSON.stringify({
+				'status': 'Error: incorrect action'
+			}),
 		});
 	}
 }
