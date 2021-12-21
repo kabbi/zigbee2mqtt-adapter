@@ -187,7 +187,8 @@ class ZigbeeMqttAdapter extends Adapter {
 		this.devices_overview = {}; //new Map(); // stores all the connected devices, and if they can be updated. Could potentially also be used to force-remove devices from the network.
 
 
-
+        this.improve_security = false;
+        
         // Check security file
         try {
 			fs.access(this.zigbee2mqtt_configuration_security_file_path, (err) => {
@@ -208,13 +209,24 @@ class ZigbeeMqttAdapter extends Adapter {
                         }
                         else{
                             this.security = JSON.parse(data);
+                            
+                            
+                            // adding extra security
+                            if(this.config.disable_improved_security == true){
+                                console.log('WARNING: (extra) security has been manually disabled.');
+                            }
+                            else {
+                                this.improve_security = true;
+                            }
+                            
+                            
                             if (this.config.debug) {
                                 console.log("Security settings have been loaded from file: ", this.security);
                             }
                         }
-                        //console.log("READING SECURITY DATA NOW from data: ", data);
+                        console.log("init: READING SECURITY DATA NOW from data: ", data);
                         
-                        //console.log(this.security);
+                        console.log("init: SECURITY IS NOW: ", this.security);
                     });
                     
 
@@ -400,30 +412,18 @@ class ZigbeeMqttAdapter extends Adapter {
                 
                 console.log("this.config.disable_improved_security = " + this.config.disable_improved_security);
                 
-                // adding extra security
-                if(this.config.disable_improved_security == true){
-                    console.log('WARNING: (extra) security has been manually disabled.');
-                }
-                else{
-                    console.log('Adding extra security.');
-        			fs.access(this.zigbee2mqtt_configuration_security_file_path, (err) => {
-        				if (err && err.code === 'ENOENT') {
-    						console.log('WARNING: zigbee2mqtt security file did not exist, cannot add extra security.');
-        				} else {
-        					if (this.config.debug) {
-        						console.log('zigbee2mqtt security file existed, adding extra security');
-        					}
-                            console.log("this.security.pan_id = " + this.security.pan_id);
-                            if(this.security.pan_id != ""){
-                                base_config += "  pan_id: " + this.security.pan_id + "\n" +
-                                "  network_key: " + this.security.network_key + "\n";
-                            }
-                            else{
-                                console.log('security pan_id was empty!');
-                            }
-                            
-                        }
-                    });
+                if(this.improve_security){
+                    if (this.config.debug) {
+                        console.log('Adding extra security.');
+                        console.log("this.security.pan_id = " + this.security.pan_id);
+                    }
+                    if(this.security.pan_id != ""){
+                        base_config += "  pan_id: " + this.security.pan_id + "\n" +
+                        "  network_key: " + this.security.network_key + "\n";
+                    }
+                    else{
+                        console.log('security pan_id was empty!');
+                    }
                 }
                         
                         
@@ -1472,6 +1472,7 @@ class ZigbeeMqttAdapter extends Adapter {
 			if (this.config.debug) {
 				console.log("not setting permitJoin back to off yet, something caused a time extension");
 			}
+            setTimeout(this.stopPairingCheck.bind(this), 130000);
 		}
 	}
 
