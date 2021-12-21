@@ -399,8 +399,17 @@ class ZigbeeMqttAdapter extends Adapter {
 					console.log('The configuration.yaml source file didn\'t exist yet:', this.zigbee2mqtt_configuration_file_source_path);
 				}
                 
-                var base_config = "homeassistant: true\n" +
-				        "permit_join: false\n" +
+                var base_config = "";
+                
+                // Home Assistant support
+                if (this.config.home_assistant_support == true) {
+                    base_config += "homeassistant: true\n";
+				}
+                else{
+                    base_config += "homeassistant: false\n";
+                }
+                
+                base_config += "permit_join: false\n" +
                         "devices: devices.yaml\n" +
                         "groups: groups.yaml\n" +
 						"mqtt:\n" +
@@ -416,7 +425,7 @@ class ZigbeeMqttAdapter extends Adapter {
 						"advanced:\n";
                         
                 
-                console.log("this.config.disable_improved_security = " + this.config.disable_improved_security);
+                //console.log("this.config.disable_improved_security = " + this.config.disable_improved_security);
                 
                 if(this.improve_security){
                     if (this.config.debug) {
@@ -428,7 +437,7 @@ class ZigbeeMqttAdapter extends Adapter {
                         "  network_key: [" + this.security.network_key + "]\n";
                     }
                     else{
-                        console.log('security pan_id was empty!');
+                        console.log('Warning: security pan_id was empty! Security was not upgraded, and is using default values.');
                     }
                 }
                         
