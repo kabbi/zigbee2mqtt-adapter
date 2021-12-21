@@ -419,7 +419,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     }
                     if(this.security.pan_id != ""){
                         base_config += "  pan_id: " + this.security.pan_id + "\n" +
-                        "  network_key: " + this.security.network_key + "\n";
+                        "  network_key: [" + this.security.network_key + "]\n";
                     }
                     else{
                         console.log('security pan_id was empty!');
