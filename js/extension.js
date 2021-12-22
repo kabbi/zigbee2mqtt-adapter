@@ -28,7 +28,7 @@
 
 
 	  show() {
-			console.log("in show");
+			//console.log("in show");
 			//console.log("this.content:");
 			//console.log(this.content);
 			
@@ -89,7 +89,7 @@
 				document.getElementById('extension-zigbee2mqtt-adapter-update-map-button').disabled = true;
 				
 				this.asked_for_map = true;
-				console.log("this.asked_for_map is now: " + this.asked_for_map);
+				//console.log("this.asked_for_map is now: " + this.asked_for_map);
 				
 		        window.API.postJson(
 		         "/extensions/zigbee2mqtt-adapter/api/ajax",
@@ -110,10 +110,10 @@
 
             // Save new network security values
             document.getElementById('extension-zigbee2mqtt-adapter-save-security-button').addEventListener('click', (event) => {
-                console.log("save zigbee security button clicked");
+                //console.log("save zigbee security button clicked");
                 const new_pan_id = document.getElementById("extension-zigbee2mqtt-adapter-security-pan-id").value;
                 const new_network_key = document.getElementById("extension-zigbee2mqtt-adapter-security-network-key").value;
-                console.log(new_pan_id,new_network_key);
+                //console.log(new_pan_id,new_network_key);
                 
                 if(new_pan_id == "" || new_network_key == ""){
                     alert("security values cannot be empty");
@@ -126,7 +126,7 @@
     					{"action":"save-security","pan_id":new_pan_id,"network_key":new_network_key}
 
     		        ).then((body) => {
-                        console.log("new values have been saved");
+                        //console.log("new values have been saved");
                         alert("The security values were saved");
     							//console.log(body);
     							//document.getElementById("extension-zigbee2mqtt-adapter-graphviz-container").innerHTML = body.status;
@@ -142,7 +142,7 @@
 		
 		
 			window.zigbee2mqtt_interval = setInterval(function(){
-				console.log("tick");
+				//console.log("tick");
 				try{
 					if( this.asked_for_map || this.asked_for_update){
 						//console.log("asked for map was true");
@@ -152,7 +152,7 @@
 
 					        ).then((body) => {
 								//console.log("received poll response");
-								console.log(body);
+								//console.log(body);
 								if(this.asked_for_map){
 									if(body['map'] != this.previous_map_data && body['map'] != ""){
 										this.previous_map_data = body['map'];
@@ -255,13 +255,13 @@
 	          '/extensions/zigbee2mqtt-adapter/api/ajax',
 						{"action": "init"}
 	        ).then((body) => {
-				console.log("Zigbee2MQTT: init response received: ", body);
+				//console.log("Zigbee2MQTT: init response received: ", body);
 				//console.log(body.devices);
                 const list2 = document.getElementById('extension-zigbee2mqtt-adapter-list');
-                console.log("list2:",list2);
+                //console.log("list2:",list2);
                 
                 if(body.installed == false){
-                    console.log("STILL INSTALLING");
+                    //console.log("STILL INSTALLING");
 			        
     				if(typeof list2 != 'undefined'){
                         list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Still installing...</h2><br/><img src="/extensions/zigbee2mqtt-adapter/images/spinner.gif" width="32" height="32" alt="Installing..."/ style="opacity:.5"><br/><p>It takes about 30 minutes for Zigbee2MQTT to be fully downloaded and installed.</p><p>Come back a little later. If this message is gone, then intallation has finished.</p><p style="font-style:italic">Do not unplug or restart this controller until installation is complete!</p></div>';
@@ -282,7 +282,7 @@
                 }
                 
                 if(typeof body.security != 'undefined'){
-                    console.log("security values were present in init data. pan_id: " + body.security.pan_id);
+                    //console.log("security values were present in init data. pan_id: " + body.security.pan_id);
                     document.getElementById('extension-zigbee2mqtt-adapter-security-pan-id').value = body.security.pan_id;
                     document.getElementById('extension-zigbee2mqtt-adapter-security-network-key').value = body.security.network_key;
                 }
@@ -498,8 +498,8 @@
 							`/extensions/${this.id}/api/ajax`,
 							{'action':'update-device','zigbee_id':items[item]['zigbee_id']}
 						).then((body) => { 
-							console.log("Update item reaction: ");
-							console.log(body);
+							//console.log("Update item reaction: ");
+							//console.log(body);
 							pre.innerText = body['update'];
 							this.asked_for_update = true;
 
