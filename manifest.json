@@ -35,6 +35,7 @@
       "serial_port": "",
       "channel": "11",
       "ikea_test_server": false,
+	  "home_assistant_support":false,
 	  "virtual_brightness_alternative": false,
       "debug": false
     },
@@ -99,6 +100,10 @@
         "ikea_test_server": {
           "type": "boolean",
           "description": "Advanced. If you find that your IKEA devices aren't succesfully updating to the latest firmware version, then you may need to switch to the firmwares from IKEA's test server instead. In januari 2021 this is currently the case."
+        },
+        "home_assistant_support": {
+          "type": "boolean",
+          "description": "Advanced. If you enable this, Zigbee2MQTT will be in Home Assistant compatibility mode."
         },
         "virtual_brightness_alternative": {
           "type": "boolean",
