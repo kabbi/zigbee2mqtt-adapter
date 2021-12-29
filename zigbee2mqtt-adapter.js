@@ -820,7 +820,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
 					if (data == "offline") { // && device.connected == true ){
 						if (this.config.debug) {
-							//console.log("O F F L I N E");
+							console.log("This device availability is set to offline. this.config.manual_toggle_response = " + this.config.manual_toggle_response);
 						}
 
 						// Set state to off
@@ -831,7 +831,9 @@ class ZigbeeMqttAdapter extends Adapter {
 
 						// Set to disconnected
 						if (this.config.manual_toggle_response == "disconnected" || this.config.manual_toggle_response == "both") {
-							//console.log("setting device.connected to false");
+							if (this.config.debug) {
+                                console.log("- setting device.connected to false");
+                            }
 							this.devices[device_id].connected = false;
 							device.connectedNotify(false);
 						}
@@ -1172,9 +1174,6 @@ class ZigbeeMqttAdapter extends Adapter {
     				this.devices[device_id].connected = true;
     				device.connectedNotify(true);
                 }
-
-
-
 
 			} catch (error) {
 				console.log("Zigbee2MQWTT adonL: Error parsing incoming message: " + error);

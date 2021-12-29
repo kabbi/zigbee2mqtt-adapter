@@ -7,6 +7,13 @@ const {
 	APIResponse
 } = require('gateway-addon');
 
+const {
+	spawn,
+	exec,
+	execSync,
+
+} = require('child_process');
+
 const manifest = require('./manifest.json');
 
 class Zigbee2MQTTHandler extends APIHandler {
@@ -206,12 +213,60 @@ class Zigbee2MQTTHandler extends APIHandler {
     						}),
     					});
                     }
-                    
-
-                    
-                    
 
 				} 
+                
+                
+                else if (action == "re-install") {
+					if (this.config.debug) {
+						console.log("in re-install. Stopping and deleting Zigbee2MQTT now.");
+					}
+                    this.adapter.stop_zigbee2mqtt();
+                    
+                    /*
+                    setTimeout(function () {
+            			try {
+                            
+            				//execSync("pgrep -f 'zigbee2mqtt-adapter/zigbee2mqtt/index.js' | xargs kill -9");
+            				execSync("pkill 'zigbee2mqtt-adapter/zigbee2mqtt/index.js'");
+            				console.log("pkill done");
+            			} catch (error) {
+            				console.log("exec pkill error: " + error);
+            			}
+                    }, 1000)
+                    */
+                    
+                    setTimeout(function () {
+                        
+                        fs.rmdir(this.adapter.zigbee2mqtt_dir_path, { recursive: true }, (err) => {
+                            if (err) {
+                                console.log("ERROR, unable to delete the folder");
+                            }
+
+                            console.log(`${dir} is deleted!`);
+                        });
+                        
+                    }, 10000)
+        			
+                    setTimeout(function () {
+                        console.log("rebooting to re-install Zigbee2MQTT");
+            			try {
+            				//execSync("pgrep -f 'zigbee2mqtt-adapter/zigbee2mqtt/index.js' | xargs kill -9");
+            				execSync("sudo reboot");
+            			} catch (error) {
+            				console.log("exec reboot error: " + error);
+            			}
+                    }, 60000)
+                    
+					return new APIResponse({
+						status: 200,
+						contentType: 'application/json',
+						content: JSON.stringify({
+							'status': 'Re-install process has been started.'
+						}),
+					});
+                    
+                }
                 
                 else if (action == "update-device") {
 					if (this.config.debug) {

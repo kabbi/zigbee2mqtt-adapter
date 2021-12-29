@@ -139,6 +139,34 @@
                 
             });
 
+            
+            
+            // Reinstall button
+            document.getElementById('extension-zigbee2mqtt-adapter-reinstall-button').addEventListener('click', (event) => {
+                console.log("re-install button clicked");
+                //console.log(new_pan_id,new_network_key);
+                
+                if( confirm("Are you absolutely sure you want to re-install Zigbee2MQTT? Only proceed if you understand the risks!") ){
+                    
+    		        window.API.postJson(
+    		         "/extensions/zigbee2mqtt-adapter/api/ajax",
+    					{"action":"re-install"}
+
+    		        ).then((body) => {
+                        document.getElementById('extension-zigbee2mqtt-adapter-content-container').innerHTML = '<h3 id="extension-zigbee2mqtt-adapter-title"><img id="extension-zigbee2mqtt-adapter-main-page-icon" src="/extensions/zigbee2mqtt-adapter/images/menu-icon.svg">Zigbee2MQTT</h3><br/><br/><h4 style="text-align:center">In one minute your controller will restart...</h4>';
+
+    		        }).catch((e) => {
+    		  			console.log("Error sending security values: " + e.toString());
+    		        });
+                    
+                }
+                
+            });
+
+
+            
+
+
 		
 		
 			window.zigbee2mqtt_interval = setInterval(function(){
@@ -290,6 +318,8 @@
 
 	        }).catch((e) => {
 	  			console.log("Error sending init request: " + e.toString());
+                
+                document.getElementById('extension-zigbee2mqtt-adapter-view').innerHTML = "<h1>The Zigbee2Mqtt Adapter seems to have stopped</h1>";
 				//document.getElementById('extension-zigbee2mqtt-adapter-response-data').innerText = "Error sending init request: " + e.toString();
 	        });
 		}
