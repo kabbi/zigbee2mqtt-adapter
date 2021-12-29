@@ -136,9 +136,12 @@ class ExposesDeviceGenerator {
 
 					if( typeof exposes_info[k]["access"] != "undefined" ){
 						if(typeof exposes_info[k]['name'] != "undefined"){
-							if( exposes_info[k]['name'] != "x" && exposes_info[k]['name'] != "y"){ // Skip the color fragments
+							if( exposes_info[k]['name'] != "x" && exposes_info[k]['name'] != "y" && exposes_info[k]['name'] != "Action group" && exposes_info[k]['name'] != "Action rate"){ // Skip the color fragments
 								new_device = this.parse_property(exposes_info[k], new_device, property_names_list);
 							}
+                            else{
+                                console.log("skipping an exposed property: " + exposes_info[k]['name'] );
+                            }
 						}
 					}
 					else if(k != "values"){
@@ -161,6 +164,15 @@ class ExposesDeviceGenerator {
 	
 	parse_property(expose, device, property_names_list){
 		//console.log("+");
+        /*
+        if(typeof expose['name'] != "undefined"){
+            if( expose['name'] == 'Action group' || expose['name'] == 'Action rate'){
+                console.log("");
+                return device;
+            }
+        }
+        */
+        
 		if(typeof expose['type'] != "undefined"){
 			
 			// Decide between float and integer
@@ -259,15 +271,23 @@ class ExposesDeviceGenerator {
 				else if(expose.name == "occupied_heating_setpoint" || expose.name == "occupied_cooling_setpoint"){
 					device.properties[expose.name]['@type'] = 'TargetTemperatureProperty';
 				}
-				else if(expose.name == "local_temperature"){
+				else if(expose.name == "local_temperature" || expose.name == "temperature"){
 					device.properties[expose.name]['@type'] = 'TemperatureProperty';
+					if(device['@type'].indexOf("TemperatureSensor") == -1){
+						device['@type'].push('TemperatureSensor');
+					}
 				}
-				else if(expose.name == "occupancy"){
+				else if(expose.name == "humidity"){
+					device.properties[expose.name]['@type'] = 'HumidityProperty';
+					if(device['@type'].indexOf("HumiditySensor") == -1){
+						device['@type'].push('HumiditySensor');
+					}
+				}
+				else if(expose.name == "occupancy" || expose.name == "contact"){
 					device.properties[expose.name]['@type'] = 'MotionProperty';
 					if(device['@type'].indexOf("MotionSensor") == -1){
 						device['@type'].push('MotionSensor');
 					}
-					
 				}
 				
 			}
@@ -338,6 +358,7 @@ class ExposesDeviceGenerator {
 		
 		
 		if (!info.supported || !info.definition || !info.definition.exposes) {
+            console.log("Error, missing exposes data, cannot generate device");
 			return;
 		}
 		
@@ -359,8 +380,7 @@ class ExposesDeviceGenerator {
 		
 			var property_names_list = this.pre_parse_device(info.definition.exposes,[]);
 			if(this.config.debug){
-				console.log("property_names_list = ");
-				console.log(property_names_list);
+				console.log("Exposes: generateDevice: property_names_list = ", property_names_list);
 			}
 			device = this.parse_device(info.definition.exposes, device, property_names_list);
 		

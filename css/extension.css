@@ -553,6 +553,16 @@
 }
 
 
+#extension-zigbee2mqtt-adapter-debug-warning{
+    max-width:60rem;
+    margin:2rem auto;
+    padding:2rem;
+    background-color:red;
+    color:white;
+    border-radius:.5rem;
+}
+
+
 @media screen and (min-width: 641px) {
 	.extension-zigbee2mqtt-adapter-line2{
 		width:auto;

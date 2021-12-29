@@ -70,7 +70,7 @@ class ZigbeeMqttAdapter extends Adapter {
 		}
         
 		if (typeof this.config.virtual_brightness_alternative == "undefined") {
-			this.config.virtual_brightness_alternative = true;
+			this.config.virtual_brightness_alternative = false;
             console.log("this.config.virtual_brightness_alternative = " + this.config.virtual_brightness_alternative);
 		}
 
@@ -127,6 +127,20 @@ class ZigbeeMqttAdapter extends Adapter {
 		this.waiting_for_update = false;
 		this.update_result = 'idle';
         
+        try{
+    		if (typeof this.config.virtual_brightness_alternative_speed == "undefined") {
+    			this.config.virtual_brightness_alternative_speed = 10;
+    		}
+            else{
+                this.config.virtual_brightness_alternative_speed = parseInt(this.config.virtual_brightness_alternative_speed);
+            }
+        }
+		catch(e){
+		    this.config.virtual_brightness_alternative_speed = 10;
+		}
+        
+            
+        //console.log("this.config.virtual_brightness_alternative = " + this.config.virtual_brightness_alternative);
         this.virtual_brightness_alternatives = {};
 
 		// Availability checking
@@ -265,7 +279,7 @@ class ZigbeeMqttAdapter extends Adapter {
 			fs.access(this.zigbee2mqtt_dir_path, (err) => {
 				if (err && err.code === 'ENOENT') {
                     console.log("zigbee2mqtt folder was missing, should download and install");
-					this.download_z2m(); // this also then starts zigbee2mqtt
+					this.download_z2m(); // this then also starts zigbee2mqtt
 				} else {
 					if (this.config.debug) {
 						console.log('zigbee2mqtt folder existed.');
@@ -441,7 +455,6 @@ class ZigbeeMqttAdapter extends Adapter {
                     }
                 }
                         
-                        
 				base_config += "  legacy_api: false\n" +
 						"device_options:\n" +
                         //"  debounce: 1\n" +
@@ -449,12 +462,12 @@ class ZigbeeMqttAdapter extends Adapter {
 					    "  legacy: false\n";
                         //"  filtered_attributes: ['Data transmission']";
 
-                if(!this.config.virtual_brightness_alternative){
+                //if(!this.config.virtual_brightness_alternative){
                     console.log("using Zigbee2MQTT's built-in simulated brightness feature");
                     base_config += "  simulated_brightness:\n" +
 					"    delta: 2\n" +
 					"    interval: 100\n";
-                }
+                //}
                 
                 if (this.config.debug) {
                     console.log("- - -");
@@ -489,9 +502,8 @@ class ZigbeeMqttAdapter extends Adapter {
 
 	run_zigbee2mqtt(delay = 10) {
         if (this.config.debug) {
-            console.log("in run_zigbee2mqtt. Will really start in a few seconds.");
+            console.log("in run_zigbee2mqtt. Will really start in: " + delay + " seconds.");
         }
-		
         setTimeout(this.check_if_config_file_exists.bind(this), 4000);
 		setTimeout(this.really_run_zigbee2mqtt.bind(this), delay * 1000); // wait 10 seconds before really starting Zigbee2MQTT, to make sure serial port has been released.
     }
@@ -499,11 +511,9 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 	really_run_zigbee2mqtt() {
-        
         if(this.mqtt_connection_attempted == false){
             this.connect_to_mqtt();
         }
-        
 		if (this.config.debug) {
 			console.log('really starting zigbee2MQTT using: node ' + this.zigbee2mqtt_file_path);
 			console.log("initial this.config.serial_port = " + this.config.serial_port);
@@ -741,6 +751,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
 	delete_z2m() {
         this.z2m_installed_succesfully = false;
+        this.stop_zigbee2mqtt()
 		if (this.config.debug) {
 			console.log('Attempting to delete local zigbee2mqtt from data folder');
 		}
@@ -763,6 +774,7 @@ class ZigbeeMqttAdapter extends Adapter {
 			console.log('_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ * * *');
 			console.log('in incoming message, topic: ' + topic);
 			console.log(this.config.prefix);
+            console.log('msg data: ', data.toString());
 		}
 
 		if (!this.z2m_started) {
@@ -854,11 +866,14 @@ class ZigbeeMqttAdapter extends Adapter {
 				}
 
 			}
-		}
+		} // end of availablity message parsing
+        
 
 		// Only proper JSON data is allowed to pass beyond this point
 		if (!data.toString().includes(":")) {
-			//console.log("incoming message did not have a : in it? aborting processing it.");
+			if (this.config.debug) {
+                console.log("incoming message did not have a : in it? Not proper json, so will not process the incoming message further.");
+            }
 			return;
 		}
 
@@ -878,7 +893,8 @@ class ZigbeeMqttAdapter extends Adapter {
 				}
 			}
 		} catch (error) {
-			console.log("msg error: " + error);
+			console.log("msg parsing error: ", error);
+            return;
 		}
 
 
@@ -920,7 +936,10 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 				if (msg.action && device.events.get(msg.action)) { // if there's an action (event), and the action exists in the device
-					const event = new Event(
+                    if (this.config.debug) {
+                        console.log("creating event from action");
+                    }
+                    const event = new Event(
 						device,
 						msg.action,
 						msg[device.events.get(msg.action)],
@@ -929,11 +948,14 @@ class ZigbeeMqttAdapter extends Adapter {
 				}
                 
 				for (const key of Object.keys(msg)) { // loop over actual property updates
-                    if (this.config.debug) {
-                        console.log(key);
-                    }
+                    //if (this.config.debug) {
+                    //    console.log(key);
+                    //}
                     
-                    if( key == "Action rate"){ // Action rate isn't very useful for anything, so skip that.
+                    if( key == "action_group" || key == "action_rate" || key == "update" || key == "action_step_size" || key == "action_transition_time"){ // Action rate isn't very useful for anything, so skip that.
+						if (this.config.debug) {
+							console.log("- ignoring property: " + key);
+						}
                         continue;
                     }
                     
@@ -968,7 +990,9 @@ class ZigbeeMqttAdapter extends Adapter {
                     
 					// Check if device can be updated
 					if (key == 'update_available') {
-						//console.log("found update_available information, storing in device_overview.");
+						if (this.config.debug) {
+                            console.log("found update_available information, storing in devices_overview.");
+                        }
 						if (!this.waiting_for_update) {
 							this.devices_overview[zigbee_id]['update_available'] = msg[key];
 						}
@@ -1015,10 +1039,12 @@ class ZigbeeMqttAdapter extends Adapter {
 						continue;
 					}
 
-					// Check if an extra boolean property should be updated
+					// Check if an extra boolean or brightness property should be updated
 					try {
 						if (key == 'action') {
 							//console.log("key == action");
+                            
+                            // boolean action
 							if (!msg.hasOwnProperty('state')) {
                                 if(msg[key] != null){
     								if (msg[key].toLowerCase() == "on" || msg[key].toLowerCase() == "off") {
@@ -1026,7 +1052,9 @@ class ZigbeeMqttAdapter extends Adapter {
     									const extra_property = device.findProperty('power state');
     									if (!extra_property) {
     										//console.log("no extra power state property spotted");
-    									} else {
+                                            this.attempt_new_property(device_id, 'power state', 1, true,false); // value, read-only and percentage-type
+    									} 
+                                        else {
     										var extra_boolean = false;
     										if (msg[key].toLowerCase() == "on") {
     											extra_boolean = true
@@ -1041,18 +1069,55 @@ class ZigbeeMqttAdapter extends Adapter {
     										}
     									}
     								}
+                                    else if(msg[key].toLowerCase() == "toggle"){
+                                        if (this.config.debug) {
+                                            console.log("toggle action spotted");
+                                        }
+                                        extra_property = device.findProperty('toggle');
+                                        
+    									if (!extra_property) {
+    										console.log("no extra power state property spotted");
+                                            this.attempt_new_property(device_id, 'toggle', true, true,false); // value, read-only and percentage-type
+    									}
+                                        else {
+                                            console.log("toggle extra_property.value: ", extra_property.value);
+                                            
+    										var extra_boolean = !extra_property.value
+    										extra_property.setCachedValue(extra_boolean);
+    										device.notifyPropertyChanged(extra_property);
+    										if (this.config.debug) {
+    											console.log("extra_boolean updated");
+    										}
+                                            
+    									}
+                                    } 
                                 }
 
 							}
                             
+                            
+                            //this.config.virtual_brightness_alternative = true;
+                            
                             if(this.config.virtual_brightness_alternative) {
-                                var extra_property = null;
-                                if(msg[key] != null){
-                                    if( (msg[key].toLowerCase() == "brightness_move_up" || msg[key].toLowerCase() == "brightness_move_down") ){
-                                        if (this.config.debug) {
-                                            console.log("brightness up or down: " + msg[key].toLowerCase() );
+                                if (this.config.debug) {
+                                    console.log("using virtual brightness alternative");
+                                }
+                                //var extra_property = null;
+                                if(msg[key] != null && msg['brightness'] != 'undefined'){
+                                    if( msg[key].toLowerCase() == "brightness_move_up" || msg[key].toLowerCase() == "brightness_move_down" ){
+                                        
+                                        var direction = 'down';
+                                        if(msg[key].toLowerCase() == "brightness_move_up"){
+                                            direction = 'up';
                                         }
-    								    extra_property = device.findProperty('brightness');
+                                        
+                                        if (this.config.debug) {
+                                            console.log("brightness alternative: spotted brightness up or down direction: " + direction );
+                                        }
+    								    
+                                        
+                                        
+                                        var extra_property = device.findProperty('brightness');
     								    if (!extra_property){
     								        if (this.config.debug) {
                                                 console.log("Creating missing brightness property");
@@ -1060,15 +1125,51 @@ class ZigbeeMqttAdapter extends Adapter {
                                                 console.log("key = " + key );
                                                 console.log("msg[key] = " + msg[key] );
                                             }
+                                            //var initial_brightness = 100;
+                                            //if(msg[key].toLowerCase() == "brightness_move_down"){initial_brightness = 0}
+                                            
                                             this.attempt_new_property(device_id, 'brightness', 0, true,true); // value, read-only and percentage-type
                                             extra_property = device.findProperty('brightness');
-                                            this.virtual_brightness_alternatives[device_id] = 0;
+                                            this.virtual_brightness_alternatives[device_id] = {'value':0,'direction':direction};
+                                            return;
     								    }
                                         else{
-                                            if (this.config.debug) {
-                                                console.log("extra brightness property existed");
+
+                                            if(typeof this.virtual_brightness_alternatives[device_id] == 'undefined'){
+                                                this.virtual_brightness_alternatives[device_id] = {'value':0,'direction':direction};
+                                                
+                                                /*
+                                                if(typeof extra_property.value != 'undefined'){
+                                                    if(parseInt(extra_property.value) > 100){
+                                                        this.virtual_brightness_alternatives[device_id] = {'value':100,'direction':direction};
+                                                    }
+                                                    else{
+                                                        this.virtual_brightness_alternatives[device_id] = {'value':parseInt(extra_property.value),'direction':direction} ;
+                                                    }
+                                                }
+                                                else{
+                                                    
+                                                    this.virtual_brightness_alternatives[device_id] = 0;
+                                                }
+                                                console.log("set initial remembered virtual brightness value to: " + this.virtual_brightness_alternatives[device_id]);
+                                                */
+                                                
                                             }
-                                        
+                                            else{
+                                                this.virtual_brightness_alternatives[device_id]['direction'] = direction;
+                                                if( isNaN(this.virtual_brightness_alternatives[device_id]['value'] ) ){
+                                                    this.virtual_brightness_alternatives[device_id]['value'] = 0;
+                                                }
+                                            }
+                                            if (this.config.debug) {
+                                                console.log("(extra) brightness property existed. Updating it through alternative. this.virtual_brightness_alternatives[device_id] gave: " + JSON.stringify(this.virtual_brightness_alternatives[device_id]));
+                                            }
+                                            
+                                            console.log("extra_property.value = " + extra_property.value);
+                                            
+                                            
+                                            
+                                            
                                             /*
                                             extra_property.getValue().then(current_value => {
                                                 console.log("current_value = " + current_value);
@@ -1086,21 +1187,23 @@ class ZigbeeMqttAdapter extends Adapter {
 
                                             });
                                             */
-                                        
-                                            if( msg[key].toLowerCase() == "brightness_move_up" && this.virtual_brightness_alternatives[device_id] <= 90 ){
-            									//extra_property.setCachedValue(extra_fromMqtt(current_value + 20));
-                                                this.virtual_brightness_alternatives[device_id] += 10;
+                                            
+                                            
+                                            /*
+                        					try{
+                                                const {
+                            						fromMqtt = identity
+                            					} = property.options;
+                            					property.setCachedValue(fromMqtt(msg[key]));
+                        					}
+                                            catch(e){
                                                 extra_property.setCachedValue(this.virtual_brightness_alternatives[device_id]);
-            									device.notifyPropertyChanged(extra_property);
                                             }
-                                            else if( msg[key].toLowerCase() == "brightness_move_down" && this.virtual_brightness_alternatives[device_id] >= 10 ){
-            									//extra_property.setCachedValue(extra_fromMqtt(current_value - 20));
-                                                this.virtual_brightness_alternatives[device_id] -= 10;
-                                                extra_property.setCachedValue(this.virtual_brightness_alternatives[device_id]);
-            									device.notifyPropertyChanged(extra_property);
-                                            }
+        									device.notifyPropertyChanged(extra_property);
+                                            */
+                                            
                                             if (this.config.debug) {
-                                                console.log("this.virtual_brightness_alternatives: " + this.virtual_brightness_alternatives);
+                                                console.log("at the end, this.virtual_brightness_alternatives: " + JSON.stringify(this.virtual_brightness_alternatives));
                                             }
                                         
                                         }
@@ -1127,7 +1230,11 @@ class ZigbeeMqttAdapter extends Adapter {
                                 }
                                 
                             }
-                            
+                            else{
+                                if (this.config.debug) {
+                                    console.log("not using virtual brightness alternative");
+                                }
+                            }
                             
                             // Remove lower dash
                             if(msg[key] != null){
@@ -1142,9 +1249,63 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 
+                    
+
                     try{
-                        if( msg[key] == 'action' && (msg[key].toLowerCase() == "brightness_move_up" || msg[key].toLowerCase() == "brightness_move_down") ){
-                            console.log("ACTION AND MOVE UP OR DOWN");
+                        
+                        // Swap the intended 0-255 value with our 0 - 100 value.
+                        var skip_brightness = false;
+                        if(this.config.virtual_brightness_alternative && key == "brightness"){
+                            if(typeof this.virtual_brightness_alternatives[device_id] != 'undefined'){
+                                console.log("this device is mentioned in the list of brightness alternatives");
+                                
+                                console.log(this.virtual_brightness_alternatives[device_id]);
+                                
+                                if( this.virtual_brightness_alternatives[device_id]['direction'] == 'up' && this.virtual_brightness_alternatives[device_id]['value'] <= 99 ){
+									console.log("going up...");
+                                    //extra_property.setCachedValue(extra_fromMqtt(current_value + 20));
+                                    this.virtual_brightness_alternatives[device_id]['value'] += this.config.virtual_brightness_alternative_speed;
+                                    if(this.virtual_brightness_alternatives[device_id]['value'] > 100){this.virtual_brightness_alternatives[device_id]['value'] = 100;}
+
+                                }
+                                else if( this.virtual_brightness_alternatives[device_id]['direction'] == 'down' && this.virtual_brightness_alternatives[device_id]['value'] >= 1 ){
+									//extra_property.setCachedValue(extra_fromMqtt(current_value - 20));
+                                    console.log("going down...");
+                                    this.virtual_brightness_alternatives[device_id]['value'] -= this.config.virtual_brightness_alternative_speed;
+                                    if(this.virtual_brightness_alternatives[device_id]['value'] < 0){this.virtual_brightness_alternatives[device_id]['value'] = 0;}
+                                    //extra_property.setCachedValue(this.virtual_brightness_alternatives[device_id]);
+									//device.notifyPropertyChanged(extra_property);
+                                }
+                                else{
+                                    console.log("yikes, virtual brightness couldn't operate on it.");
+                                }
+                            
+                                msg['brightness'] = this.virtual_brightness_alternatives[device_id]['value'];
+                                
+                                //skip_brightness = true;
+                            }
+                            /*
+                            if(typeof msg['action'] != 'undefined'){
+                                if(msg['action'].indexOf('brightness') !== -1){
+                                    console.log("this message already had a brightness action, so brightness alternative is probably taking care of this.");
+                                    skip_brightness = true;
+                                }
+                            }
+                            */
+                        }
+                        
+                        
+                        //if( msg[key] == 'action' && (msg[key].toLowerCase() == "brightness_move_up" || msg[key].toLowerCase() == "brightness_move_down") ){
+                        //    console.log("ACTION AND BRIGHTNESS MOVE UP OR DOWN");
+                        ///}
+                        /*
+                        if(skip_brightness && key == 'brightness'){
+                            console.log("- ignoring brightness message since we're handling that through the alternative");
+        					const {
+        						fromMqtt = identity
+        					} = property.options;
+        					property.setCachedValue(fromMqtt(msg[key]));
+        					device.notifyPropertyChanged(property);
                         }
                         else{
         					if (this.config.debug) {
@@ -1156,6 +1317,15 @@ class ZigbeeMqttAdapter extends Adapter {
         					property.setCachedValue(fromMqtt(msg[key]));
         					device.notifyPropertyChanged(property);
                         }
+                        */
+    					if (this.config.debug) {
+    						console.log(key + " -> " + msg[key]);
+    					}
+    					const {
+    						fromMqtt = identity
+    					} = property.options;
+    					property.setCachedValue(fromMqtt(msg[key]));
+    					device.notifyPropertyChanged(property);
                     
 				    } catch (error) {
 					    console.log("Error while handling action data for custom properties: " + error);
@@ -1247,8 +1417,8 @@ class ZigbeeMqttAdapter extends Adapter {
 	addDevice(info) {
 		try {
 			if (this.config.debug) {
-				console.log('in addDevice.');
-				//console.log(info);
+				console.log('in addDevice. info:');
+				console.log(info);
 				console.log("subscribing to: " + this.config.prefix + "/" + info.ieee_address);
 			}
 			this.client.subscribe(`${this.config.prefix}/${info.ieee_address}`);
@@ -1424,7 +1594,6 @@ class ZigbeeMqttAdapter extends Adapter {
         }
 
 	}
-
 
 
 	removeDevice(deviceId) {

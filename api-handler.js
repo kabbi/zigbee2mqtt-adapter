@@ -80,7 +80,8 @@ class Zigbee2MQTTHandler extends APIHandler {
 							'status': 'ok',
 							'devices': devices_as_list,
                             'security': this.adapter.security,
-                            'installed': this.adapter.z2m_installed_succesfully
+                            'installed': this.adapter.z2m_installed_succesfully,
+                            'debug': this.adapter.config.debug
 						}),
 					});
 

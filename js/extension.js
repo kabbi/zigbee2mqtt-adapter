@@ -283,7 +283,7 @@
 	          '/extensions/zigbee2mqtt-adapter/api/ajax',
 						{"action": "init"}
 	        ).then((body) => {
-				//console.log("Zigbee2MQTT: init response received: ", body);
+				console.log("Zigbee2MQTT: init response received: ", body);
 				//console.log(body.devices);
                 const list2 = document.getElementById('extension-zigbee2mqtt-adapter-list');
                 //console.log("list2:",list2);
@@ -315,6 +315,13 @@
                     document.getElementById('extension-zigbee2mqtt-adapter-security-network-key').value = body.security.network_key;
                 }
 				
+				
+                if(typeof body.debug != 'undefined'){
+                    if(body.debug){
+                        document.getElementById('extension-zigbee2mqtt-adapter-debug-warning').style.display = 'block';
+                    }
+                }
+                
 
 	        }).catch((e) => {
 	  			console.log("Error sending init request: " + e.toString());

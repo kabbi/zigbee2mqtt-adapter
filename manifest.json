@@ -37,6 +37,7 @@
       "ikea_test_server": false,
 	  "home_assistant_support":false,
 	  "virtual_brightness_alternative": false,
+	  "virtual_brightness_alternative_speed": "10",
       "debug": false
     },
     "schema": {
@@ -107,7 +108,28 @@
         },
         "virtual_brightness_alternative": {
           "type": "boolean",
-          "description": "Advanced. Allow the addon to calculate brightness levels generated from pressing buttons or turning knobs. It's recommended to keep this disabled, as it is work in progress."
+          "description": "Advanced. Allow the addon to calculate brightness levels generated from pressing buttons or turning knobs, instead of relying on Zigbee2MQTT's internal methods."
+        },
+        "virtual_brightness_alternative_speed": {
+          "description": "Advanced. Set the sensitivity of the brightness alternative. The default is 10, which means each 'tick' of your button or knob will change the brightness 10% up or down.",
+          "enum": [
+            "2",
+            "4",
+            "6",
+            "8",
+            "10",
+            "12",
+            "14",
+            "16",
+            "18",
+            "20",
+            "25",
+            "30",
+            "40",
+            "50",
+            "100"
+          ],
+          "type": "string"
         },
         "debug": {
           "type": "boolean",
