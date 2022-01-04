@@ -1080,6 +1080,10 @@ class ZigbeeMqttAdapter extends Adapter {
                     
                 }
                 
+                //
+                //  LOOP OVER AND ADD/UPDATE THE PROPERTIES FROM THE INCOMING MESSAGE
+                //
+                
                 
 				for (const key of Object.keys(msg)) { // loop over properties in the message
                     //if (this.config.debug) {
@@ -1201,6 +1205,7 @@ class ZigbeeMqttAdapter extends Adapter {
 						// Check if the missing property has succesfully been created. If so, then its value may be immediately set
 						property = device.findProperty(key);
 						if (!property) {
+                            console.log("Error: missing property still has not been created");
 							continue;
 						}
 
@@ -1429,9 +1434,9 @@ class ZigbeeMqttAdapter extends Adapter {
                             }
                             
                             // Remove lower dash
-                            if(msg[key] != null){
-                                msg[key] = msg[key].replace(/_/g, " ");
-                            }
+                            //if(msg[key] != null){
+                            //    msg[key] = msg[key].replace(/_/g, " ");
+                            //}
                             
 						}
                         
@@ -1441,6 +1446,10 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 
+
+                    //
+                    //  CHECK IF BRIGHTNESS ALTERNATIVE SHOULD BE USED
+                    //
                     
 
                     try{
@@ -1472,7 +1481,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                     console.log("yikes, virtual brightness couldn't operate on it.");
                                 }
                             
-                                msg['brightness'] = this.virtual_brightness_alternatives[device_id]['value'];
+                                msg['brightness'] = this.virtual_brightness_alternatives[device_id]['value']; // overwrite the brightness value with the new one
                                 
                                 //skip_brightness = true;
                             }
