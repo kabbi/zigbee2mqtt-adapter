@@ -1180,6 +1180,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 
+
                     //
                     //  FIND PROPERTY OBJECT
                     //
@@ -1208,8 +1209,24 @@ class ZigbeeMqttAdapter extends Adapter {
                             console.log("Error: missing property still has not been created");
 							continue;
 						}
-
 					}
+
+
+
+                    if(key == 'open_window'){
+                        console.log("OPEN WINDOW SPOTTED");
+                        console.log("open window type: ", typeof msg[key], msg[key]);
+                        console.log(property);
+                        
+                        if(typeof msg[key] == "boolean"){
+                            console.log("forcing opposite");
+                            msg[key] = !msg[key];
+                        }
+                        else{
+                            console.log("whoa");
+                        }
+                        
+                    }
 
 
 					// Modify byte (0-255) to a percentage (0-100). Whether this should be done is stored inside the property. TODO: this might not be persistent yet.
