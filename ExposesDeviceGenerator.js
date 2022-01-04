@@ -257,42 +257,132 @@ class ExposesDeviceGenerator {
 					}else{
 						device.properties[expose.name]['@type'] = 'OnOffProperty';
 					}
-					
 				}
 				else if(expose.name.endsWith("brightness") ){
 					device.properties[expose.name]['@type'] = 'BrightnessProperty';
 				}
+				else if(expose.name == "cube_side" || expose.name == "angle" || expose.name == "illuminance_lux"){
+					device.properties[expose.name]['@type'] = 'LevelProperty';
+					if(device['@type'].indexOf("MultiLevelSensor") == -1){
+						device['@type'].push('MultiLevelSensor');
+					}
+				}
+                
+                
+                
 				else if(expose.name == "color_temp"){
 					device.properties[expose.name]['@type'] = 'ColorTemperatureProperty';
+					if(device['@type'].indexOf("ColorControl") == -1){
+						device['@type'].push('ColorControl');
+					}
 				}
 				else if(expose.name == "color_xy" || expose.name == "color_hs"){
 					device.properties[expose.name]['@type'] = 'ColorProperty';
+					if(device['@type'].indexOf("ColorControl") == -1){
+						device['@type'].push('ColorControl');
+					}
 				}
-				else if(expose.name == "occupied_heating_setpoint" || expose.name == "occupied_cooling_setpoint"){
+				else if(expose.name == "occupied_heating_setpoint" || expose.name == "occupied_cooling_setpoint" || expose.name == "comfort_temperature" || expose.name == "eco_temperature"){
 					device.properties[expose.name]['@type'] = 'TargetTemperatureProperty';
+					if(device['@type'].indexOf("Thermostat") == -1){
+						device['@type'].push('Thermostat');
+					}
 				}
-				else if(expose.name == "local_temperature" || expose.name == "temperature"){
+				else if(expose.name == "local_temperature" || expose.name == "temperature" || expose.name == "cpu_temperature"){
 					device.properties[expose.name]['@type'] = 'TemperatureProperty';
 					if(device['@type'].indexOf("TemperatureSensor") == -1){
 						device['@type'].push('TemperatureSensor');
 					}
 				}
-				else if(expose.name == "humidity"){
+				else if(expose.name == "humidity" || expose.name == "soil_moisture"){
 					device.properties[expose.name]['@type'] = 'HumidityProperty';
 					if(device['@type'].indexOf("HumiditySensor") == -1){
 						device['@type'].push('HumiditySensor');
 					}
 				}
-				else if(expose.name == "occupancy" || expose.name == "contact"){
+				else if(expose.name == "pressure"){
+					device.properties[expose.name]['@type'] = 'BarometricPressureProperty';
+					if(device['@type'].indexOf("BarometricPressureSensor") == -1){
+						device['@type'].push('BarometricPressureSensor');
+					}
+				}
+				else if(expose.name == "presence" || expose.name == "occupancy" || expose.name == "vibration"){
 					device.properties[expose.name]['@type'] = 'MotionProperty';
 					if(device['@type'].indexOf("MotionSensor") == -1){
 						device['@type'].push('MotionSensor');
 					}
 				}
-				
+				else if(expose.name == "open_window" || expose.name == "contact"){
+					device.properties[expose.name]['@type'] = 'OpenProperty';
+					if(device['@type'].indexOf("DoorSensor") == -1){
+						device['@type'].push('DoorSensor');
+					}
+				}
+				else if(expose.name == "alarm" || expose.name == "sos" || expose.name == "carbon_monoxide" || expose.name == "gas"){
+					device.properties[expose.name]['@type'] = 'AlarmProperty';
+					if(device['@type'].indexOf("Alarm") == -1){
+						device['@type'].push('Alarm');
+					}
+				}
+                
+				else if(expose.name == "lock"){
+					device.properties[expose.name]['@type'] = 'LockedProperty';
+					if(device['@type'].indexOf("Lock") == -1){
+						device['@type'].push('Lock');
+					}
+				}
+				else if(expose.name == "smoke"){
+					device.properties[expose.name]['@type'] = 'SmokeProperty';
+					if(device['@type'].indexOf("SmokeSensor") == -1){
+						device['@type'].push('SmokeSensor');
+					}
+				}
+				else if(expose.name == "switch"){
+					device.properties[expose.name]['@type'] = 'BooleanProperty';
+					if(device['@type'].indexOf("BinarySensor") == -1){
+						device['@type'].push('BinarySensor');
+					}
+				}
+				else if(expose.name == "water_leak"){
+					device.properties[expose.name]['@type'] = 'LeakProperty';
+					if(device['@type'].indexOf("LeakSensor") == -1){
+						device['@type'].push('LeakSensor');
+					}
+				}
+				else if(expose.name == "power"){
+					device.properties[expose.name]['@type'] = 'InstantaneousPowerProperty';
+					if(device['@type'].indexOf("EnergyMonitor") == -1){
+						device['@type'].push('EnergyMonitor');
+					}
+				}
+				else if(expose.name == "voltage"){
+					device.properties[expose.name]['@type'] = 'VoltageProperty';
+					if(device['@type'].indexOf("EnergyMonitor") == -1){
+						device['@type'].push('EnergyMonitor');
+					}
+				}
+				else if(expose.name == "current"){
+					device.properties[expose.name]['@type'] = 'CurrentProperty';
+					if(device['@type'].indexOf("EnergyMonitor") == -1){
+						device['@type'].push('EnergyMonitor');
+					}
+				}
+				else if(expose.name == "co2" || expose.name == "eco2" || expose.name == "voc"){
+					device.properties[expose.name]['@type'] = 'ConcentrationProperty';
+					if(device['@type'].indexOf("AirQualitySensor") == -1){
+						device['@type'].push('AirQualitySensor');
+					}
+				}
+				else if(expose.name == "pm10" || expose.name == "pm25" || expose.name == "hcho"){
+					device.properties[expose.name]['@type'] = 'DensityProperty';
+					if(device['@type'].indexOf("AirQualitySensor") == -1){
+						device['@type'].push('AirQualitySensor');
+					}
+				}
+                
 			}
 			else{
-				console.log("WARNING, NO NAME!!");
+				console.log("WARNING, PROPERTY HAD NO NAME");
 			}
 			
 			

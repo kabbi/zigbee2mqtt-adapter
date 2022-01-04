@@ -306,7 +306,7 @@ class Zigbee2MQTTHandler extends APIHandler {
 							status: 200,
 							contentType: 'application/json',
 							content: JSON.stringify({
-								'status': 'Sorry, please wait for the current update to finish.'
+								'status': 'Sorry, an update is already in progress.'
 							}),
 						});
 					}
