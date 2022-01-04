@@ -314,7 +314,7 @@ class ExposesDeviceGenerator {
 				}
 				else if(expose.name == "open_window" || expose.name == "contact"){
 					device.properties[expose.name]['@type'] = 'OpenProperty';
-					if(device['@type'].indexOf("DoorSensor") == -1){
+					if(device['@type'].indexOf("DoorSensor") == -1 && device['@type'].length == 0){
 						device['@type'].push('DoorSensor');
 					}
 				}

@@ -1542,6 +1542,7 @@ class ZigbeeMqttAdapter extends Adapter {
     					const {
     						fromMqtt = identity
     					} = property.options;
+                        console.log("fromMqtt(msg[key]) = ", fromMqtt(msg[key]));
     					property.setCachedValue(fromMqtt(msg[key]));
     					device.notifyPropertyChanged(property);
                     
