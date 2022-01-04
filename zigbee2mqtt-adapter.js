@@ -1086,41 +1086,36 @@ class ZigbeeMqttAdapter extends Adapter {
                     //    console.log(key);
                     //}
                     
-                    if( key == "action_group" || key == "action_rate" || key == "update" || key == "action_step_size" || key == "action_transition_time"){ // Action rate isn't very useful for anything, so skip that.
+                    
+                    
+                    //
+                    //  SOME PROPERTIES ARE IGNORED
+                    //
+                    
+                    if( key == "action_group" || key == "action_rate" || key == "action_step_size" || key == "action_transition_time"){ // Action rate isn't very useful for anything, so skip that.
 						if (this.config.debug) {
 							console.log("- ignoring property: " + key);
 						}
                         continue;
                     }
                     
-					var property = device.findProperty(key);
-					if (!property) {
-						if (this.config.debug) {
-							console.log("- that property could not be found: " + key);
-						}
 
-						if (key != "update" && typeof msg[key] != "object") { // && key != "update_available"
-							if (this.config.debug) {
-								console.log("- attempting to create missing property");
-							}
-							this.attempt_new_property(device_id, key, msg[key]);
-						} else {
-							if (this.config.debug) {
-								console.log("- ignoring update property");
-							}
-							continue;
-						}
 
-						// Check if the missing property has succesfully been created. If so, then its value may be immediately set
-						property = device.findProperty(key);
-						if (!property) {
-							continue;
-						}
 
-					}
+                    //
+                    //  MODIFY SOME VALUES TO BETTER FOR
+                    //
 
 					//console.log("updating this property:");
 					//console.log(property);
+                    
+                    if (key == 'lock') {
+                        if(msg[key].toLowerCase() == 'lock'){msg[key] == 'locked';}
+                        if(msg[key].toLowerCase() == 'unlock'){msg[key] == 'unlocked';}
+                    }
+                    
+                    
+                    
                     
 					// Check if device can be updated
 					if (key == 'update') {
@@ -1130,16 +1125,16 @@ class ZigbeeMqttAdapter extends Adapter {
 						//if (!this.waiting_for_update) {
                             if(typeof msg[key]['state'] != 'undefined'){
                                 if(msg[key]['state'] == 'available'){
-                                    //this.devices_overview[zigbee_id]['update_available'] = true;
-                                    msg['update_available'] = true;
+                                    this.devices_overview[zigbee_id]['update_available'] = true;
+                                    //msg['update_available'] = true;
                                 }
                                 else if(msg[key]['state'] == 'idle'){
-                                    //this.devices_overview[zigbee_id]['update_available'] = false;
-                                    msg['update_available'] = false;
+                                    this.devices_overview[zigbee_id]['update_available'] = false;
+                                    //msg['update_available'] = false;
                                 }
                             }
                         //}
-                        
+                        continue;
 					}
                     
                     // officially deprecated in Z2M
@@ -1178,7 +1173,41 @@ class ZigbeeMqttAdapter extends Adapter {
 						continue;
 					}
 
-					// Modify byte to a percentage
+
+
+
+                    //
+                    //  FIND PROPERTY OBJECT
+                    //
+
+					var property = device.findProperty(key);
+					if (!property) {
+						if (this.config.debug) {
+							console.log("- that property could not be found: " + key);
+						}
+
+						if (key != "update" && typeof msg[key] != "object") { // && key != "update_available"
+							if (this.config.debug) {
+								console.log("- attempting to create missing property");
+							}
+							this.attempt_new_property(device_id, key, msg[key]);
+						} else {
+							if (this.config.debug) {
+								console.log("- ignoring update property");
+							}
+							continue;
+						}
+
+						// Check if the missing property has succesfully been created. If so, then its value may be immediately set
+						property = device.findProperty(key);
+						if (!property) {
+							continue;
+						}
+
+					}
+
+
+					// Modify byte (0-255) to a percentage (0-100). Whether this should be done is stored inside the property. TODO: this might not be persistent yet.
 					try {
 						if (property.options.hasOwnProperty("origin")) {
 
@@ -1193,6 +1222,14 @@ class ZigbeeMqttAdapter extends Adapter {
 						console.log("Zigbee2MQTT addon: error translating byte to percentage: " + error);
 						continue;
 					}
+
+
+
+
+                    //
+                    //  HANDLE ACTION PROPERTY
+                    //
+
 
 					// Check if an extra boolean or brightness property should be updated
 					try {
