@@ -355,18 +355,23 @@ class ExposesDeviceGenerator {
 	*/
 	
 	generateDevice(info) {
+        try{
+            if(info == null){
+                console.log("Error, no exposes data (info was null)");
+    			return;
+            }
+            
+    		if (!info.supported || !info.definition || !info.definition.exposes) {
+                console.log("Error, missing exposes data, cannot generate device: ", info);
+    			return;
+    		}
         
-		if (!info.supported || !info.definition || !info.definition.exposes) {
-            console.log("Error, missing exposes data, cannot generate device: ", info);
-			return;
-		}
-        
-		var device = new Object();
-		device['@type'] = [];
-		device.properties = new Object();
-		device.actions = new Object();
+    		var device = new Object();
+    		device['@type'] = [];
+    		device.properties = new Object();
+    		device.actions = new Object();
 		
-		try{
+		
 			if(this.config.debug){
 				console.log(" ");
 				console.log(" ");

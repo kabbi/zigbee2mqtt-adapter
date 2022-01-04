@@ -418,6 +418,8 @@ class ZigbeeMqttAdapter extends Adapter {
                         "    timeout: " + this.availability_interval + "\n" +
                         "  passive:\n" +
                         "    timeout: 1500\n" +
+                        "ota:\n" +
+                        "  update_check_interval: 2880\n" +
 						"advanced:\n";
                         
                 
@@ -483,6 +485,16 @@ class ZigbeeMqttAdapter extends Adapter {
 			this.zigbee2mqtt_subprocess.kill();
 		} catch (error) {
 			console.error(`Error stopping zigbee2mqtt: ${error.message}`);
+    		if (this.config.local_zigbee2mqtt == true) {
+    			// Make sure previous instances of Zigbee2mqtt are gone
+    			try {
+    				//execSync("pgrep -f 'zigbee2mqtt-adapter/zigbee2mqtt/index.js' | xargs kill -9");
+    				execSync("pkill 'zigbee2mqtt-adapter/zigbee2mqtt/index.js'");
+    				console.log("pkill done");
+    			} catch (error) {
+    				console.log("exec pkill error: " + error);
+    			}
+    		}
 		}
 	}
 
@@ -1069,7 +1081,7 @@ class ZigbeeMqttAdapter extends Adapter {
                 }
                 
                 
-				for (const key of Object.keys(msg)) { // loop over actual property updates
+				for (const key of Object.keys(msg)) { // loop over properties in the message
                     //if (this.config.debug) {
                     //    console.log(key);
                     //}
@@ -1111,14 +1123,35 @@ class ZigbeeMqttAdapter extends Adapter {
 					//console.log(property);
                     
 					// Check if device can be updated
+					if (key == 'update') {
+						if (this.config.debug) {
+                            console.log("- spotted update information: ", msg[key]);
+                        }
+						//if (!this.waiting_for_update) {
+                            if(typeof msg[key]['state'] != 'undefined'){
+                                if(msg[key]['state'] == 'available'){
+                                    //this.devices_overview[zigbee_id]['update_available'] = true;
+                                    msg['update_available'] = true;
+                                }
+                                else if(msg[key]['state'] == 'idle'){
+                                    //this.devices_overview[zigbee_id]['update_available'] = false;
+                                    msg['update_available'] = false;
+                                }
+                            }
+                        //}
+                        
+					}
+                    
+                    // officially deprecated in Z2M
 					if (key == 'update_available') {
 						if (this.config.debug) {
-                            console.log("found update_available information, storing in devices_overview.");
+                            console.log("- found update_available information, storing in devices_overview.");
                         }
-						if (!this.waiting_for_update) {
-							this.devices_overview[zigbee_id]['update_available'] = msg[key];
-						}
+						//if (!this.waiting_for_update) {
+						this.devices_overview[zigbee_id]['update_available'] = msg[key];
+                        //}
 					}
+                    
 
 					// Attempt to make a color compatible with the gateway's HEX color system
 					try {
@@ -1614,7 +1647,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
                 // Add data transmission property
                 if (this.config.debug) {
-                    console.log("adding data transmission property");
+                    console.log("adding data transmission property to new device");
                 }
                 this.attempt_new_property('z2m-' + zigbee_id, "data_transmission", true, false); // device name, property name, value (true) and readOnly (false)
 
@@ -1740,21 +1773,25 @@ class ZigbeeMqttAdapter extends Adapter {
 		return new Promise((resolve, reject) => {
 			const device = this.devices[deviceId]; // a.k.a. friendly_name
 			if (device) {
-				this.handleDeviceRemoved(device);
-				resolve(device);
-
 				try {
                     if(deviceId.startsWith('z2m-')){
                         const zigbee_id = deviceId.replace('z2m-','');
+                        console.log("Telling Z2M to remove: " + zigbee_id);
+                        this.client.publish(`${this.config.prefix}/bridge/request/device/remove`, zigbee_id);
                         this.client.publish(`${this.config.prefix}/bridge/request/device/remove`, '{"id": "' + zigbee_id + '"}');
                     }
+    				
+                    // Also remove it from the Gateway
+                    this.handleDeviceRemoved(device);
+    				resolve(device);
+                    
 				} catch (error) {
-					console.log(error);
+					console.log("Error removing device from Z2M network: ", error);
 				}
 
 			}
             else {
-				reject(`Device: ${deviceId} not found.`);
+				reject(`Device: ${deviceId} not found, so could not be removed.`);
 			}
 		});
 	}
@@ -1810,9 +1847,11 @@ class ZigbeeMqttAdapter extends Adapter {
 			console.log("in unload");
 		}
 		await this.stop_zigbee2mqtt();
-		if (this.config.debug) {
+		/*
+        if (this.config.debug) {
 			console.log("doing a pkill of zigbee2mqtt just in case");
 		}
+        
 		if (this.config.local_zigbee2mqtt == true) {
 			// Make sure previous instances of Zigbee2mqtt are gone
 			try {
@@ -1823,6 +1862,7 @@ class ZigbeeMqttAdapter extends Adapter {
 				console.log("exec pkill error: " + error);
 			}
 		}
+        */
 
 		console.log("zigbee2mqtt should now be stopped. Goodbye.");
 		return super.unload();
