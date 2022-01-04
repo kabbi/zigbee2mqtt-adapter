@@ -237,8 +237,12 @@ class Zigbee2MQTTHandler extends APIHandler {
                     }, 1000)
                     */
                     
-                    setTimeout(function () {
-                        
+                    setTimeout(() => {
+                        console.log("re-install: deleting Z2M");
+						this.adapter.delete_z2m();
+                        console.log("re-install: downloading Z2M");
+						this.adapter.download_z2m(); // this also then starts zigbee2mqtt
+                        /*
                         fs.rmdir(this.adapter.zigbee2mqtt_dir_path, { recursive: true }, (err) => {
                             if (err) {
                                 console.log("ERROR, unable to delete the folder");
@@ -246,10 +250,13 @@ class Zigbee2MQTTHandler extends APIHandler {
 
                             console.log(`${dir} is deleted!`);
                         });
-                        
-                    }, 10000)
+                        */
+                    
+                    }, 10000);
+                   
         			
-                    setTimeout(function () {
+                    /*
+                    setTimeout(() => {
                         console.log("rebooting to re-install Zigbee2MQTT");
             			try {
             				//execSync("pgrep -f 'zigbee2mqtt-adapter/zigbee2mqtt/index.js' | xargs kill -9");
@@ -258,6 +265,7 @@ class Zigbee2MQTTHandler extends APIHandler {
             				console.log("exec reboot error: " + error);
             			}
                     }, 60000)
+                    */
                     
 					return new APIResponse({
 						status: 200,

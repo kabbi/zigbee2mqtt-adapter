@@ -153,8 +153,13 @@
     					{"action":"re-install"}
 
     		        ).then((body) => {
-                        document.getElementById('extension-zigbee2mqtt-adapter-content-container').innerHTML = '<h3 id="extension-zigbee2mqtt-adapter-title"><img id="extension-zigbee2mqtt-adapter-main-page-icon" src="/extensions/zigbee2mqtt-adapter/images/menu-icon.svg">Zigbee2MQTT</h3><br/><br/><h4 style="text-align:center">In one minute your controller will restart...</h4>';
-
+                        document.getElementById('extension-zigbee2mqtt-adapter-content-container').innerHTML = '<h3 id="extension-zigbee2mqtt-adapter-title"><img id="extension-zigbee2mqtt-adapter-main-page-icon" src="/extensions/zigbee2mqtt-adapter/images/menu-icon.svg">Zigbee2MQTT</h3><br/><br/><h4 style="text-align:center">Please wait...</h4>';
+                        
+                        window.setTimeout(() => {
+                            console.log("refreshing page so that 'still installing' message is shown");
+                            window.location.reload(false);
+                        }, 20000);
+                        
     		        }).catch((e) => {
     		  			console.log("Error sending security values: " + e.toString());
     		        });
@@ -211,11 +216,13 @@
 								if(this.asked_for_update){
 									if(body['waiting_for_update'] == false){
 										
-										if(body['update_result'] == true){
+										if(body['update_result'] == 'ok'){
 											pre.innerText = "Updated succesfully!";
+                                            alert("Firmware was updated succesfully");
 										}
 										else{
-											pre.innerText = "Update failed!";
+                                            alert("Firmware update failed! The error was: " + body['update_result']);
+											pre.innerText = "Firmware update failed! The error was: " + body['update_result'];
 										}
 										
 										this.asked_for_update = false;
@@ -292,7 +299,7 @@
                     //console.log("STILL INSTALLING");
 			        
     				if(typeof list2 != 'undefined'){
-                        list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Still installing...</h2><br/><img src="/extensions/zigbee2mqtt-adapter/images/spinner.gif" width="32" height="32" alt="Installing..."/ style="opacity:.5"><br/><p>It takes about 30 minutes for Zigbee2MQTT to be fully downloaded and installed.</p><p>Come back a little later. If this message is gone, then intallation has finished.</p><p style="font-style:italic">Do not unplug or restart this controller until installation is complete!</p></div>';
+                        list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Still installing...</h2><br/><img src="/extensions/zigbee2mqtt-adapter/images/spinner.gif" width="32" height="32" alt="Installing..."/ style="opacity:.5"><br/><p>It takes about 30 minutes for Zigbee2MQTT to be fully downloaded and installed.</p><p>Come back a little later. If this message is gone, that means the intallation has finished.</p><p style="font-style:italic">Do not power-off or restart this controller until installation is complete!</p></div>';
     				    return;
     				}
                     else{

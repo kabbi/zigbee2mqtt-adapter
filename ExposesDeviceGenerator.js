@@ -355,13 +355,12 @@ class ExposesDeviceGenerator {
 	*/
 	
 	generateDevice(info) {
-		
-		
+        
 		if (!info.supported || !info.definition || !info.definition.exposes) {
-            console.log("Error, missing exposes data, cannot generate device");
+            console.log("Error, missing exposes data, cannot generate device: ", info);
 			return;
 		}
-		
+        
 		var device = new Object();
 		device['@type'] = [];
 		device.properties = new Object();
@@ -387,13 +386,13 @@ class ExposesDeviceGenerator {
 			//console.log("= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = ");
 			//console.log("new_device is now:");
 			//console.log(device);
-			
-	  }
-	  catch (error){
-	  	console.log("Error in generateDevice: " + error);
-	  }
+        }
+        catch (error){
+	  	    console.error("Error in generateDevice: " + error);
+            console.debug('Device', info.friendly_name, 'exposes', JSON.stringify(info.definition.exposes));
+        }
 		
-		return device;
+	return device;
 		
 		
 		

@@ -12,8 +12,8 @@ const {
 	spawn,
 	exec,
 	execSync,
-    
 } = require('child_process');
+
 const https = require('https');
 const os = require('os');
 const fs = require('fs');
@@ -32,6 +32,8 @@ const Zigbee2MQTTHandler = require('./api-handler');
 const Devices = require('./devices');
 const ExposesDeviceGenerator = require('./ExposesDeviceGenerator');
 //const colorTranslator = require('./colorTranslator');
+
+const barometer = require('barometer-trend');
 
 const identity = (v) => v;
 
@@ -85,7 +87,7 @@ class ZigbeeMqttAdapter extends Adapter {
 		if (typeof this.config.mqtt == "undefined") {
 			this.config.mqtt = "mqtt://localhost";
 		}
-
+        console.log('this.config.mqtt = ', this.config.mqtt);
 
 		if (this.config.local_zigbee2mqtt) {
 			try {
@@ -226,7 +228,10 @@ class ZigbeeMqttAdapter extends Adapter {
                         }
                         else{
                             this.security = JSON.parse(data);
-                            
+                                
+                            if (this.config.debug) {
+                                console.log("Security settings have been loaded from file: ", this.security);
+                            }
                             
                             // adding extra security
                             if(this.config.disable_improved_security == true){
@@ -235,15 +240,7 @@ class ZigbeeMqttAdapter extends Adapter {
                             else {
                                 this.improve_security = true;
                             }
-                            
-                            
-                            if (this.config.debug) {
-                                console.log("Security settings have been loaded from file: ", this.security);
-                            }
                         }
-                        console.log("init: READING SECURITY DATA NOW from data: ", data);
-                        
-                        console.log("init: SECURITY IS NOW: ", this.security);
                     });
                     
 
@@ -279,7 +276,7 @@ class ZigbeeMqttAdapter extends Adapter {
 			fs.access(this.zigbee2mqtt_dir_path, (err) => {
 				if (err && err.code === 'ENOENT') {
                     console.log("zigbee2mqtt folder was missing, should download and install");
-					this.download_z2m(); // this then also starts zigbee2mqtt
+					this.download_z2m(); // this then also installs and starts zigbee2mqtt
 				} else {
 					if (this.config.debug) {
 						console.log('zigbee2mqtt folder existed.');
@@ -345,7 +342,7 @@ class ZigbeeMqttAdapter extends Adapter {
 													this.sendPairingPrompt("Updating Zigbee2MQTT to " + github_json.tag_name);
 
 													this.delete_z2m();
-													this.download_z2m(); // this also then starts zigbee2mqtt
+													this.download_z2m(); // this also then installs and starts zigbee2mqtt
 
 												}
 											}
@@ -382,21 +379,6 @@ class ZigbeeMqttAdapter extends Adapter {
 
 	}
 
-
-    connect_to_mqtt(){
-        console.log("attempting to latch onto MQTT");
-		// Start MQTT connection
-		this.client = mqtt.connect(this.config.mqtt);
-		this.client.on('error', (error) => console.error('mqtt error:', error));
-		this.client.on('message', this.handleIncomingMessage.bind(this));
-		this.client.subscribe(`${this.config.prefix}/bridge/devices`);
-		//this.client.subscribe(`${this.config.prefix}/bridge/event`); // in practise these messages hardly ever appear, and were useless. Used availability instead.
-		this.client.subscribe(`${this.config.prefix}/bridge/response/networkmap`);
-		this.client.subscribe(`${this.config.prefix}/bridge/response/device/ota_update/update`);
-        this.mqtt_connection_attempted = true;
-
-		//this.client.subscribe(`${this.config.prefix}/#`);
-    }
 
 
 	// By having the config files outside of the zigbee2mqtt folder it becomes easier to update zigbee2mqtt
@@ -469,6 +451,11 @@ class ZigbeeMqttAdapter extends Adapter {
 					"    interval: 100\n";
                 //}
                 
+                
+                //base_config += "external_converters:\n" +
+			    //"  - TZE200_kzm5w4iz.js\n";
+                
+                
                 if (this.config.debug) {
                     console.log("- - -");
                     console.log(base_config);
@@ -490,6 +477,7 @@ class ZigbeeMqttAdapter extends Adapter {
 	}
 
 
+
 	stop_zigbee2mqtt() {
 		try {
 			this.zigbee2mqtt_subprocess.kill();
@@ -505,15 +493,53 @@ class ZigbeeMqttAdapter extends Adapter {
             console.log("in run_zigbee2mqtt. Will really start in: " + delay + " seconds.");
         }
         setTimeout(this.check_if_config_file_exists.bind(this), 4000);
-		setTimeout(this.really_run_zigbee2mqtt.bind(this), delay * 1000); // wait 10 seconds before really starting Zigbee2MQTT, to make sure serial port has been released.
+		setTimeout(this.connect_to_mqtt.bind(this), delay * 1000); // wait 10 seconds before really starting Zigbee2MQTT, to make sure serial port has been released.
+    }
+
+
+    //if(this.mqtt_connection_attempted == false){
+    //    this.connect_to_mqtt();
+    //}
+
+
+
+    connect_to_mqtt(){
+        console.log("attempting to latch onto MQTT");
+		// Start MQTT connection
+		this.client = mqtt.connect(this.config.mqtt);
+        this.client.on('connect', () => {
+            this.mqtt_connected = true;
+            
+    		this.client.subscribe(`${this.config.prefix}/bridge/devices`);
+    		//this.client.subscribe(`${this.config.prefix}/bridge/event`); // in practise these messages hardly ever appear, and were useless. Used availability instead.
+    		this.client.subscribe(`${this.config.prefix}/bridge/response/networkmap`);
+    		this.client.subscribe(`${this.config.prefix}/bridge/response/device/ota_update/update`);
+            
+            if(this.z2m_started == false){
+                console.log("MQTT is now connected. Next, staring Zigbee2MQTT (since it will now also be able to connect to MQTT)");
+                this.really_run_zigbee2mqtt();
+            }
+        })
+		this.client.on('error', (error) => console.error('mqtt error:', error));
+        this.client.onConnectionLost = this.onConnectionLost;
+		this.client.on('message', this.handleIncomingMessage.bind(this));
+
+        this.mqtt_connection_attempted = true;
+
+		//this.client.subscribe(`${this.config.prefix}/#`);
+    }
+
+
+    on_mqtt_connection_lost(){
+        console.log("ERROR: client lost connection to MQTT! This means the addon will no longer receive messages from Zigbee2MQTT.");
+        this.mqtt_connected = false;
     }
 
 
 
 	really_run_zigbee2mqtt() {
-        if(this.mqtt_connection_attempted == false){
-            this.connect_to_mqtt();
-        }
+        console.log("in really_run_zigbee2mqtt()");
+
 		if (this.config.debug) {
 			console.log('really starting zigbee2MQTT using: node ' + this.zigbee2mqtt_file_path);
 			console.log("initial this.config.serial_port = " + this.config.serial_port);
@@ -594,7 +620,7 @@ class ZigbeeMqttAdapter extends Adapter {
             this.zigbee2mqtt_subprocess = spawn('node', [this.zigbee2mqtt_file_path]);
         
             this.zigbee2mqtt_subprocess.stdout.setEncoding('utf8');
-            this.zigbee2mqtt_subprocess.stdout.on('data', function(data) { // 
+            this.zigbee2mqtt_subprocess.stdout.on('data', (data) => { // 
                 //Here is where the output goes
                 
                 console.log('z2m stdout: ' + data);
@@ -611,25 +637,30 @@ class ZigbeeMqttAdapter extends Adapter {
                     catch(e){
                         console.log("pkill error: " + e);
                     }
-                    parent_scope.run_zigbee2mqtt(61); // wait 61 seconds before retrying
+                    //parent_scope.run_zigbee2mqtt(61); // wait 61 seconds before retrying
+                    this.run_zigbee2mqtt(61); // wait 61 seconds before retrying
                 }
                 else if( data.includes(", failed") ){
                 
+                    console.log('this.zigbee2mqtt_dir_path = ' + this.zigbee2mqtt_dir_path);
+                    //const zigbee2mqtt_dir = path.join(path.resolve('../..'), '.webthings', 'data', 'zigbee2mqtt-adapter','zigbee2mqtt');
+                    console.log("Yikes, Zigbee2MQTT may not be installed ok. Will attempt to fix. Dir: " + this.zigbee2mqtt_dir_path);
                 
-                    const zigbee2mqtt_dir = path.join(path.resolve('../..'), '.webthings', 'data', 'zigbee2mqtt-adapter','zigbee2mqtt');
-                    console.log("Yikes, Zigbee2MQTT may not be installed ok. Will attempt to fix. Dir: " + zigbee2mqtt_dir);
-                
-        			exec(`cd ${zigbee2mqtt_dir}; npm i --save-dev @types/node; npm ci --production`, (err, stdout, stderr) => {
+        			exec(`cd ${this.zigbee2mqtt_dir_path}; npm i --save-dev @types/node; npm ci --production`, (err, stdout, stderr) => {
         				if (err) {
         					console.error(err);
         					return;
         				}
+                        else{
+                            console.log("nice, fix attempt did not create an error?");
+                        }
         				if (this.config.debug) {
         					console.log(stdout);
         				}
         				console.log("-----INSTALL FIX ATTEMPT COMPLETE-----");
     				
-        				parent_scope.run_zigbee2mqtt();
+        				//parent_scope.run_zigbee2mqtt();
+                        this.run_zigbee2mqtt();
         			});
                     
                 
@@ -638,20 +669,24 @@ class ZigbeeMqttAdapter extends Adapter {
             });
         
             this.zigbee2mqtt_subprocess.stderr.setEncoding('utf8');
-            this.zigbee2mqtt_subprocess.stderr.on('data', function(data) {
+            this.zigbee2mqtt_subprocess.stderr.on('data', (data) => {
                 //Here is where the error output goes
                 
-                console.log('z2m stderr: ' + data);
+                console.log('z2m stderr: ', data);
 
-                data=data.toString();
+                //data=data.toString();
                 //scriptOutput+=data;
             });
 
-            this.zigbee2mqtt_subprocess.on('close', function(code) {
+            //this.zigbee2mqtt_subprocess.on('close', function(code) {
+            this.zigbee2mqtt_subprocess.on('close', (code) => {
                 //Here you can get the exit code of the script
 
                 console.log('z2m closing code: ' + code);
-
+                if(code == 0){
+                    console.log("nice, Z2M closed cleanly.");
+                }
+                this.z2m_started = false;
                 //console.log('Full output of script: ',scriptOutput);
             });
             
@@ -729,6 +764,7 @@ class ZigbeeMqttAdapter extends Adapter {
     			exec(command_to_run, (err, stdout, stderr) => { // npm ci --production
     				if (err) {
     					console.error(err);
+                        this.z2m_installed_succesfully = false;
     					return;
     				}
     				if (this.config.debug) {
@@ -790,13 +826,13 @@ class ZigbeeMqttAdapter extends Adapter {
 		}
 
 		if (topic.endsWith('/availability')) { // either "online" or "offline" as payload
-			//console.log("Received availability message. Data = " + data.toString());
+			console.log("Received availability message. Data = " + data.toString());
 
 			if (Date.now() < this.addon_start_time + (this.availability_ignore_period * 1000)) {
 				if (this.config.debug) {
-					console.log("early availability message, ignoring");
+					console.log("early availability message");
 				}
-				return;
+				//return;
 			}
 
 
@@ -810,11 +846,12 @@ class ZigbeeMqttAdapter extends Adapter {
 						console.log("- strange, got availability data for a device that wasn't created yet: " + device_id);
 					}
 					return;
-				} else {
-					const property = device.findProperty('state');
-					if (!property) {
-						return;
-					}
+				} 
+                else {
+					//const property = device.findProperty('state');
+					//if (!property) {
+					//	return;
+					//}
 
 					/*
 					else{
@@ -832,13 +869,19 @@ class ZigbeeMqttAdapter extends Adapter {
 
 					if (data == "offline") { // && device.connected == true ){
 						if (this.config.debug) {
-							console.log("This device availability is set to offline. this.config.manual_toggle_response = " + this.config.manual_toggle_response);
+                            
+							console.log("O F F L I N E (got availability message). this.config.manual_toggle_response = " + this.config.manual_toggle_response);
 						}
 
 						// Set state to off
 						if (this.config.manual_toggle_response == "toggle off" || this.config.manual_toggle_response == "both") {
-							property.setCachedValue(false);
-							device.notifyPropertyChanged(property);
+        					const property = device.findProperty('state');
+        					if (property) {
+        					//	return;
+							    property.setCachedValue(false);
+							    device.notifyPropertyChanged(property);
+                            }
+
 						}
 
 						// Set to disconnected
@@ -852,27 +895,28 @@ class ZigbeeMqttAdapter extends Adapter {
 
 					} else if (data == "online") { //  && device.connected == false ){
 						if (this.config.debug) {
-							//console.log("O N L I N E");
+							console.log("O N L I N E");
 						}
 						//console.log("setting device.connected to truey");
 
 						this.devices[device_id].connected = true;
 						device.connectedNotify(true);
-						this.publishMessage(`${zigbee_id}/get`, { // TODO: does this need a check to see if the thing even has the 'state' property? Or is shooting first and asking questions later fine?
-							"state": ""
-						});
+						//this.publishMessage(`${zigbee_id}/get`, { // TODO: does this need a check to see if the thing even has the 'state' property? Or is shooting first and asking questions later fine?
+						//	"state": ""
+                        //});
 
 					}
 				}
 
 			}
+            return;
 		} // end of availablity message parsing
         
 
 		// Only proper JSON data is allowed to pass beyond this point
 		if (!data.toString().includes(":")) {
 			if (this.config.debug) {
-                console.log("incoming message did not have a : in it? Not proper json, so will not process the incoming message further.");
+                console.log("incoming message did not have a : in it? Not proper json, so will not process the incoming message further: ", data.toString());
             }
 			return;
 		}
@@ -946,6 +990,73 @@ class ZigbeeMqttAdapter extends Adapter {
 					);
 					device.eventNotify(event);
 				}
+                
+                
+                
+                
+                if(typeof msg.pressure != 'undefined' && typeof msg.temperature != 'undefined'){
+                    console.log("PRESSURE SPOTTED on what is likely some sort of climate sensor");
+                    try{
+                        var is_barometer = false;
+                        if( msg.pressure > 850 && msg.pressure < 1100){
+                            let date_time = new Date();
+                            barometer.addPressure(date_time, msg.pressure * 100);
+                            is_barometer = true;
+                        }
+                        else if( msg.pressure > 85000 && msg.pressure < 110000){
+                            let date_time = new Date();
+                            barometer.addPressure(date_time, msg.pressure);
+                            is_barometer = true;
+                        }
+                        
+                        if(is_barometer){
+                            let forecast = barometer.getPredictions(); //returns JSON
+                        
+                            console.log(forecast);
+                            if(forecast == null){
+                                console.log("forecast was still null");
+                                msg['barometer_tendency'] = 'unknown';
+                                msg['barometer_trend'] = 'unknown';
+                                msg['weather_prediction'] = 'unknown';
+                            }
+                            else{
+                                // tendency (rising/falling)
+                                if(typeof forecast.trend.tendency != 'undefined'){
+                                    msg['barometer_tendency'] = forecast.trend.tendency;
+                                }
+                                else{
+                                    msg['barometer_tendency'] = 'unknown';
+                                }
+                        
+                                if(typeof forecast.trend != 'undefined'){
+                                    msg['barometer_trend'] = forecast.trend.trend;
+                                }
+                                else{
+                                    msg['barometer_trend'] = 'unknown';
+                                }
+                        
+                                if(typeof forecast.predictions != 'undefined'){
+                                    msg['weather_prediction'] = forecast.predictions.pressureOnly
+                                }
+                                else{
+                                    msg['weather_prediction'] = 'unknown';
+                                }
+                            }
+                        
+                            
+                        }
+                        
+                        
+                    
+                        
+                    }
+                    catch(e){
+                        console.log("Error appending weather prediction based on barometric pressure: ", e);
+                    }
+                    
+                    
+                }
+                
                 
 				for (const key of Object.keys(msg)) { // loop over actual property updates
                     //if (this.config.debug) {
@@ -1380,18 +1491,31 @@ class ZigbeeMqttAdapter extends Adapter {
 
 		// Handle result of firmware update
 		else if (topic.endsWith('/bridge/response/device/ota_update/update')) {
-			if (msg['status'] == 'ok') {
-				if (msg['data']['from']['software_build_id'] != msg['data']['to']['software_build_id']) {
-					const zigbee_id = msg['data']['id'];
-					this.devices_overview[zigbee_id]['update_available'] = false;
-					this.update_result = 'ok';
-				} else {
-					this.update_result = 'failed';
-				}
-			} else {
-				this.update_result = 'failed';
-			}
-			this.waiting_for_update = false;
+            try{
+    			if (msg['status'] == 'ok') {
+    				if (msg['data']['from']['software_build_id'] != msg['data']['to']['software_build_id']) {
+    					const zigbee_id = msg['data']['id'];
+    					this.devices_overview[zigbee_id]['update_available'] = false;
+    					this.update_result = 'ok';
+    				} 
+                    else {
+    					this.update_result = 'failed';
+    				}
+    			} 
+                else {
+                    if(typeof msg['error'] != 'undefined'){
+                        this.update_result = msg['error'];
+                    }
+    				else{
+    				    this.update_result = 'failed';
+    				}
+    			}
+    			this.waiting_for_update = false;
+            }
+            catch(e){
+                console.log("error while parsing firmware update result");
+            }
+			
 		}
 
 
@@ -1406,8 +1530,7 @@ class ZigbeeMqttAdapter extends Adapter {
         }
 
 		if (this.config.debug) {
-			console.log('in pubmsg. Topic and message: ' + topic);
-			console.log(msg);
+			console.log('Publising message: ' + JSON.stringify(msg) + ' to topic: ' + topic);
 		}
 		this.client.publish(`${this.config.prefix}/${topic}`, JSON.stringify(msg));
 	}
@@ -1417,8 +1540,8 @@ class ZigbeeMqttAdapter extends Adapter {
 	addDevice(info) {
 		try {
 			if (this.config.debug) {
-				console.log('in addDevice. info:');
-				console.log(info);
+				console.log('in addDevice');
+				//console.log(info);
 				console.log("subscribing to: " + this.config.prefix + "/" + info.ieee_address);
 			}
 			this.client.subscribe(`${this.config.prefix}/${info.ieee_address}`);
@@ -1475,7 +1598,7 @@ class ZigbeeMqttAdapter extends Adapter {
                 const zigbee_id = info.ieee_address;
 				if (deviceDefinition.properties.state) { // If the device has a state property, then initially set it to disconnected.
 					device.connectedNotify(false);
-					let timerId = setTimeout(() => this.try_getting_state(zigbee_id), 11000); // 11 seconds after creating the device, an extra /get will be used to try and get the actual state
+					//let timerId = setTimeout(() => this.try_getting_state(zigbee_id), 11000); // 11 seconds after creating the device, an extra /get will be used to try and get the actual state
 				}
 
                 // Add data transmission property
@@ -1543,6 +1666,9 @@ class ZigbeeMqttAdapter extends Adapter {
             else if (typeof value === 'boolean') {
     			type = "boolean";
     		}
+            if (this.config.debug) {
+                console.log("attempt value type: ", type);
+            }
 
     		var desc = {
                 'name': key,
