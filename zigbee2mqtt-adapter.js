@@ -454,8 +454,8 @@ class ZigbeeMqttAdapter extends Adapter {
                 //}
                 
                 
-                //base_config += "external_converters:\n" +
-			    //"  - TZE200_kzm5w4iz.js\n";
+                base_config += "external_converters:\n" +
+			    "  - TZE200_kzm5w4iz.js\n";
                 
                 
                 if (this.config.debug) {
