@@ -930,7 +930,18 @@ class ZigbeeMqttAdapter extends Adapter {
 				}
 				try {
 					for (const device of msg) {
-						this.addDevice(device);
+                        if(typeof device.type != "undefined"){
+                            if(device.type != "Coordinator"){
+                                this.addDevice(device);
+                            }
+                            else{
+                                console.log("ignoring coordinator device");
+                            }
+                        }
+                        else{
+                            this.addDevice(device);
+                        }
+						
 					}
 				} catch (error) {
 					console.log("Error parsing /bridge/devices: " + error);
