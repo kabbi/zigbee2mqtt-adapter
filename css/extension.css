@@ -38,6 +38,10 @@
 	margin:0 auto;
 }
 
+
+#extension-zigbee2mqtt-adapter-view button{
+    cursor:pointer;
+}
 /*
 #extension-zigbee2mqtt-adapter-title #extension-zigbee2mqtt-adapter-tutorial-button{
 	opacity:0;
@@ -67,7 +71,7 @@
 	font-weight:bold;
 }
 
-#extension-zigbee2mqtt-adapter-view .update a{
+#extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-update a{
 	color:#999;
 }
 
@@ -81,24 +85,25 @@
 
 .extension-zigbee2mqtt-adapter-item-delete-button{
 	background: url(/images/delete-button.png);
-  background-size: 3.6rem;
-  width: 3.6rem;
-  height: 3.6rem;
-  padding: 0;
-  margin: 0;
-  border-radius: 50%;
-  border: 1px solid #979797;
-  cursor: pointer;
-	/*
+    background-size: 3.6rem;
+    width: 3.6rem;
+    height: 3.6rem;
+    padding: 0;
+    margin: 0;
+    border-radius: 50%;
+    border: 2px solid #979797;
+    cursor: pointer;
 	display:inline-block;
-	*/
+	/*
 	display:none!important;
+    */
 	opacity:.5;
 }
 
 .extension-zigbee2mqtt-adapter-item-delete-button:hover{
 	opacity:1;
 	box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    border:2px solid red
 }
 
 
@@ -200,11 +205,11 @@
 }
 
 #extension-zigbee2mqtt-adapter-view {
-	height: 100%; /*calc(100% - 7.6rem);*/
+	height: calc(100vh - 8rem); /*calc(100% - 7.6rem);*/
 	box-sizing: border-box;
 	overflow: auto;
 	position: absolute;
-	top: 7.6rem;
+    top: 8rem;
 	left: 0;
 	padding: 2rem;
 }
@@ -342,6 +347,16 @@
 
 
 
+.extension-zigbee2mqtt-adapter-item-title{
+    display:block;
+}
+
+.extension-zigbee2mqtt-adapter-item-description{
+    display:block;
+    opacity:.6;
+    padding: .5rem 0;
+}
+
 
 /*  list item overlays */
 #extension-zigbee2mqtt-adapter-view .rule-edit-overlay{
@@ -355,17 +370,23 @@
 
 
 
-#extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-item.delete .rule-edit-overlay.delete,
-#extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-item.delete .rule-edit-overlay.delete .rule-delete-dialog,
-#extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-item.update .rule-edit-overlay.update,
-#extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-item.update .rule-edit-overlay.update .rule-delete-dialog,
-#extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-item.updating .rule-edit-overlay.updating,
-#extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-item.updating .rule-edit-overlay.updating .rule-delete-dialog{
+#extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-item.extension-zigbee2mqtt-adapter-delete .rule-edit-overlay.extension-zigbee2mqtt-adapter-delete,
+#extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-item.extension-zigbee2mqtt-adapter-delete .rule-edit-overlay.extension-zigbee2mqtt-adapter-delete .rule-delete-dialog,
+#extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-item.extension-zigbee2mqtt-adapter-update .rule-edit-overlay.extension-zigbee2mqtt-adapter-update,
+#extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-item.extension-zigbee2mqtt-adapter-update .rule-edit-overlay.extension-zigbee2mqtt-adapter-update .rule-delete-dialog,
+#extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-item.extension-zigbee2mqtt-adapter-updating .rule-edit-overlay.extension-zigbee2mqtt-adapter-updating,
+#extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-item.extension-zigbee2mqtt-adapter-updating .rule-edit-overlay.extension-zigbee2mqtt-adapter-updating .rule-delete-dialog{
 	display:block;
 	opacity:100;
 }
 
 
+
+
+
+.extension-zigbee2mqtt-adapter-hidden{
+    display:none;
+}
 
 /*  updating  */
 .extension-zigbee2mqtt-adapter-updating-text-container{
@@ -380,7 +401,7 @@
 }
 
 
-.extension-zigbee2mqtt-adapter-overlay.updating{
+.extension-zigbee2mqtt-adapter-overlay.extension-zigbee2mqtt-adapter-updating{
 	background-color:#ff5e00;	
 }
 
@@ -406,7 +427,7 @@
 .extension-zigbee2mqtt-adapter-line1{
 	display:flex;
 	flex-wrap:wrap;
-	align-items:end;
+	align-items:start;
 	width:100%;
 }
 
@@ -427,7 +448,11 @@
 /*  update progress bar  */
 
 .extension-zigbee2mqtt-adapter-update-progress-bar-container{
-	background-color:yellow;
+	background-color: rgba(0,0,0,.2);
+    line-height:0;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    position:relative;
 }
 
 .extension-zigbee2mqtt-adapter-update-progress-bar{
@@ -435,12 +460,26 @@
     overflow:hidden;
     white-space:nowrap;
     display:inline-block;
-    width:0%;
+    width:0;
+    height:0;
 }
 
-.updating .extension-zigbee2mqtt-adapter-update-progress-bar{
-	transition: width 30s linear;
-	width:90%;
+.extension-zigbee2mqtt-adapter-updating .extension-zigbee2mqtt-adapter-update-progress-bar{
+	transition: width 3s linear;
+	width:0;
+    height:3rem;
+}
+
+/*
+.extension-zigbee2mqtt-adapter-update-progress-bar-percentage{
+    display:none;
+}
+*/
+
+.extension-zigbee2mqtt-adapter-updating .extension-zigbee2mqtt-adapter-update-progress-bar-percentage{
+    position:absolute;
+    top:50%;
+    left:1rem;
 }
 
 
@@ -448,12 +487,13 @@
 /*  ICONS  */
 
 .extension-zigbee2mqtt-adapter-icon{
-	width:6rem;
+	width:8rem;
 	margin-right:2rem;
 	margin-bottom:0rem;
 	flex-shrink: 0;
-	min-width:6rem;
+	min-width:8rem;
 	box-sizing:border-box;
+    overflow:hidden;
 }
 
 .extension-zigbee2mqtt-adapter-icon > div{
@@ -461,6 +501,7 @@
 	padding: .7rem;
 	font-size: 1.4rem;
 	font-weight: bolder;
+    margin-bottom:1rem;
 }
 
 .extension-zigbee2mqtt-adapter-icon-ikea{
@@ -534,6 +575,14 @@
 	background-color: white;
 }
 
+.extension-zigbee2mqtt-adapter-icon-heiman{
+	color:#b9bec1;
+	background-color: white;
+}
+.extension-zigbee2mqtt-adapter-icon-ewelink{
+	color:white;
+	background-color: #0098dd;
+}
 
 
 
@@ -566,7 +615,7 @@
 @media screen and (min-width: 641px) {
 	.extension-zigbee2mqtt-adapter-line2{
 		width:auto;
-		margin-left:8rem;
+		margin-left:10rem;
 	}
 	.extension-zigbee2mqtt-adapter-line2 > div{
 		width:auto;
@@ -577,18 +626,25 @@
 	}
 	
 	.extension-zigbee2mqtt-adapter-description{
-		width:calc(100% - 8rem);
+		width:calc(100% - 10rem);
 	}
 }
 
 
 @media screen and (min-width: 1025px) {
 	#extension-zigbee2mqtt-adapter-view{
-		left:9.6rem;
-		top: 0;
+		
+        /*padding-left:9.6rem;*/
 		height:100vh; 
-		position:absolute;
-		width: calc(100% - 9.6rem);
+		/*width:100vw;*/
+        
+        position:absolute;
+		left:9.6rem;
+        top: 0;
+        /*
+		
+        */
+        width: calc(100% - 9.6rem);
 		padding-right:9.6rem;
 	}
 	
