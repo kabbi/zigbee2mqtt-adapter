@@ -52,19 +52,18 @@ class Zigbee2MQTTHandler extends APIHandler {
 
 					// reset in case something went wrong, and enough time has passed
 					if( this.last_update_request_time + this.update_reset_time_delay < Date.now() ){
-						this.adapter.waiting_for_update = false;
-						this.adapter.update_result = 'idle';
+						this.adapter.updating_firmware = false;
+						this.adapter.update_result = {'status':'idle'};
 					}
 
 					var devices_as_list = [];
 					try {
-						for (const key in this.adapter.devices_overview) {
-							if (this.adapter.devices_overview.hasOwnProperty(key)) {
-								var device = this.adapter.devices_overview[key];
-								if (this.adapter.waiting_for_update) {
-									device['update_available'] = false;
-								}
-
+						for (const key in this.adapter.persistent_data.devices_overview) {
+							if (this.adapter.persistent_data.devices_overview.hasOwnProperty(key)) {
+								var device = this.adapter.persistent_data.devices_overview[key];
+								//if (this.adapter.updating_firmware) {
+								//	device['update_available'] = false;
+								//}
 								devices_as_list.push(device);
 							}
 						}
@@ -78,9 +77,12 @@ class Zigbee2MQTTHandler extends APIHandler {
 						contentType: 'application/json',
 						content: JSON.stringify({
 							'status': 'ok',
-							'devices': devices_as_list,
+							'devices': this.adapter.persistent_data.devices_overview,
                             'security': this.adapter.security,
                             'installed': this.adapter.z2m_installed_succesfully,
+                            'started': this.adapter.z2m_started,
+                            'updating_firmware': this.adapter.updating_firmware,
+                            'update_result': this.adapter.update_result,
                             'debug': this.adapter.config.debug
 						}),
 					});
@@ -112,7 +114,8 @@ class Zigbee2MQTTHandler extends APIHandler {
 								'status': 'A new network map has been requested. Please wait.'
 							}),
 						});
-					} else {
+					} 
+                    else {
 						if (this.config.debug) {
 							console.log("map update delayed");
 						}
@@ -131,13 +134,33 @@ class Zigbee2MQTTHandler extends APIHandler {
                 
                 
                 else if (action == "poll") {
+                    
+					var devices_as_list = [];
+					try {
+						for (const key in this.adapter.persistent_data.devices_overview) {
+							if (this.adapter.persistent_data.devices_overview.hasOwnProperty(key)) {
+								var device = this.adapter.persistent_data.devices_overview[key];
+                                //if(device['update']['state'] == "updating"){
+                                    
+                                //}
+								//if (this.adapter.updating_firmware) {
+								//	device['update_available'] = false;
+								//}
+								devices_as_list.push(device);
+							}
+						}
+					} catch (error) {
+						console.log("Error in poll API handling: ", error);
+					}
+                    
 					return new APIResponse({
 						status: 200,
 						contentType: 'application/json',
 						content: JSON.stringify({
 							'status': 'Updating... please wait',
+                            'devices':devices_as_list,
 							'map': this.map,
-							'waiting_for_update': this.adapter.waiting_for_update,
+							'updating_firmware': this.adapter.updating_firmware,
 							'update_result': this.adapter.update_result
 						}),
 					});
@@ -154,11 +177,11 @@ class Zigbee2MQTTHandler extends APIHandler {
                         if(this.adapter.security.pan_id != request.body.pan_id){
                             this.adapter.security.pan_id = request.body.pan_id;
                             this.adapter.security.network_key = JSON.parse("[" + request.body.network_key + "]");
-                            console.log("this.adapter.security.network_key array: " + this.adapter.security.network_key);
+                            //console.log("this.adapter.security.network_key array: " + this.adapter.security.network_key);
                             
                             fs.writeFile( this.adapter.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.adapter.security ), "utf8" , (err, result) => {
                                 if(err){
-                                    console.log('file write error:', err);
+                                    console.log('save security: file write error:', err);
                 					return new APIResponse({
                 						status: 200,
                 						contentType: 'application/json',
@@ -277,17 +300,42 @@ class Zigbee2MQTTHandler extends APIHandler {
                     
                 }
                 
-                else if (action == "update-device") {
+                
+                else if (action == "check-updates") {
 					if (this.config.debug) {
-						console.log("in update device, with zigbee_id:" + request.body.zigbee_id);
+						console.log("API handler: in check-updates");
 					}
 
+					try {
+						for (const key in this.adapter.persistent_data.devices_overview) {
+							if (this.adapter.persistent_data.devices_overview.hasOwnProperty(key)) {
+								var device = this.adapter.persistent_data.devices_overview[key];
+                                console.log("update check look device: ", device);
+								//if (this.adapter.updating_firmware) {
+								//	device['update_available'] = false;
+								//}
 
-					if (this.adapter.waiting_for_update == false) {
-						this.adapter.waiting_for_update = true;
+								//devices_as_list.push(device);
+							}
+						}
+                    }
+                    catch(e){
+                        console.log("Error in manual update check: ",e);
+                    }
+					return new APIResponse({
+						status: 200,
+						contentType: 'application/json',
+						content: JSON.stringify({
+							'status': 'Update check initiated.'
+						}),
+					});
+
+                    /*
+					if (this.adapter.updating_firmware == false) {
+						this.adapter.updating_firmware = true;
 						this.last_update_request_time = Date.now();
-						this.adapter.update_result = 'waiting';
-						const update_topic = 'bridge/request/device/ota_update/update';
+						this.adapter.update_result = 'waiting';zigbee2mqtt/bridge/request/device/ota_update/check
+						const update_topic = 'bridge/request/device/ota_update/check';
 						console.log("update device topic: " + update_topic);
 						const update_message = {
 							"id": request.body.zigbee_id
@@ -310,6 +358,42 @@ class Zigbee2MQTTHandler extends APIHandler {
 							}),
 						});
 					}
+                    */
+
+				} 
+                
+                else if (action == "update-device") {
+					if (this.config.debug) {
+						console.log("API handler: in update device, with zigbee_id:" + request.body.zigbee_id);
+					}
+
+					if (this.adapter.updating_firmware == false) {
+						this.adapter.updating_firmware = true;
+						this.last_update_request_time = Date.now();
+						this.adapter.update_result = {'status':'idle'};
+						const update_topic = 'bridge/request/device/ota_update/update';
+						console.log("update device topic: " + update_topic);
+						const update_message = {
+							"id": request.body.zigbee_id
+						};
+						console.log("update device message: " + update_message);
+						this.adapter.publishMessage(update_topic, update_message);
+						return new APIResponse({
+							status: 200,
+							contentType: 'application/json',
+							content: JSON.stringify({
+								'status': 'Attempting an update of the device.'
+							}),
+						});
+					} else {
+						return new APIResponse({
+							status: 200,
+							contentType: 'application/json',
+							content: JSON.stringify({
+								'status': 'error','error':'An update is already in progress.'
+							}),
+						});
+					}
 
 				} 
                 
@@ -318,7 +402,8 @@ class Zigbee2MQTTHandler extends APIHandler {
 					if (this.config.debug) {
 						console.log("in delete, with zigbee_id:" + request.body.zigbee_id);
 					}
-
+                    
+                    /*
 					const delete_topic = 'bridge/request/device/remove';
 					//console.log("delete topic: " + delete_topic);
 					const delete_message = {
@@ -327,14 +412,39 @@ class Zigbee2MQTTHandler extends APIHandler {
 					};
 					//console.log("delete message: " + delete_message);
 					this.adapter.publishMessage(delete_topic, delete_message);
+                    */
+                    this.adapter.removeDevice('z2m-' + request.body.zigbee_id)
+                    .then(
+                        function(value) { 
+        					return new APIResponse({
+        						status: 200,
+        						contentType: 'application/json',
+        						content: JSON.stringify({
+        							'status': 'ok','messsage':'Succesfully attempted a force-remove of the device'
+        						}),
+        					});
+                        },
+                        function(error) {
+        					return new APIResponse({
+        						status: 200,
+        						contentType: 'application/json',
+        						content: JSON.stringify({
+        							'status': 'error','messsage':'Failed to force-remove the device'
+        						}),
+        					});
+                        }
+                    );
+                    /*
+                    .then((successMessage) => {
+                      // successMessage is whatever we passed in the resolve(...) function above.
+                      // It doesn't have to be a string, but if it is only a succeed message, it probably will be.
+                      console.log("Yay! " + successMessage)
+                    });
+                    */
 
-					return new APIResponse({
-						status: 200,
-						contentType: 'application/json',
-						content: JSON.stringify({
-							'status': 'Attempted a force-remove of the device'
-						}),
-					});
+                    //this.adapter.removeDevice('z2m-' + request.body.zigbee_id);
+
+					
 				} 
                 
                 
