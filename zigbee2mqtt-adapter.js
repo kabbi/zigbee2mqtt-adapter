@@ -442,8 +442,9 @@ class ZigbeeMqttAdapter extends Adapter {
         this.ping_interval = setInterval(() => {
             
             // this.config.manual_toggle_response
-            
-            this.ping_things();
+            if (!this.config.debug) { // TODO: remove this again for more ping testing.
+                this.ping_things();
+            }
             
         }, 120000);
         
@@ -1212,7 +1213,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                         if(typeof device.interview_completed != "undefined" && typeof device.interviewing != "undefined" && device.supported != 'undefined'){
                                             if (this.config.debug) {
                                                 console.log("- device.type was not undefined or coordinator, it was: " + device.type);
-                                                //console.log(device);
+                                                
                                             }
                                             if(device.interview_completed == true && device.interviewing == false && device.supported == true){
                                                 if (this.config.debug) {
@@ -1222,7 +1223,8 @@ class ZigbeeMqttAdapter extends Adapter {
                                             }
                                             else{
                                                 if (this.config.debug) {
-                                                    console.log("Warning, device is still in the proces of being interviewed OR is not supported");
+                                                    console.log("Warning, device is still in the proces of being interviewed OR is not supported:");
+                                                    console.log(device.manufacturer, device.model_id, device.ieee_address);
                                                 }
                                             }
                                         }
@@ -1611,12 +1613,16 @@ class ZigbeeMqttAdapter extends Adapter {
     					try {
     						if (key == 'action') {
     							if (this.config.debug) {
-                                    console.log("key == action");
+                                    console.log("key == action, action: " + msg[key]);
                                 }
-                            
-                                // boolean action
-    							if (!msg.hasOwnProperty('state') && !msg.hasOwnProperty('toggle')) {
-                                    if(msg[key] != null){
+                                if(msg[key] != null){
+                                
+                                    // Figure out if this incoming action should also be used to change toggle buttons. This is only relevant id the message doesn't have properties indicating the device has its own proper properties by those names.
+    							    if (!msg.hasOwnProperty('state') && !msg.hasOwnProperty('toggle')  && !msg.hasOwnProperty('pushed')) { // this would indicate that these properties officially exist
+                                    
+                                    
+                                        // TOGGLE from on-off pair
+                                        // An on or off message could still be relevant to both a toggle switch and a momentary push button, so we'll have to figure out if the toggle and pushed properties actually exist.
         								if (msg[key].toLowerCase() == "on" || msg[key].toLowerCase() == "off") {
         									//console.log("it's on or off");
     										var extra_boolean = false;
@@ -1624,21 +1630,21 @@ class ZigbeeMqttAdapter extends Adapter {
     											extra_boolean = true;
     										}
                                         
-        									const extra_property = device.findProperty('toggle');
-        									if (!extra_property) {
-        										console.log("no extra toggle property spotted, will attempt to generate it now");
-                                                this.attempt_new_property(device, 'toggle', extra_boolean, true, false); // value, read-only and percentage-type
-                                                this.handleDeviceAdded(device);
-        									} 
-                                            else {
+        									const extra_toggle_property = device.findProperty('toggle');
+        									if (extra_toggle_property) { 
+        										//console.log("no extra toggle property spotted, will attempt to generate it now");
+                                                //this.attempt_new_property(device, 'toggle', extra_boolean, true, false); // value, read-only and percentage-type
+                                                //this.handleDeviceAdded(device);
                                                 /*
         										const {
         											extra_fromMqtt = identity
-        										} = extra_property.options;
-                                                extra_property.setCachedValue(extra_fromMqtt(extra_boolean));
+        										} = extra_toggle_property.options;
+                                                //extra_property.setCachedValue(extra_fromMqtt(extra_boolean));
+                                                const testje = extra_fromMqtt(msg[key]);
+                                                console.log("testje. Are they the same?: ", msg[key], testje, extra_boolean);
                                                 */
-        										extra_property.setCachedValue(extra_boolean);
-        										device.notifyPropertyChanged(extra_property);
+        										extra_toggle_property.setCachedValue(extra_boolean); // Technically this should now use the fromMqtt construction, but in practise these extra generated properties all use booleans normally, so translation is not necessary.
+        										device.notifyPropertyChanged(extra_toggle_property);
                                             
                                                 this.handle_persistent_value(zigbee_id, 'toggle', extra_boolean, true, false);
                                                 this.save_persistent_data();
@@ -1647,26 +1653,50 @@ class ZigbeeMqttAdapter extends Adapter {
         											console.log("extra_boolean updated to: " + extra_boolean);
         										}
         									}
+                                            
+                                            // PUSHED
+                                            if(msg[key].toLowerCase() == "on"){
+                                                // Let's try looking for a pushed property too. This is only relevant if the action was "on".
+                                                const extra_pushed_property = device.findProperty('pushed');
+                                                if(extra_pushed_property){
+                                                    //console.log("p");
+                                                    //console.log("Extra pushed property. Does it have origin info?: ", extra_pushed_property);
+                                                    
+                                                    /*
+            										const {
+            											extra_fromMqtt = identity
+            										} = extra_pushed_property.options;
+                                                    //extra_property.setCachedValue(extra_fromMqtt(extra_boolean));
+                                                    const testje = extra_fromMqtt(msg[key]);
+                                                    console.log("testje. Are they the same?: ", msg[key], testje, extra_boolean);
+            										*/
+                                                    
+                                                    // Turn it on...
+                                                    extra_pushed_property.setCachedValue(true); // Technically this should now use the fromMqtt construction, but in practise these extra generated properties all use booleans normally, so translation is not necessary.
+            										device.notifyPropertyChanged(extra_pushed_property);
+                                                    
+                                                    // And a second later turn it off again
+                                                    setTimeout(() => {
+                                                        //console.log("switching pushed property back to off");
+                										extra_pushed_property.setCachedValue(false);
+                										device.notifyPropertyChanged(extra_pushed_property);
+                                                    }, 1000);
+                                                    
+                                                }
+        										
+        									}
         								}
                                     
+                                        // TOGGLE from single action message
+                                        // A toggle action is simpler to handle. When it arrives we change the value of the toggle property to its opposite. This state also recorded in the persistent device_overview to that its value will be restored after a restart.
                                         else if(msg[key].toLowerCase() == "toggle"){
                                             if (this.config.debug) {
                                                 console.log("toggle action spotted");
                                             }
                                             extra_property = device.findProperty('toggle');
                                         
-        									if (!extra_property) {
-        										if (this.config.debug) {
-                                                    console.log("no extra power state property spotted. Creating it now");
-                                                }
-                                                this.attempt_new_property(zigbee_id, 'toggle', false, true, false); // value, read-only and percentage-type
-                                                if (this.config.debug) {
-                                                    console.log("calling handleDeviceAdded");
-                                                }
-                                                this.handleDeviceAdded(device);
-                                                this.save_persistent_data();
-        									}
-                                            else {
+        									if (extra_property) { // this never happen, as actions are pre-defined in the device information, and the addon now uses that to generate these extra properties in the exposes device generator. But it can't hurt to have it in here, just in case.
+        										
                                                 if (this.config.debug) {
                                                     console.log("toggle extra_property.value: ", extra_property.value);
                                                 }
@@ -1677,36 +1707,30 @@ class ZigbeeMqttAdapter extends Adapter {
                                             
                                                 this.handle_persistent_value(zigbee_id, 'toggle', extra_boolean, true, false);
                                                 this.save_persistent_data();
-                                                /*
-                                                // Save the new value in the devices's appendages in devices_overview
-                                                try{
-                                                    // save updated value to devices_overview in case it has to be regenrated at init next time.
-                                                    if(typeof this.persistent_data.devices_overview[device_id] != 'undefined'){
-                                                        if(typeof this.persistent_data.devices_overview[device_id]['appendages'] != 'undefined'){
-                                                            if(typeof this.persistent_data.devices_overview[device_id]['appendages']['toggle'] != 'undefined'){
-                                                                console.log("updating the value of toggle appengage in the devices overview");
-                                                                this.persistent_data.devices_overview[device_id]['appendages']['toggle']['value'] = extra_boolean;
-                                                                this.save_persistent_data();
-                                                            }
-                                                            else{
-                                                                console.log("yikes, toggle was not in appendages yet?");
-                                                            }
-                                                        }
-                                                        else{
-                                                            console.log("yikes, missing appendages info for extra toggle property");
-                                                        }
-                                                    }
-                                                    else{
-                                                        console.log("Note: device_id was not yet in devices_overview while parsing toggle action");
-                                                    }
-                                                }
-                                                catch(e){
-                                                    console.log("Error while trying to save updated appendage values in devices_overview");
-                                                }
-                                                */
+                                                
         										if (this.config.debug) {
-        											console.log("extra_boolean updated to its opposite: " + extra_boolean);
+        											console.log("extra toggle property switched to its opposite: " + extra_boolean);
         										}
+        									}
+                                            else {
+                                                
+                                                /*
+                                                // In the past receiving an action message for the first time would initiate its creation.
+                                                if (this.config.debug) {
+                                                    console.log("no extra power state property spotted. Creating it now");
+                                                }
+                                                this.attempt_new_property(zigbee_id, 'toggle', false, true, false); // value, read-only and percentage-type
+                                                if (this.config.debug) {
+                                                    console.log("calling handleDeviceAdded");
+                                                }
+                                                this.handleDeviceAdded(device);
+                                                this.save_persistent_data();
+                                                
+                                                */
+                                                
+                                                
+
+
                                             
         									}
                                         } 
@@ -1818,7 +1842,10 @@ class ZigbeeMqttAdapter extends Adapter {
                                         
                                             var extra_property = device.findProperty('brightness');
         								    if (!extra_property){
-        								        if (this.config.debug) {
+        								        
+                                                /*
+                                                // This has been disabled, as we'll not trust Z2M to handle this. If it creates a virtual brightness property, I hope it's smart enough to provide that in the device info.
+                                                if (this.config.debug) {
                                                     console.log("Creating missing brightness property");
                                                     console.log("device_id = " + device_id );
                                                     console.log("key = " + key );
@@ -1835,6 +1862,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                                 extra_property = device.findProperty('brightness');
                                                 this.persistent_data.virtual_brightness_alternatives[device_id] = {'value':0,'direction':direction};
                                                 continue;
+                                                */
         								    }
                                             else{
                                                 if(typeof this.persistent_data.virtual_brightness_alternatives[device_id] == 'undefined'){
@@ -2070,7 +2098,8 @@ class ZigbeeMqttAdapter extends Adapter {
                         
                         
                             try{
-                                // save updated value to devices_overview in case it has to be regenrated at init next time.
+                                
+                                // save updated value to devices_overview in case it has to be regenerated at init next time. this.handle_persistent_data cannot be used here, as we don't know enough about the data, so we go around and update the value only.
                                 if(typeof this.persistent_data.devices_overview[device_id] != 'undefined'){
                                     if(typeof this.persistent_data.devices_overview[device_id]['appendages'] != 'undefined'){
                                         if(typeof this.persistent_data.devices_overview[device_id]['appendages'][key] != 'undefined'){
