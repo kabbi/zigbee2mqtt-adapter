@@ -80,7 +80,7 @@ class Zigbee2MQTTHandler extends APIHandler {
 							'devices': this.adapter.persistent_data.devices_overview,
                             'security': this.adapter.security,
                             'installed': this.adapter.z2m_installed_succesfully,
-                            'started': this.adapter.z2m_started,
+                            'started': this.adapter.z2m_state,
                             'updating_firmware': this.adapter.updating_firmware,
                             'update_result': this.adapter.update_result,
                             'debug': this.adapter.config.debug
@@ -161,7 +161,9 @@ class Zigbee2MQTTHandler extends APIHandler {
                             'devices':devices_as_list,
 							'map': this.map,
 							'updating_firmware': this.adapter.updating_firmware,
-							'update_result': this.adapter.update_result
+							'update_result': this.adapter.update_result,
+                            'installed': this.adapter.z2m_installed_succesfully,
+                            'started': this.adapter.z2m_state,
 						}),
 					});
 				} 
