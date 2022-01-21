@@ -35,7 +35,7 @@ class ExposesDeviceGenerator {
 	* https://www.zigbee2mqtt.io/information/exposes
 	*/
 	
-	generateDevice(info, zigbee_id) {
+	generateDevice(info, zigbee_id, model_id) {
         try{
             if(info == null){
                 console.log("Error, no exposes data (info was null)");
@@ -50,6 +50,7 @@ class ExposesDeviceGenerator {
     		var device = new Object();
     		device['@type'] = [];
             device.zigbee_id = zigbee_id;
+            device.model_id = model_id;
     		device.properties = new Object();
     		device.actions = new Object();
 		
@@ -271,15 +272,41 @@ class ExposesDeviceGenerator {
 	
 	
     
-    
+    flip_value_on_and_off(expose){
+        
+        return expose;   
+    }
     
 	
 	parse_property(expose, device, property_names_list){
 		if(this.config.debug){
             console.log("+ (parse_property)");
+            console.log("expose: ", expose);
+            console.log("+");
         }
         
-        console.log("parse_property: is device undefined? " + typeof device);
+        //console.log("parse_property: is device undefined? " + typeof device);
+        
+        try{
+            //
+            //  Making some changes based on the specific device we're dealing with.
+            //
+            console.log("parse_prop: ************* device model: ", device.model_id);
+            
+            if(this.adapter.reverse_list_contact.includes(device.model_id) && expose.property == 'contact'){
+                console.log("- spotted a contact propery that should be reversed");
+                expose['reversed'] = true;
+            }
+            
+            
+            
+        }
+        catch(e){
+            console.log("Error while doing device-specific adjustments: ", e);
+        }
+        
+        
+        
         
         
         /*
@@ -353,7 +380,12 @@ class ExposesDeviceGenerator {
             				if (expose.access === this.ACCESS_MASK_ACTION) {
             					device.actions[expose.property] = this.enumPropertyToStringAction(expose);
             				} else {
-            					device.properties[expose.property] = this.enumPropertyToStringProperty(expose);
+                                if(device.model_id == 'STARKVIND Air purifier'){
+                                    device.properties[expose.property] = this.STARKVINDenumPropertyToStringProperty(expose);
+                                }else{
+                                    device.properties[expose.property] = this.enumPropertyToStringProperty(expose);
+                                }
+            					
             				}
             				break;
 			
@@ -431,7 +463,10 @@ class ExposesDeviceGenerator {
                             device.properties[expose.property]['multipleOf'] = 1;
                         
                         }
-                        
+                        else if( expose['unit'] == 'µg/m³' ){
+                            device.properties[expose.property]['minimum'] = 0;
+                            //device.properties[expose.property]['maximum'] = 65535;
+                        }
                     }
                 
                     if( expose['name'] == 'humidity' && device.properties[expose.property] != 'undefined'){
@@ -933,12 +968,6 @@ class ExposesDeviceGenerator {
 		return device;
 	}
 	
-	
-
-	
-    
-
-	
     
     
 	/**
@@ -949,12 +978,13 @@ class ExposesDeviceGenerator {
             console.log("binaryPropertyToBooleanProperty binary: ",binary);
             //console.log("binary.value_on = ", binary.value_on);
         }
-        
+        /*
         if(typeof binary.value_on == 'undefined'){
             console.log("Warning, ExposesGenerator: binary.value_on was undefined in binaryPropertyToBooleanProperty");
             binary.value_on = true;
             binary.value_off = false;
         }
+        */
         //else if(binary.name == 'contact'){
             //console.log("----> switching contact around. Before value_off;", binary.value_off);
             //const old_off = binary.value_off;
@@ -969,6 +999,12 @@ class ExposesDeviceGenerator {
 		property.description = binary.description;
 		property.readOnly = this.accessToReadOnly(binary.access);
         property.property = binary.property;
+        property.value_off = binary.value_off;
+        property.value_on = binary.value_on;
+        property.reversed = false;
+        if(typeof binary.reversed != 'undefined'){
+            property.reversed = binary.reversed;
+        }
         /*
         if(binary.name == 'contact'){
             console.log("----> switching contact fromMqtt and toMqtt around2.");
@@ -980,8 +1016,37 @@ class ExposesDeviceGenerator {
 		    property.toMqtt = (v) => (v ? binary.value_on : binary.value_off);
         }
         */
-	    property.fromMqtt = (v) => v === binary.value_on;
-	    property.toMqtt = (v) => (v ? binary.value_on : binary.value_off);
+	    property.fromMqtt = (v) => {
+            var result_boolean = v;
+            if(property.reversed == true){
+                if( v == property.value_off){
+                    result_boolean = property.value_on;
+                }else{
+                    result_boolean = property.value_off;
+                }
+                return result_boolean;
+            }
+            else{
+                return v === property.value_on;
+            }
+            /*
+                return v === property.value_off;
+            }else{
+                console.log("FROM MQTT NORMAL: ", v);
+                
+            }
+            */
+	    }
+        
+	    property.toMqtt = (v) => {
+            if(property.reversed == true){
+                console.log("TO MQTT REVERSED");
+                return v ? property.value_off : property.value_on;
+            }else{
+                console.log("TO MQTT NORMAL");
+                return v ? property.value_on : property.value_off
+            }
+	    } // (v ? binary.value_on : binary.value_off);
 		return property;
 	}
 	
@@ -1065,9 +1130,62 @@ class ExposesDeviceGenerator {
 		property.readOnly = this.accessToReadOnly(enumeration.access);
 		property.enum = enumeration.values;
         property.property = enumeration.property;
-		console.log("ENUM typeof enumeration.values = " + typeof enumeration.values);
-		console.log("ENUM values: ",enumeration.values);
+		//console.log("ENUM typeof enumeration.values = " + typeof enumeration.values);
+		//console.log("ENUM values: ",enumeration.values);
 		return property;
+	}
+	STARKVINDenumPropertyToStringProperty(enumeration) {
+		const property = new Object();
+		property.type = 'string';
+		property.title = this.applySentenceCase(enumeration.name);
+		property.description = enumeration.description;
+		property.readOnly = this.accessToReadOnly(enumeration.access);
+		
+        
+        property.property = enumeration.property;
+        
+        if(property.property == 'fan_mode'){
+            property.enum = ['off','auto','1','1.5','2','2.5','3','3.5','4','4.5','5'];
+        }
+        else{
+            property.enum = enumeration.values;
+        }
+		//console.log("ENUM values: ",enumeration.values);
+		
+	    property.fromMqtt = (v) => {
+            if(property.property == 'fan_mode'){
+                console.log("fromMqtt is translating: ", v);
+                if(v == '2'){v = '1.5'}
+                else if(v == '3'){v = '2'}
+                else if(v == '4'){v = '2.5'}
+                else if(v == '5'){v = '3'}
+                else if(v == '6'){v = '3.5'}
+                else if(v == '7'){v = '4'}
+                else if(v == '8'){v = '4.5'}
+                else if(v == '9'){v = '5'}
+                console.log("- fromMqtt is translating after: ", v);
+            }
+            return v;
+	    };
+        property.toMqtt = (v) => {
+            v = v.toString();
+            if(property.property == 'fan_mode'){
+                console.log("toMqtt is translating: ", v);
+                console.log("- fanmode_enum is: ", property.enum);
+                if(v == '1.5'){v = '2';}
+                else if(v == '2'){v = '3';}
+                else if(v == '2.5'){v = '4';}
+                else if(v == '3'){v = '5';}
+                else if(v == '3.5'){v = '6';}
+                else if(v == '4'){v = '7';}
+                else if(v == '4.5'){v = '8';}
+                else if(v == '5'){v = '9';}
+                console.log("- toMqtt is translating after: ", v);
+            }
+            return v;
+        };
+        return property;
+        
 	}
 	
 	/**
@@ -1084,7 +1202,7 @@ class ExposesDeviceGenerator {
 	
 	/**
 	* Transforms a Zigbee2MQTT binary property, which you can only set but not get, into a WebThings
-	* Action with a input of of type boolean.
+	* Action with a input of type boolean.
 	*/
 	binaryPropertyToBooleanAction(binary) {
 		const action = new Object();
@@ -1097,7 +1215,7 @@ class ExposesDeviceGenerator {
 	
 	/**
 	* Transforms a Zigbee2MQTT binary property, which you can only set but not get, into a WebThings
-	* Action with a input of of type boolean.
+	* Action with a input of type boolean.
 	*/
 	binaryPropertyToLockAction(binary) {
 		const action = new Object();
@@ -1111,7 +1229,7 @@ class ExposesDeviceGenerator {
     
 	/**
 	* Transforms a Zigbee2MQTT enum property, which you can only set but not get, into a WebThings
-	* Action with a input of of type string.
+	* Action with a input of type string.
 	*/
 	enumPropertyToStringAction(enumeration) {
 		const action = new Object();
@@ -1124,7 +1242,7 @@ class ExposesDeviceGenerator {
 	
 	/**
 	* Transforms a Zigbee2MQTT numeric property, which you can only set but not get, into a WebThings
-	* Action with a input of of type integer.
+	* Action with a input of type integer.
 	*/
 	numericPropertyToIntegerAction(numeric) {
 		const action = new Object();
@@ -1183,7 +1301,9 @@ class ExposesDeviceGenerator {
 		if(title.toLowerCase() == "power state"){ // handle the extra state property that is generated from enum.
 			return "Power state";
 		}
-		
+		if(title.toLowerCase() == "led_enable"){ // handle the extra state property that is generated from enum.
+			return "Led";
+		}
 		
 		
 		title = title.replace(/_/g, ' '); // replace _ with space
