@@ -613,6 +613,71 @@
 }
 
 
+
+
+
+/*  spinner  */
+
+
+.extension-privacy-manager-spinner {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin:0 auto;
+}
+.extension-privacy-manager-spinner div {
+  position: absolute;
+  top: 33px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.5);
+  animation-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+.extension-privacy-manager-spinner div:nth-child(1) {
+  left: 8px;
+  animation: extension-privacy-manager-spinner1 0.6s infinite;
+}
+.extension-privacy-manager-spinner div:nth-child(2) {
+  left: 8px;
+  animation: extension-privacy-manager-spinner2 0.6s infinite;
+}
+.extension-privacy-manager-spinner div:nth-child(3) {
+  left: 32px;
+  animation: extension-privacy-manager-spinner2 0.6s infinite;
+}
+.extension-privacy-manager-spinner div:nth-child(4) {
+  left: 56px;
+  animation: extension-privacy-manager-spinner3 0.6s infinite;
+}
+@keyframes extension-privacy-manager-spinner1 {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes extension-privacy-manager-spinner3 {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(0);
+  }
+}
+@keyframes extension-privacy-manager-spinner2 {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(24px, 0);
+  }
+}
+
+
+
 @media screen and (min-width: 641px) {
 	.extension-zigbee2mqtt-adapter-line2{
 		width:auto;

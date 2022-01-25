@@ -21,7 +21,7 @@
 						//console.log("fetched html:");
 						//console.log(text);
 	         	this.content = text;
-	  		 	  if( document.location.href.endsWith("zigbee2mqtt-adapter") ){
+	  		 	  if( document.location.href.endsWith("extensions/zigbee2mqtt-adapter") ){
 					//console.log(document.location.href);
 	  		  		this.show();
 	  		  	}
@@ -287,6 +287,16 @@
 								
                                 if(this.updating_z2m){
                                     console.log("updating z2m?");
+                                    
+                                    if(body.installed && !body.started){
+                                        console.log("installed, but not started yet");
+                                    }
+                                    this.request_devices_list();
+                                    if(body.started){
+                                        console.log("Z2M moved from installing to started");
+                                        this.updating_z2m = false;
+                                    }
+                                    
                                 }
                                 
 
@@ -351,8 +361,9 @@
                 //console.log("list2:",list2);
                 
                 if(body.installed == false){
-                    //console.log("STILL INSTALLING");
-			        
+                    console.log("STILL INSTALLING");
+			        this.updating_z2m = true;
+                    
     				if(typeof list2 != 'undefined'){
                         list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Still installing...</h2><br/><img src="/extensions/zigbee2mqtt-adapter/images/spinner.gif" width="32" height="32" alt="Please refresh the page in a while..."/ style="opacity:.5"><br/><p>It takes about 30 minutes for Zigbee2MQTT to be fully downloaded and installed.</p><p>Come back a little later. If this message is gone, that means the intallation has finished.</p><p style="font-style:italic">Do not power-off or restart this controller until installation is complete!</p></div>';
     				    return;

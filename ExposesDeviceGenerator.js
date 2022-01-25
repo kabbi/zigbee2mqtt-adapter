@@ -25,8 +25,6 @@ class ExposesDeviceGenerator {
 		this.ACCESS_MASK_ACTION = this.ACCESS_BIT_SET;
 	}
 	
-	
-    
     
 	
 	/**
@@ -129,7 +127,7 @@ class ExposesDeviceGenerator {
 	
     
     
-	// note: this method is recursive, it calls itself internallty to parse deeper complex structures
+	// note: this method is recursive, it calls itself internally to parse deeper complex structures
 	parse_device(exposes_info, device, property_names_list){
 		
 		
@@ -174,18 +172,7 @@ class ExposesDeviceGenerator {
 								device = this.parse_property(composite_expose, device, property_names_list);
 
 							}
-							/*
-							else{
-								// This will attemps to expose each fragment as a property.
-								// Improve human-readable name
-								for(var fragment in exposes_info){
-									if(typeof exposes_info[fragment]["name"] != "undefined"){
-										exposes_info[fragment]["name"] = exposes_info['property'] + " " + exposes_info[fragment]["name"];
-									}
-							
-								}
-							}
-							*/
+
 
 						}
 					}
@@ -199,7 +186,13 @@ class ExposesDeviceGenerator {
 						if(this.config.debug){
 							console.log("it's a switch");
 						}
-						device['@type'].push('OnOffSwitch');
+                        if(device.model_id == 'ZB-SW01'){
+                            console.log("turning ZB-SW01 into a lock instead");
+                            device['@type'].push('Lock');
+                        }
+                        else{
+                            device['@type'].push('OnOffSwitch');
+                        }   
 					}
 					else if(exposes_info['type'] == "lock"){
 						if(this.config.debug){
@@ -213,7 +206,6 @@ class ExposesDeviceGenerator {
 						}
 						device['@type'].push('Thermostat');
 					}
-				
 				
 				}
 			}
@@ -250,8 +242,7 @@ class ExposesDeviceGenerator {
 					}
 					//else if(k != "values"){
                     else { //if(typeof exposes_info[k]["access"] == "object"){
-                    	console.log(".. diving deeper ..  typeof device: " + typeof device);
-                        //console.log(".. .. .. .. .. .. ..");
+                    	//console.log(".. diving deeper ..  typeof device: " + typeof device);
 						device = this.parse_device(exposes_info[k], device, property_names_list);
 					}
 					
@@ -291,10 +282,12 @@ class ExposesDeviceGenerator {
             //
             //  Making some changes based on the specific device we're dealing with.
             //
-            console.log("parse_prop: ************* device model: ", device.model_id);
+            //console.log("parse_prop: ************* device model: ", device.model_id);
             
             if(this.adapter.reverse_list_contact.includes(device.model_id) && expose.property == 'contact'){
-                console.log("- spotted a contact propery that should be reversed");
+                if(this.config.debug){
+                    console.log("- spotted a boolean propery that should be reversed");
+                }
                 expose['reversed'] = true;
             }
             
@@ -417,18 +410,12 @@ class ExposesDeviceGenerator {
                         if(typeof device.properties[expose.property] != 'undefined'){
                             device.properties[expose.property]['value'] = expose['value'];
                         }
-                        else{
-                            console.log("[D dodged, value");
-                        }
                     }
                 
                     if(typeof expose['property'] != "undefined"){
-                        console.log("expose['property']: " + expose['property']);
+                        //console.log("expose['property']: " + expose['property']);
                         if(typeof device.properties[expose.property] != 'undefined'){
                             device.properties[expose.property]['property'] = expose['property'];
-                        }
-                        else{
-                            console.log("[D dodged, property");
                         }
                         
                     }
@@ -499,7 +486,7 @@ class ExposesDeviceGenerator {
             						device.properties[expose.property]['@type'] = 'LockedProperty'; // read-only
             					}else{
                                     //console.log("IS ACTIONABLE LOCK");
-            						device.properties[expose.property]['@type'] = 'OnOffProperty';
+            						device.properties[expose.property]['@type'] = 'OnOffProperty'; // should be read-only. But it might work?
                                     /*
                                     // Experiment to add actions to a lock, as the spec prefers. However, actions are (currently) not compatible with Voco voice control, so I abandoned this for now. Also had trouble receiving the action.
                                     try{
@@ -653,9 +640,9 @@ class ExposesDeviceGenerator {
         				}
         				else if(expose.name == "voltage"){
         					device.properties[expose.property]['@type'] = 'VoltageProperty';
-        					if(device['@type'].indexOf("EnergyMonitor") == -1){
-        						device['@type'].push('EnergyMonitor');
-        					}
+        					//if(device['@type'].indexOf("EnergyMonitor") == -1){
+        					//	device['@type'].push('EnergyMonitor');
+        					//}
         				}
         				else if(expose.name == "current"){
         					device.properties[expose.property]['@type'] = 'CurrentProperty';
@@ -773,14 +760,14 @@ class ExposesDeviceGenerator {
                                     console.log("exposesDeviceGenerator spotted a brightness_stop in an action property enum list, and no pre-existing brightness property");
                                 }
                                 var fake_exposes_info = {'access': 1, 
-                                                            'name':'brightness',
-                                                            'property':'brightness',
-                                                            'description': 'read-only brightness property (generated from actions data)',
-                                                            'type': 'numeric', 
-                                                            'value_max': 100, 
-                                                            'value_min': 0,
-                                                            'value_step':1
-                                                            };
+                                    'name':'brightness',
+                                    'property':'brightness',
+                                    'description': 'read-only brightness property (generated from actions data)',
+                                    'type': 'numeric', 
+                                    'value_max': 100, 
+                                    'value_min': 0,
+                                    'value_step':1
+                                };
                                             
                                 const initial_value = this.adapter.handle_persistent_value(device.zigbee_id,'brightness',0,true,true); // zigbee_id, property_name, value, read-only, percentage
                                 if(initial_value != null){
@@ -808,17 +795,6 @@ class ExposesDeviceGenerator {
                         if ( expose.values.indexOf('toggle') !== -1 || (expose.values.indexOf('on') !== -1 && expose.values.indexOf('off') !== -1 && add_push_button == false) ){
                             if (property_names_list.indexOf('toggle') == -1 && property_names_list.indexOf('state') == -1 ){ // make sure these properties don't exist officially already.
     					
-                            /*
-                            var on_off_count = 0;
-        					for (var i = 0; i < expose.values.length; i++) {
-        					    if( expose.values[i].toLowerCase() == "on" || expose.values[i].toLowerCase() == "off"){
-        					    	on_off_count++;
-        					    }
-        					}
-        					if(on_off_count == 2){
-                            */
-                        
-                        
                             
                                 if(this.config.debug){
                                     console.log("exposesDeviceGenerator spotted a on and off combo in an action property enum list, and no pre-existing toggle property");
@@ -833,16 +809,6 @@ class ExposesDeviceGenerator {
                                     'value_off':'off'
         						}
                         
-                                /*
-                                if( add_push_button == true){
-                                    fake_exposes_info['name'] == 'pushed';
-                                    fake_exposes_info['property'] == 'pushed';
-                                }
-                                else{
-                                    fake_exposes_info['name'] == 'toggle';
-                                    fake_exposes_info['property'] == 'toggle';
-                                }
-                                */
 
                                 const initial_value = this.adapter.handle_persistent_value(device.zigbee_id,'toggle',false,true,false); // zigbee_id, property_name, value, read-only, percentage
                                 if(initial_value != null){
@@ -850,15 +816,9 @@ class ExposesDeviceGenerator {
                                 }
                         
                         
-        						//if(expose.access == 1){
-        						//device['@type'].push('PushButton'); // for read-only binary properties
-        						//}
-        						//else{
-        						//	device['@type'].push('OnOffSwitch');
-        						//}
-                        
         						property_names_list.push('toggle'); // Remember that a state property now does exist, so as not to generate even more.
         						device = this.parse_property(fake_exposes_info, device, property_names_list); // Create extra OnOffProperty
+                                
                                 // add capability if there isn't one already
                                 if( device['@type'].indexOf('BinarySensor') == -1){
                                     device['@type'].push('BinarySensor');
@@ -866,74 +826,32 @@ class ExposesDeviceGenerator {
                                 
                                 }
                                 device.properties['toggle'].origin = "exposes-generated-from-action";
-                                //already_added_extra_state = true;
         					}
+                            
         				} // End of property_names_list check
 
                     
         				for (var i = 0; i < expose.values.length; i++) {
         				    try{
-                                /*
-                                if( expose.values[i].toLowerCase() == "toggle" && property_names_list.indexOf('toggle') == -1 && property_names_list.indexOf('state') == -1){
-                                    if(this.config.debug){
-                                        console.log("exposesDeviceGenerator spotted a toggle in an action property enum list, and no pre-existing toggle property");
-                                    }
-                                    var fake_exposes_info = {'access': 1, 
-                                                                'name':'toggle',
-                                                                'property':'toggle',
-                                                                'description': 'extra read-only toggle property (generated from actions data)',
-                                                                'type': 'binary', 
-                                                                'value_off': false, 
-                                                                'value_on': true
-                                                                };
-
-                                    const initial_value = this.adapter.handle_persistent_value(device.zigbee_id,'toggle',false,true,false); // zigbee_id, property_name, value, read-only, percentage
-                                    if(initial_value != null){
-                                        fake_exposes_info['value'] = initial_value;
-                                    }
-                        
-                                    property_names_list.push('toggle');
-                        
-                                    device = this.parse_property(fake_exposes_info, device, property_names_list);
-                        
-                                    // add capability if there isn't one already
-                                    if( device['@type'].indexOf('BinarySensor') == -1){
-                                        device['@type'].push('BinarySensor');
-                                        device.properties['toggle']['@type'] = 'BooleanProperty';
-                                    }
-            				    }
-                                //else if( expose.values[i].toLowerCase() == "brightness_stop" && property_names_list.indexOf('brightness') == -1){
-
-                                //}
-                            
-                                else
-                                */
+                                
                                 if( expose.values[i].toLowerCase() == "arrow_right_click" || expose.values[i].toLowerCase() == "arrow_left_click"){
                                     if(this.config.debug){
                                         console.log("exposesDeviceGenerator spotted a brightness_stop in an action property enum list, and no pre-existing brightness property");
                                     }
                                     var fake_exposes_info = {'access': 1, 
-                                                                'name':expose.values[i].toLowerCase(),
-                                                                'property':expose.values[i].toLowerCase(),
-                                                                'description': 'momentary push button (generated from actions data)',
-                                                                'type': 'binary',
-                                                                'value_off': false, 
-                                                                'value_on': true
-                                                                };
+                                        'name':expose.values[i].toLowerCase(),
+                                        'property':expose.values[i].toLowerCase(),
+                                        'description': 'momentary push button (generated from actions data)',
+                                        'type': 'binary',
+                                        'value_off': false, 
+                                        'value_on': true
+                                    };
                                 
                                      // This should always be false:
                                     fake_exposes_info['value'] = this.adapter.handle_persistent_value(device.zigbee_id,expose.values[i].toLowerCase(),false,true,false); // zigbee_id, property_name, value, read-only, percentage
                                                     
                                     property_names_list.push(expose.values[i].toLowerCase());
                                     device = this.parse_property(fake_exposes_info, device, property_names_list);
-                
-                                    // add capability if there isn't one already
-                                    /*
-                                    if( device['@type'].indexOf('PushButton') == -1){ // In this case it's unfortunate that the WebThings Gateway can only handle one capability per type.
-                                        device['@type'].push('PushButton');
-                                        device.properties[expose.values[i].toLowerCase()]['@type'] = 'PushedProperty';
-                                    }
-                                    */
                                 
                                     device.properties[ expose.values[i].toLowerCase() ].origin = "exposes-generated-from-action";
             				    }
@@ -951,10 +869,7 @@ class ExposesDeviceGenerator {
                         console.log("error while trying to add extra properties based on actions: ", e);
                     }                    
                     
-                    
-				
     			}
-			
 			
     		}
     		else{
@@ -974,24 +889,6 @@ class ExposesDeviceGenerator {
 	* Transforms a Zigbee2MQTT binary property into a WebThings Property object of type boolean.
 	*/
 	binaryPropertyToBooleanProperty(binary) {
-        if(this.config.debug){
-            console.log("binaryPropertyToBooleanProperty binary: ",binary);
-            //console.log("binary.value_on = ", binary.value_on);
-        }
-        /*
-        if(typeof binary.value_on == 'undefined'){
-            console.log("Warning, ExposesGenerator: binary.value_on was undefined in binaryPropertyToBooleanProperty");
-            binary.value_on = true;
-            binary.value_off = false;
-        }
-        */
-        //else if(binary.name == 'contact'){
-            //console.log("----> switching contact around. Before value_off;", binary.value_off);
-            //const old_off = binary.value_off;
-            //binary.value_off = binary.value_on;
-            //binary.value_on = old_off;
-            //console.log("------> ", binary.value_off);
-        //}
         
 		const property = new Object();
 		property.type = 'boolean';
@@ -1005,17 +902,7 @@ class ExposesDeviceGenerator {
         if(typeof binary.reversed != 'undefined'){
             property.reversed = binary.reversed;
         }
-        /*
-        if(binary.name == 'contact'){
-            console.log("----> switching contact fromMqtt and toMqtt around2.");
-		    property.fromMqtt = (v) => v === false;//binary.value_off;
-		    property.toMqtt = (v) => (v ? false : true);
-        }
-        else{
-		    property.fromMqtt = (v) => v === binary.value_on;
-		    property.toMqtt = (v) => (v ? binary.value_on : binary.value_off);
-        }
-        */
+        
 	    property.fromMqtt = (v) => {
             var result_boolean = v;
             if(property.reversed == true){
@@ -1029,24 +916,19 @@ class ExposesDeviceGenerator {
             else{
                 return v === property.value_on;
             }
-            /*
-                return v === property.value_off;
-            }else{
-                console.log("FROM MQTT NORMAL: ", v);
-                
-            }
-            */
+            
 	    }
         
 	    property.toMqtt = (v) => {
             if(property.reversed == true){
-                console.log("TO MQTT REVERSED");
+                //console.log("TO MQTT REVERSED");
                 return v ? property.value_off : property.value_on;
             }else{
-                console.log("TO MQTT NORMAL");
+                //console.log("TO MQTT NORMAL");
                 return v ? property.value_on : property.value_off
             }
-	    } // (v ? binary.value_on : binary.value_off);
+	    } 
+        // (v ? binary.value_on : binary.value_off);
 		return property;
 	}
 	
