@@ -51,7 +51,7 @@ class ZigbeeMqttAdapter extends Adapter {
 		// STARTING THE ADDON
 		//
 
-		super(addonManager, 'ZigbeeMqttAdapter', manifest.id);
+		super(addonManager, 'ZigbeeMqttAdapter', manifest.name);
 		this.config = manifest.moziot.config;
 
 		this.current_os = os.platform().toLowerCase();
@@ -1852,7 +1852,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                     msg['brightness'] = this.persistent_data.virtual_brightness_alternatives[device_id]['value']; // overwrite the brightness value with the new one
 
                                 }
-                                */
+                                
                             }
                     
     				    } catch (error) {
