@@ -103,7 +103,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
 		if (this.config.local_zigbee2mqtt) {
 			try {
-				if (typeof this.config.serial_port == "undefined" || this.config.serial_port == "") {
+				if (typeof this.config.serial_port == "undefined" || this.config._port == "") {
 					console.log("Serial port is not defined in settings. Will attempt auto-detect.");
 					if (this.current_os == 'linux') {
 						this.config.serial_port = "/dev/ttyAMA0";
@@ -444,7 +444,9 @@ class ZigbeeMqttAdapter extends Adapter {
 		}
         
         // Start the periodic availability check, which pings routers every 2 minutes.
+        /*
         this.pinging_things = false;
+        
         this.ping_interval = setInterval(() => {
             
             // this.config.manual_toggle_response
@@ -453,7 +455,7 @@ class ZigbeeMqttAdapter extends Adapter {
             }
             
         }, 120000);
-        
+        */
 
 	}
 
@@ -1010,6 +1012,17 @@ class ZigbeeMqttAdapter extends Adapter {
                     console.log("Z2M is now running");
                     this.z2m_state = true;
                     //this.ping_things();
+                    
+                    this.ping_interval = setTimeout(() => {
+            
+                        // this.config.manual_toggle_response
+                        if (!this.config.debug) { // TODO: remove this again for more ping testing.
+                            //this.ping_things();
+                        }
+            
+                    }, 3000); // 30 seconds after starting, we make sure we have to correct state for all the lights.
+                    
+                    
                 }
             }
 
@@ -1027,8 +1040,10 @@ class ZigbeeMqttAdapter extends Adapter {
             //
 
     		if (topic.endsWith('/availability')) { // either "online" or "offline" as payload
-    			console.log("Received availability message. Data = " + data.toString());
-
+    			if (this.config.debug) {
+                    console.log("Received availability message. Data = " + data.toString());
+                }
+                
     			if (data == "offline" || data == "online") {
     				const zigbee_id = topic.split('/')[1];
                     const device_id = 'z2m-' + zigbee_id;
@@ -1043,13 +1058,13 @@ class ZigbeeMqttAdapter extends Adapter {
                     else {
                     
                         try{
-                            console.log("this.persistent_data.devices_overview[device_id].type: " + this.persistent_data.devices_overview[device_id].type);
+                            //console.log("this.persistent_data.devices_overview[device_id].type: " + this.persistent_data.devices_overview[device_id].type);
                             if(this.persistent_data.devices_overview[device_id].type == 'Router'){
                                 console.log(">> router <<");
                             }
-                            if(typeof this.persistent_data.devices_overview[device_id].type != 'undefined'){
-                                console.log("availability: type data in devices_overview: " + this.persistent_data.devices_overview[device_id].type);
-                            }
+                            //if(typeof this.persistent_data.devices_overview[device_id].type != 'undefined'){
+                            //    console.log("availability: type data in devices_overview: " + this.persistent_data.devices_overview[device_id].type);
+                            //}
                         }
                         catch(e){
                             console.log("availability error: that device had no type data in devices_overview");
@@ -1069,14 +1084,20 @@ class ZigbeeMqttAdapter extends Adapter {
                             //console.log("device.hasProperty('state'): ", device.hasProperty('state'));
                             
                             if( device.hasProperty('contact') || device.hasProperty('water_leak') || device.hasProperty('action') || device.hasProperty('vibration') || device.hasProperty('smoke')){
-                                console.log("device has contact, leak, action, vibration or similar property, so will likely not send data very often. Offline message should be ignored.");
+                                if (this.config.debug) {
+                                    console.log("device has contact, leak, action, vibration or similar property, so will likely not send data very often. Offline message should be ignored.");
+                                }
                                 device.connectedNotify(true);
                             }
                             else{
-                                console.log("offline, and device doesn't have smoke/water_leak/etc");
+                                if (this.config.debug) {
+                                    console.log("offline, and device doesn't have smoke/water_leak/etc");
+                                }
                                 const property = device.findProperty('state');
                                 if (property) {
-                                    console.log("ofline, and found state property");
+                                    if (this.config.debug) {
+                                        console.log("ofline, and found state property");
+                                    }
             						// Set state to off
             						if (this.config.manual_toggle_response == "toggle off" || this.config.manual_toggle_response == "both") {
                     					if (property.readOnly == false) { // an extra check
@@ -1883,13 +1904,13 @@ class ZigbeeMqttAdapter extends Adapter {
                                 if(typeof this.persistent_data.devices_overview[device_id] != 'undefined'){
                                     if(typeof this.persistent_data.devices_overview[device_id]['appendages'] != 'undefined'){
                                         if(typeof this.persistent_data.devices_overview[device_id]['appendages'][key] != 'undefined'){
-                                            console.log("updating the value of an appendage in the devices overview: " + key);
+                                            //console.log("updating the value of an appendage in the devices overview: " + key);
                                             if(this.config.virtual_brightness_alternative && key == "brightness" && typeof this.persistent_data.virtual_brightness_alternatives[device_id] !='undefined'){
-                                                console.log("saving virtual brightness value to devices overview");
+                                                //console.log("saving virtual brightness value to devices overview");
                                                 this.persistent_data.devices_overview[device_id]['appendages'][key]['value'] = this.persistent_data.virtual_brightness_alternatives[device_id]['value']; // This is a litle silly, copying between two dictionaries, but it keeps things separeted well.
                                             }
                                             else{
-                                                console.log("saving normal value to devices overview");
+                                                //console.log("saving normal value to devices overview");
                                                 this.persistent_data.devices_overview[device_id]['appendages'][key]['value'] = msg[key]; //fromMqtt(msg[key]);
                                             }
                                         
@@ -2056,7 +2077,7 @@ class ZigbeeMqttAdapter extends Adapter {
 				
                 //const zigbee_id = info.ieee_address;
 				if (deviceDefinition.properties.state) { // If the device has a state property, then initially set it to disconnected.
-                    console.log("addDevice: spotted state in properties");
+                    //console.log("addDevice: spotted state in properties");
 					device.connectedNotify(false);
 					//let timerId = setTimeout(() => this.try_getting_state(info.ieee_address), 11000); // 11 seconds after creating the device, an extra /get will be used to try and get the actual state
 				}
@@ -2226,14 +2247,14 @@ class ZigbeeMqttAdapter extends Adapter {
 
     // Gets the persistent value, and if those don't exist, it sets the provided values as the initial persistent value
     handle_persistent_value(zigbee_id, property_name, value=0, read_only=true, percentage=false){
-        console.log("in handlePersistentValue for property: " + property_name);
+        //console.log("in handlePersistentValue for property: " + property_name);
         try{
             if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id] != 'undefined'){
                 if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'] != 'undefined'){
-                    console.log("- existing appendages data: ", this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages']);
+                    //console.log("- existing appendages data: ", this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages']);
                     if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name] != 'undefined'){
                         if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name]['value'] != 'undefined'){
-                            console.log("handle_persistent_value is returning this value from the devices_overview: ", this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name]['value']);
+                            //console.log("handle_persistent_value is returning this value from the devices_overview: ", this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name]['value']);
                             return this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name]['value'];
                         }
                     }
@@ -2249,15 +2270,15 @@ class ZigbeeMqttAdapter extends Adapter {
         
         try{
             if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id] == 'undefined'){
-                console.log("appendage property was not yet present in devices_overview. Adding it now.");
+                //console.log("appendage property was not yet present in devices_overview. Adding it now.");
                 this.persistent_data.devices_overview['z2m-' + zigbee_id] = {'appendages':{}, 'zigbee_id':zigbee_id, 'update':{'state':'idle'}}
             }
             if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'] == 'undefined'){
-                console.log("appendage property was present but had no appendages dictionary. Adding it now.");
+                //console.log("appendage property was present but had no appendages dictionary. Adding it now.");
                 this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'] = {};
             }
         
-            console.log("initial appendages value was missing in devices_overview, so creating it now. Value: " + value);
+            //console.log("initial appendages value was missing in devices_overview, so creating it now. Value: " + value);
             this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name] = {};
             this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name]['value'] = value;
             this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name]['read_only'] = read_only;
@@ -2497,11 +2518,11 @@ class MqttDevice extends Device {
 		this.connected = false;
         
 		for (const [name, desc] of Object.entries(description.actions || {})) {
-            console.log('in MqttDevice init, importing action: ' + name);
+            //console.log('in MqttDevice init, importing action: ' + name);
 			this.addAction(name, desc);
 		}
 		for (const [name, desc] of Object.entries(description.properties || {})) {
-            console.log('in MqttDevice init, importing property: ' + name);
+            //console.log('in MqttDevice init, importing property: ' + name);
 			const property = new MqttProperty(this, name, desc);
 			this.properties.set(name, property);
 		}
@@ -2511,7 +2532,7 @@ class MqttDevice extends Device {
 	}
 
 	async performAction(action) {
-        console.log("received action: ", action);
+        //console.log("received action: ", action);
         /*
         console.log("this.id = " + this.id);
         //action.name = action.name.replace(/\-action/, '');

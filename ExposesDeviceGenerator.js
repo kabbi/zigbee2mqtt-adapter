@@ -79,13 +79,14 @@ class ExposesDeviceGenerator {
 			//console.log("= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = ");
 			//console.log("device is now:");
 			//console.log(device);
-            
-    		console.log(".");
-            console.log("final device: ", device);
-            console.log(".");
-            console.log(".");
-            console.log(" ");
-            console.log(" ");
+            if(this.config.debug){
+        		console.log(".");
+                console.log("final device: ", device);
+                console.log(".");
+                console.log(".");
+                console.log(" ");
+                console.log(" ");
+            }
             
         }
         catch (error){
@@ -143,8 +144,8 @@ class ExposesDeviceGenerator {
         if(this.config.debug){
             console.log(" ");
             console.log("+ + + + + + + + + + + + + parse_device + + + + + + + + + + + + + + + + + + + + + + + +");
-
         }
+        
 		//console.log(device);
 		try{
 			
@@ -467,13 +468,9 @@ class ExposesDeviceGenerator {
                 
                 
                 
-                
-                
-                
-                
                 // add capabilities information
     			if(typeof expose['name'] != "undefined" && device.properties[expose.property] != 'undefined'){
-                    console.log("expose.name = " + expose.name);
+                    //console.log("expose.name = " + expose.name);
                     
                     try{
         				if( expose.name.endsWith("state") ){
@@ -709,7 +706,7 @@ class ExposesDeviceGenerator {
     			if(expose['type'] == "enum" && expose.access == 1){ // For now, only read-only enum properties (access type 1) with 'on' and 'off' in them will get an extra OnOffProperty
     				//var already_added_extra_state = false; // to avoid adding both an extra toggle and an extra power_state property
                     
-                    console.log("about to add fake properties");
+                    //console.log("about to add fake properties");
                     var add_push_button = false;
                     var add_brightness = false;
                     
@@ -719,7 +716,7 @@ class ExposesDeviceGenerator {
                         if(expose.values.indexOf('brightness_move_up') !== -1 && expose.values.indexOf('brightness_move_down') === -1){
                         
                             if(property_names_list.indexOf('pushed') == -1){
-                                console.log('Adding push button');
+                                //console.log('Adding push button');
                                 add_push_button = true;
                         
                                 if(this.config.debug){
@@ -753,7 +750,7 @@ class ExposesDeviceGenerator {
                         else if( (expose.values.indexOf('brightness_step_up') !== -1 || expose.values.indexOf('brightness_move_up') !== -1) && (expose.values.indexOf('brightness_step_down') !== -1 || expose.values.indexOf('brightness_move_down') !== -1) && expose.values.indexOf('brightness_stop') !== -1){
                         
                             if(property_names_list.indexOf('brightness') == -1){
-                                console.log("adding brightness property generated from actions"); // doesn't Z2M already handle this automatically?
+                                //console.log("adding brightness property generated from actions"); // doesn't Z2M already handle this automatically?
                                 add_brightness == true;
                         
                                 if(this.config.debug){
@@ -1036,7 +1033,7 @@ class ExposesDeviceGenerator {
 		
 	    property.fromMqtt = (v) => {
             if(property.property == 'fan_mode'){
-                console.log("fromMqtt is translating: ", v);
+                //console.log("fromMqtt is translating: ", v);
                 if(v == '2'){v = '1.5'}
                 else if(v == '3'){v = '2'}
                 else if(v == '4'){v = '2.5'}
@@ -1045,15 +1042,15 @@ class ExposesDeviceGenerator {
                 else if(v == '7'){v = '4'}
                 else if(v == '8'){v = '4.5'}
                 else if(v == '9'){v = '5'}
-                console.log("- fromMqtt is translating after: ", v);
+                //console.log("- fromMqtt is translating after: ", v);
             }
             return v;
 	    };
         property.toMqtt = (v) => {
             v = v.toString();
             if(property.property == 'fan_mode'){
-                console.log("toMqtt is translating: ", v);
-                console.log("- fanmode_enum is: ", property.enum);
+                //console.log("toMqtt is translating: ", v);
+                //console.log("- fanmode_enum is: ", property.enum);
                 if(v == '1.5'){v = '2';}
                 else if(v == '2'){v = '3';}
                 else if(v == '2.5'){v = '4';}
@@ -1062,7 +1059,7 @@ class ExposesDeviceGenerator {
                 else if(v == '4'){v = '7';}
                 else if(v == '4.5'){v = '8';}
                 else if(v == '5'){v = '9';}
-                console.log("- toMqtt is translating after: ", v);
+                //console.log("- toMqtt is translating after: ", v);
             }
             return v;
         };

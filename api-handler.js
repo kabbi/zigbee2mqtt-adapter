@@ -83,7 +83,8 @@ class Zigbee2MQTTHandler extends APIHandler {
                             'started': this.adapter.z2m_state,
                             'updating_firmware': this.adapter.updating_firmware,
                             'update_result': this.adapter.update_result,
-                            'debug': this.adapter.config.debug
+                            'debug': this.adapter.config.debug,
+                            'serial': this.adapter.config.serial_port
 						}),
 					});
 
