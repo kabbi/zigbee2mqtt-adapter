@@ -104,7 +104,7 @@ class ZigbeeMqttAdapter extends Adapter {
 		if (this.config.local_zigbee2mqtt) {
 			try {
 				if (typeof this.config.serial_port == "undefined" || this.config._port == "") {
-					console.log("Serial port is not defined in settings. Will attempt auto-detect.");
+					console.log("Serial port is not defined in settings. Will attempt auto-detect. this.current_os: ", this.current_os);
 					if (this.current_os == 'linux') {
 						this.config.serial_port = "/dev/ttyAMA0";
 						let result = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
@@ -550,7 +550,7 @@ class ZigbeeMqttAdapter extends Adapter {
 			fs.access(this.zigbee2mqtt_configuration_file_path, (err) => {
 							
                 if (err && err.code === 'ENOENT') {
-					console.log('The configuration.yaml source file didn\'t exist yet:', this.zigbee2mqtt_configuration_file_source_path);
+					console.log('The configuration.yaml source file didn\'t exist yet:', this.zigbee2mqtt_configuration_file_path);
 				}
                 
                 var base_config = "";
