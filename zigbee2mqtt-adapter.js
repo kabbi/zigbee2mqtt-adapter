@@ -609,7 +609,7 @@ class ZigbeeMqttAdapter extends Adapter {
                         "  filtered_attributes: ['Action group', 'Action rate', 'xy']\n";
 
                 //if(!this.config.virtual_brightness_alternative){
-                    console.log("using Zigbee2MQTT's built-in simulated brightness feature");
+                    //console.log("using Zigbee2MQTT's built-in simulated brightness feature");
                     base_config += "  simulated_brightness:\n" +
 					"    delta: 2\n" +
 					"    interval: 100\n";
@@ -664,9 +664,9 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 	run_zigbee2mqtt(delay = 10) {
-        //if (this.config.debug) {
-        console.log("in run_zigbee2mqtt. Will really start in: " + delay + " seconds.");
-        //}
+        if (this.config.debug) {
+            console.log("in run_zigbee2mqtt. Will really start in: " + delay + " seconds.");
+        }
         setTimeout(this.check_if_config_file_exists.bind(this), 4000);
 		setTimeout(this.connect_to_mqtt.bind(this), delay * 1000); // wait 10 seconds before really starting Zigbee2MQTT, to make sure serial port has been released.
     }
@@ -679,7 +679,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
     connect_to_mqtt(){
-        console.log("attempting to latch onto MQTT");
+        //console.log("attempting to latch onto MQTT");
 		// Start MQTT connection
 		this.client = mqtt.connect(this.config.mqtt);
         this.client.on('connect', () => {
@@ -718,12 +718,12 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 	really_run_zigbee2mqtt() {
-        //if (this.config.debug) {
+        if (this.config.debug) {
 			console.log('really starting zigbee2MQTT using: node ' + this.zigbee2mqtt_file_path);
 			console.log("initial this.config.serial_port = " + this.config.serial_port);
 			console.log("this.zigbee2mqtt_configuration_devices_file_path = " + this.zigbee2mqtt_configuration_devices_file_path);
 			console.log("this.zigbee2mqtt_configuration_log_path = " + this.zigbee2mqtt_configuration_log_path);
-        //}
+        }
 		process.env.ZIGBEE2MQTT_DATA = this.zigbee2mqtt_data_dir_path;
 		process.env.ZIGBEE2MQTT_CONFIG_MQTT_BASE_TOPIC = this.config.prefix;
 		process.env.ZIGBEE2MQTT_CONFIG_MQTT_SERVER = this.config.mqtt;
@@ -759,7 +759,7 @@ class ZigbeeMqttAdapter extends Adapter {
 		if (this.config.debug) {
 			process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_LEVEL = 'debug';
 		} else {
-			process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_LEVEL = 'debug';
+			process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_LEVEL = 'error';
             //process.env.ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_LEVEL = 'error';
 		}
 		if (typeof this.config.channel != "undefined") {
@@ -1059,7 +1059,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     
                         try{
                             //console.log("this.persistent_data.devices_overview[device_id].type: " + this.persistent_data.devices_overview[device_id].type);
-                            if(this.persistent_data.devices_overview[device_id].type == 'Router'){
+                            if(this.persistent_data.devices_overview[device_id].type == 'Router' && this.config.debug){
                                 console.log(">> router <<");
                             }
                             //if(typeof this.persistent_data.devices_overview[device_id].type != 'undefined'){
@@ -1363,7 +1363,9 @@ class ZigbeeMqttAdapter extends Adapter {
                                 }
                             
                                 this.persistent_data['barometer_measurements'] = barometer.getAll();
-                                console.log("ALL BAROMETER VALUES: ", this.persistent_data['barometer_measurements']);
+                                if (this.config.debug) {
+                                    console.log("All barometer values from persistent data: ", this.persistent_data['barometer_measurements']);
+                                }
                                 this.save_persistent_data();
                             }
                         
@@ -2496,7 +2498,7 @@ class ZigbeeMqttAdapter extends Adapter {
     
     // save persistent data to file
     save_persistent_data(){
-        console.log("in save_persistent_data");
+        //console.log("in save_persistent_data");
         try{
             fs.writeFile( this.persistent_data_file_path, JSON.stringify( this.persistent_data, null, 2), "utf8", function(err, result) {
                 if(err) console.log('file write error while saving persistent data: ', err);

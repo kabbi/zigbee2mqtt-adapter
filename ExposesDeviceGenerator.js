@@ -187,13 +187,15 @@ class ExposesDeviceGenerator {
 						if(this.config.debug){
 							console.log("it's a switch");
 						}
+                        /*
                         if(device.model_id == 'ZB-SW01'){
                             console.log("turning ZB-SW01 into a lock instead");
                             device['@type'].push('Lock');
                         }
                         else{
                             device['@type'].push('OnOffSwitch');
-                        }   
+                        }
+                        */
 					}
 					else if(exposes_info['type'] == "lock"){
 						if(this.config.debug){
@@ -234,7 +236,7 @@ class ExposesDeviceGenerator {
 								device = this.parse_property(exposes_info[k], device, property_names_list);
                             }
                             else{
-                                console.log("skipping an exposed property: " + exposes_info[k]['name'] );
+                                //console.log("skipping an exposed property: " + exposes_info[k]['name'] );
                             }
 						}
                         else{
