@@ -29,6 +29,7 @@ const {
 } = require('gateway-addon');
 const Zigbee2MQTTHandler = require('./api-handler');
 
+//const DBHandler = require('./lib/db-handler');
 const Devices = require('./devices');
 const ExposesDeviceGenerator = require('./ExposesDeviceGenerator');
 //const colorTranslator = require('./colorTranslator');
@@ -98,12 +99,13 @@ class ZigbeeMqttAdapter extends Adapter {
 			this.config.mqtt = "mqtt://localhost";
 		}
         if (this.config.debug) {
-            console.log('this.config.mqtt = ', this.config.mqtt);
+            console.log('this.config.mqtt: ', this.config.mqtt);
+            console.log('this.config.serial_port: ', this.config.serial_port);
         }
 
 		if (this.config.local_zigbee2mqtt) {
 			try {
-				if (typeof this.config.serial_port == "undefined" || this.config._port == "") {
+				if (typeof this.config.serial_port == "undefined" || this.config.serial_port == "") {
 					console.log("Serial port is not defined in settings. Will attempt auto-detect.");
 					this.config.serial_port = "/dev/ttyAMA0";
 					let result = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
@@ -122,10 +124,16 @@ class ZigbeeMqttAdapter extends Adapter {
 						}
 					}
 				}
+                else{
+                    console.log("this.config.serial_port seems to be pre-defined: ", this.config.serial_port);
+                }
 			} catch (error) {
 				console.log(error);
 			}
 		}
+        else{
+            console.log("not using local Z2M instance");
+        }
 
         this.security = {pan_id: "", network_key: ""};
         
