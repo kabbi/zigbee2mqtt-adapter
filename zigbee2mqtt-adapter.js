@@ -54,7 +54,7 @@ class ZigbeeMqttAdapter extends Adapter {
 		super(addonManager, 'ZigbeeMqttAdapter', manifest.name);
 		this.config = manifest.moziot.config;
 
-		this.current_os = os.platform().toLowerCase();
+		//this.current_os = os.platform().toLowerCase();
 
 
 
@@ -64,7 +64,7 @@ class ZigbeeMqttAdapter extends Adapter {
 		} else if (this.config.debug) {
 			console.log("Debugging is enabled");
 			console.log(this.config);
-			console.log("OS: " + this.current_os);
+			//console.log("OS: " + this.current_os);
 		}
 		addonManager.addAdapter(this);
 		this.exposesDeviceGenerator = new ExposesDeviceGenerator(this, this.config);
@@ -104,26 +104,22 @@ class ZigbeeMqttAdapter extends Adapter {
 		if (this.config.local_zigbee2mqtt) {
 			try {
 				if (typeof this.config.serial_port == "undefined" || this.config._port == "") {
-					console.log("Serial port is not defined in settings. Will attempt auto-detect. this.current_os: ", this.current_os);
-					if (this.current_os == 'linux') {
-						this.config.serial_port = "/dev/ttyAMA0";
-						let result = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
-						result = result.split(/\r?\n/);
-						for (const i in result) {
-							if (this.config.debug) {
-								console.log("line: " + result[i]);
-							}
-							if (result[i].length == 3 && result[i].includes("->")) { // If there is only one USB device, grab what you can.
-								this.config.serial_port = "/dev/" + result[i].split("/").pop();
-							}
-							// In general, be picky, and look for hints that we found a viable Zigbee stick
-							if (result[i].toLowerCase().includes("cc253") || result[i].toLowerCase().includes("conbee") || result[i].toLowerCase().includes('cc26x') || result[i].toLowerCase().includes('cc265') || result[i].toLowerCase().includes('igbee') ){ // CC26X2R1, CC253, CC2652
-								this.config.serial_port = "/dev/" + result[i].split("/").pop();
-								console.log("- USB stick spotted at: " + this.config.serial_port);
-							}
+					console.log("Serial port is not defined in settings. Will attempt auto-detect.");
+					this.config.serial_port = "/dev/ttyAMA0";
+					let result = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
+					result = result.split(/\r?\n/);
+					for (const i in result) {
+						if (this.config.debug) {
+							console.log("line: " + result[i]);
 						}
-					} else {
-						this.config.serial_port = null; // fall back on Zigbee2MQTT's own auto-detect (which doesn't work on the Webthings Raspberry Pi disk image)
+						if (result[i].length == 3 && result[i].includes("->")) { // If there is only one USB device, grab what you can.
+							this.config.serial_port = "/dev/" + result[i].split("/").pop();
+						}
+						// In general, be picky, and look for hints that we found a viable Zigbee stick
+						if (result[i].toLowerCase().includes("cc253") || result[i].toLowerCase().includes("conbee") || result[i].toLowerCase().includes('cc26x') || result[i].toLowerCase().includes('cc265') || result[i].toLowerCase().includes('igbee') ){ // CC26X2R1, CC253, CC2652
+							this.config.serial_port = "/dev/" + result[i].split("/").pop();
+							console.log("- USB stick spotted at: " + this.config.serial_port);
+						}
 					}
 				}
 			} catch (error) {
