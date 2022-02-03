@@ -82,10 +82,10 @@ class ZigbeeMqttAdapter extends Adapter {
 			this.config.auto_update = true;
 		}
         
-		if (typeof this.config.virtual_brightness_alternative == "undefined") {
-			this.config.virtual_brightness_alternative = false;
-            console.log("this.config.virtual_brightness_alternative = " + this.config.virtual_brightness_alternative);
-		}
+		//if (typeof this.config.virtual_brightness_alternative == "undefined") {
+		//	this.config.virtual_brightness_alternative = true;
+        //    console.log("this.config.virtual_brightness_alternative = " + this.config.virtual_brightness_alternative);
+		//}
 
 		if (typeof this.config.manual_toggle_response == "undefined") {
 			console.log("this.config.manual_toggle_response was undefined. Set to BOTH");
@@ -144,6 +144,8 @@ class ZigbeeMqttAdapter extends Adapter {
 		this.updating_firmware = false;
 		this.update_result = {'status':'idle'}; // will contain the message that Z2M returns after the update process succeeds or fails.
         //this.updating_firmware_progress = 0;
+        
+        this.config.virtual_brightness_alternative = true;
         
         try{
     		if (typeof this.config.virtual_brightness_alternative_speed == "undefined") {
@@ -614,9 +616,9 @@ class ZigbeeMqttAdapter extends Adapter {
 
                 //if(!this.config.virtual_brightness_alternative){
                     //console.log("using Zigbee2MQTT's built-in simulated brightness feature");
-                    base_config += "  simulated_brightness:\n" +
-					"    delta: 2\n" +
-					"    interval: 100\n";
+                base_config += "  simulated_brightness:\n" +
+				"    delta: 2\n" +
+				"    interval: 100\n";
                 //}
                 
                 
@@ -1764,66 +1766,55 @@ class ZigbeeMqttAdapter extends Adapter {
 
     							}
                                 
-                            
-                                //this.config.virtual_brightness_alternative = true;
-                            
-                                if(this.config.virtual_brightness_alternative) {
-                                    if (this.config.debug) {
-                                        console.log("using virtual brightness alternative");
-                                    }
-                                    //var extra_property = null;
-                                    if(msg[key] != null && msg['brightness'] != 'undefined'){
-                                        if( msg[key].toLowerCase() == "brightness_move_up" || msg[key].toLowerCase() == "brightness_move_down" || msg[key].toLowerCase() == "brightness_step_up" || msg[key].toLowerCase() == "brightness_step_down"){
-                                        
-                                            var direction = 'down';
-                                            if(msg[key].toLowerCase() == "brightness_move_up" || msg[key].toLowerCase() == "brightness_step_up"){
-                                                direction = 'up';
+                                if (this.config.debug) {
+                                    console.log("using virtual brightness alternative");
+                                }
+                                //var extra_property = null;
+                                if(msg[key] != null && msg['brightness'] != 'undefined'){
+                                    if( msg[key].toLowerCase() == "brightness_move_up" || msg[key].toLowerCase() == "brightness_move_down" || msg[key].toLowerCase() == "brightness_step_up" || msg[key].toLowerCase() == "brightness_step_down"){
+                                    
+                                        var direction = 'down';
+                                        if(msg[key].toLowerCase() == "brightness_move_up" || msg[key].toLowerCase() == "brightness_step_up"){
+                                            direction = 'up';
+                                        }
+                                    
+                                        if (this.config.debug) {
+                                            console.log("brightness alternative: spotted brightness up or down direction: " + direction );
+                                        }
+								    
+                                    
+                                    
+                                        var extra_property = device.findProperty('brightness');
+    								    if (extra_property){
+                                            if(typeof this.persistent_data.virtual_brightness_alternatives[device_id] == 'undefined'){
+                                                this.persistent_data.virtual_brightness_alternatives[device_id] = {'value':0,'direction':direction};
+                                            
+                                            }
+                                            else{
+                                                this.persistent_data.virtual_brightness_alternatives[device_id]['direction'] = direction;
+                                                if( isNaN(this.persistent_data.virtual_brightness_alternatives[device_id]['value'] ) ){
+                                                    console.log("warning, virtual brightness value became NaN somehow");
+                                                    this.persistent_data.virtual_brightness_alternatives[device_id]['value'] = 0;
+                                                }
+                                            }
+                                            if (this.config.debug) {
+                                                console.log("(extra) brightness property existed. Updating it through alternative. this.persistent_data.virtual_brightness_alternatives[device_id] gave: " + JSON.stringify(this.persistent_data.virtual_brightness_alternatives[device_id]));
+                                                console.log("extra_property.value = " + extra_property.value);
                                             }
                                         
                                             if (this.config.debug) {
-                                                console.log("brightness alternative: spotted brightness up or down direction: " + direction );
-                                            }
-    								    
-                                        
-                                        
-                                            var extra_property = device.findProperty('brightness');
-        								    if (extra_property){
-                                                if(typeof this.persistent_data.virtual_brightness_alternatives[device_id] == 'undefined'){
-                                                    this.persistent_data.virtual_brightness_alternatives[device_id] = {'value':0,'direction':direction};
-                                                
-                                                }
-                                                else{
-                                                    this.persistent_data.virtual_brightness_alternatives[device_id]['direction'] = direction;
-                                                    if( isNaN(this.persistent_data.virtual_brightness_alternatives[device_id]['value'] ) ){
-                                                        console.log("warning, virtual brightness value became NaN somehow");
-                                                        this.persistent_data.virtual_brightness_alternatives[device_id]['value'] = 0;
-                                                    }
-                                                }
-                                                if (this.config.debug) {
-                                                    console.log("(extra) brightness property existed. Updating it through alternative. this.persistent_data.virtual_brightness_alternatives[device_id] gave: " + JSON.stringify(this.persistent_data.virtual_brightness_alternatives[device_id]));
-                                                    console.log("extra_property.value = " + extra_property.value);
-                                                }
-                                            
-                                                if (this.config.debug) {
-                                                    console.log("at the end, this.persistent_data.virtual_brightness_alternatives: " + JSON.stringify(this.persistent_data.virtual_brightness_alternatives));
-                                                }
-                                        
+                                                console.log("at the end, this.persistent_data.virtual_brightness_alternatives: " + JSON.stringify(this.persistent_data.virtual_brightness_alternatives));
                                             }
                                     
-        								}
-                                        else if( msg[key].toLowerCase() == "toggle" || msg[key].toLowerCase() == "brightness_stop"){
-                                            if (this.config.debug) {
-                                                console.log("Toggle or brightness_stop detected. Setting virtual brightness direction to none");
-                                            }
-                                            this.persistent_data.virtual_brightness_alternatives[device_id]['direction'] = "none";
-                                            this.save_persistent_data();
                                         }
-                                    }
                                 
-                                }
-                                else{
-                                    if (this.config.debug) {
-                                        console.log("not using virtual brightness alternative");
+    								}
+                                    else if( msg[key].toLowerCase() == "toggle" || msg[key].toLowerCase() == "brightness_stop"){
+                                        if (this.config.debug) {
+                                            console.log("Toggle or brightness_stop detected. Setting virtual brightness direction to none");
+                                        }
+                                        this.persistent_data.virtual_brightness_alternatives[device_id]['direction'] = "none";
+                                        this.save_persistent_data();
                                     }
                                 }
                             
