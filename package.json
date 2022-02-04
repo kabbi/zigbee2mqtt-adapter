@@ -1,7 +1,7 @@
 {
   "name": "zigbee2mqtt-adapter",
-  "version": "1.0.5",
-  "description": "Brings all your Zigbee devices to the gateway through MQTT bridge",
+  "version": "1.0.7",
+  "description": "Connect to your Zigbee devices. Builds on the open source Zigbee2MQTT project.",
   "scripts": {
     "lint": "eslint ."
   },
