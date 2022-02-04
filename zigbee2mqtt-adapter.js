@@ -107,7 +107,7 @@ class ZigbeeMqttAdapter extends Adapter {
 			try {
 				if (typeof this.config.serial_port == "undefined" || this.config.serial_port == "" || this.config.serial_port == null) {
 					console.log("Serial port is not defined in settings. Will attempt auto-detect.");
-					this.config.serial_port = "/dev/ttyAMA0";
+					this.config.serial_port = null; //"/dev/ttyAMA0";
 					let result = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
 					//console.log("output from ls -l/dev/serial/by-id was: ", result);
                     result = result.split(/\r?\n/);
@@ -738,6 +738,12 @@ class ZigbeeMqttAdapter extends Adapter {
 			console.log("this.zigbee2mqtt_configuration_devices_file_path = " + this.zigbee2mqtt_configuration_devices_file_path);
 			console.log("this.zigbee2mqtt_configuration_log_path = " + this.zigbee2mqtt_configuration_log_path);
         }
+        
+        if(this.config.serial_port == null || this.config.serial_port == ""){
+            console.log("ZIGBEE2MQTT will really not start: no USB stick detected");
+            return;
+        }
+        
 		process.env.ZIGBEE2MQTT_DATA = this.zigbee2mqtt_data_dir_path;
 		process.env.ZIGBEE2MQTT_CONFIG_MQTT_BASE_TOPIC = this.config.prefix;
 		process.env.ZIGBEE2MQTT_CONFIG_MQTT_SERVER = this.config.mqtt;
