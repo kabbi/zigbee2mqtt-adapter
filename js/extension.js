@@ -378,7 +378,7 @@
                 }
                 else if(body.started == false){
     				if(typeof list2 != 'undefined'){
-                        list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Zigbee2MQTT has not started (yet).</h2><br/><img src="/extensions/zigbee2mqtt-adapter/images/spinner.gif" width="32" height="32" alt="Please refresh the page in a while..."/ style="opacity:.5"><br/><p>It may be that it is still starting up. If this message is still here after two minutes, then something is probably wrong. In that case, try rebooting your controller. Also make sure no other Zigbee addons are running.</p></div>';
+                        list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Zigbee2MQTT has not started (yet).</h2><br/><img src="/extensions/zigbee2mqtt-adapter/images/spinner.gif" width="32" height="32" alt="Please refresh the page in a while..."/ style="opacity:.5"><br/><p>It may be that it is still starting up. If this message is still here after two minutes, then something is probably wrong. In that case, try rebooting your controller. Also make sure no other Zigbee addons are running, and that the Zigbee USB stick is plugged in.</p></div>';
     				    return;
     				}
                 }
