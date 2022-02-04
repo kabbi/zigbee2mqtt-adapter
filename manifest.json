@@ -1,6 +1,6 @@
 {
   "author": "Kabbi",
-  "description": "Brings all your Zigbee devices to the gateway through MQTT bridge",
+  "description": "Connect to your Zigbee devices. Builds on the open source Zigbee2MQTT project.",
   "content_scripts": [
     {
       "css": [
@@ -144,7 +144,7 @@
     }
   },
   "short_name": "zigbee2mqtt",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
