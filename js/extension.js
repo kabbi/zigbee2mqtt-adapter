@@ -311,7 +311,9 @@
 						//pre.innerText = "Not waiting for map.";
 					}
 				}
-				catch(e){"Zigbee2MQTT polling error: " + //console.log(e)}
+				catch(e){
+                    //console.log("Zigbee2MQTT polling error: ", e);
+                }
 				
 			}, 3000);
 			
