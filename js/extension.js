@@ -391,14 +391,13 @@
                     else{
                         console.log("Zigbee2MQTT: the target element no longer exists. User has likely switched to another page.");
                     }
-                    
-                    if(typeof body.serial != 'undefined'){
-                        console.log("body.serial was not undefined. It was: " + body.serial);
-                        if(body.serial == null){
-                            console.log('no USB stick detected?');
-                            
-                            document.getElementById('extension-zigbee2mqtt-adapter-serial-hint').style.display = 'block';
-                        }
+                }
+                
+                if(typeof body.serial != 'undefined'){
+                    console.log("body.serial was not undefined. It was: " + body.serial);
+                    if(body.serial == null && body.installed == true){
+                        console.log('no USB stick detected?');
+                        document.getElementById('extension-zigbee2mqtt-adapter-serial-hint').style.display = 'block';
                     }
                 }
                 
