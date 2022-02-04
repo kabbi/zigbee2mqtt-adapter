@@ -674,9 +674,9 @@ class ZigbeeMqttAdapter extends Adapter {
 
 	run_zigbee2mqtt(delay = 10) {
         if (this.config.debug) {
-            console.log("in run_zigbee2mqtt. Will really start in: " + delay + " seconds.");
+            console.log("in run_zigbee2mqtt. Will really start in: " + delay + " seconds. this.config.serial_port: ", this.config.serial_port);
         }
-        if(this.config.serial_port == null){
+        if(this.config.serial_port == null || this.config.serial_port == ""){
             console.log("ZIGBEE2MQTT will not start: no USB stick detected");
             return;
         }
