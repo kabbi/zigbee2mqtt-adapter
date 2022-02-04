@@ -105,11 +105,12 @@ class ZigbeeMqttAdapter extends Adapter {
 
 		if (this.config.local_zigbee2mqtt) {
 			try {
-				if (typeof this.config.serial_port == "undefined" || this.config.serial_port == "") {
+				if (typeof this.config.serial_port == "undefined" || this.config.serial_port == "" || this.config.serial_port == null) {
 					console.log("Serial port is not defined in settings. Will attempt auto-detect.");
 					this.config.serial_port = "/dev/ttyAMA0";
 					let result = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
-					result = result.split(/\r?\n/);
+					//console.log("output from ls -l/dev/serial/by-id was: ", result);
+                    result = result.split(/\r?\n/);
 					for (const i in result) {
 						if (this.config.debug) {
 							console.log("line: " + result[i]);
@@ -127,8 +128,10 @@ class ZigbeeMqttAdapter extends Adapter {
                 else{
                     console.log("this.config.serial_port seems to be pre-defined: ", this.config.serial_port);
                 }
-			} catch (error) {
-				console.log(error);
+			} catch (e) {
+				console.log("Error while trying to read serial port: ", e);
+                this.config.serial_port == null
+                this.sendPairingPrompt("Error: no Zigbee USB stick detected");
 			}
 		}
         else{
@@ -673,6 +676,11 @@ class ZigbeeMqttAdapter extends Adapter {
         if (this.config.debug) {
             console.log("in run_zigbee2mqtt. Will really start in: " + delay + " seconds.");
         }
+        if(this.config.serial_port == null){
+            console.log("ZIGBEE2MQTT will not start: no USB stick detected");
+            return;
+        }
+        
         setTimeout(this.check_if_config_file_exists.bind(this), 4000);
 		setTimeout(this.connect_to_mqtt.bind(this), delay * 1000); // wait 10 seconds before really starting Zigbee2MQTT, to make sure serial port has been released.
     }
