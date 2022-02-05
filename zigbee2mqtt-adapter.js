@@ -229,7 +229,11 @@ class ZigbeeMqttAdapter extends Adapter {
 
         this.persistent_data = {'devices_overview':{},'virtual_brightness_alternatives': {}}
         
-        // try to load persistent data
+        
+        //
+        //  LOAD PERSISTENT
+        //
+        
         try {
 			fs.access(this.persistent_data_file_path, (err) => {
 				if (err && err.code === 'ENOENT') {
@@ -245,7 +249,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     
                     fs.readFile(this.persistent_data_file_path, 'utf8', (error, data) => {
                         if (error){
-                            console.log("Error reading security file: " + error);
+                            console.log("Error reading persistent data file: " + error);
                         }
                         //console.log("READING PERSISTENT DATA NOW from data: ", data);
                         this.persistent_data = JSON.parse(data);
@@ -260,7 +264,10 @@ class ZigbeeMqttAdapter extends Adapter {
 			console.error("Error while checking/opening security file: " + error.message);
 		}
 
-        // Restore barometer measurements if available.
+
+        //
+        // RESTORE BAROMETER
+        // 
         
         if( typeof this.persistent_data['barometer_measurements'] != 'undefined'){
             console.log("barometer values were present in persistent data: ", this.persistent_data['barometer_measurements']);
@@ -281,7 +288,15 @@ class ZigbeeMqttAdapter extends Adapter {
             });            
         }
 
+
+        //
+        //  EXTRA SECURITY
+        //
+
         this.improve_security = false;
+        
+        
+        
         
         // Check security file
         try {
@@ -290,8 +305,36 @@ class ZigbeeMqttAdapter extends Adapter {
 					if (this.config.debug) {
 						console.log('zigbee2mqtt security file did not exist.');
 					}
+                    
+                    this.security = {
+                        pan_id: rand_hex(4),
+                        network_key: generate_security_key()
+                    };
+                    if (this.config.debug) {
+                        console.log("new security details: ", this.security);
+                    }
+		
+                    fs.writeFile( this.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.security ), "utf8", function(err, result) {
+                        if(err){
+                            console.log('security file write error:', err);
+                            this.improve_security = false;
+                        } 
+                        else{
+                            // Security file now exists. But do we use it?
+                            if(this.config.disable_improved_security == true){
+                                console.log('WARNING: (extra) security has been manually disabled.');
+                                this.improve_security = false;
+                            }
+                            else {
+                                this.improve_security = true;
+                            }
+                        }
+                        
+                    });
+                    
             
-				} else {
+				} 
+                else {
 					if (this.config.debug) {
 						console.log('zigbee2mqtt security file existed:');
 					}
@@ -311,6 +354,7 @@ class ZigbeeMqttAdapter extends Adapter {
                             // adding extra security
                             if(this.config.disable_improved_security == true){
                                 console.log('WARNING: (extra) security has been manually disabled.');
+                                this.improve_security = false;
                             }
                             else {
                                 this.improve_security = true;
@@ -323,7 +367,7 @@ class ZigbeeMqttAdapter extends Adapter {
             });
 		} 
         catch (error) {
-			console.error("Error while checking/opening persistent data file: " + error.message);
+			console.error("Error while checking/opening security file: " + error.message);
 		}
         
 
@@ -921,36 +965,7 @@ class ZigbeeMqttAdapter extends Adapter {
     			if (this.config.debug) {
     				console.log(stdout);
     			}
-    			console.log("-----DOWNLOAD COMPLETE, STARTING INSTALL-----");
-                
-                // Create new security file
-                try {
-        			fs.access(this.zigbee2mqtt_configuration_security_file_path, (err) => {
-        				if (err && err.code === 'ENOENT') {
-        					if (this.config.debug) {
-        						console.log('zigbee2mqtt security file did not exist yet.');
-        					}
-                    
-                            this.security = {
-                                pan_id: rand_hex(4),
-                                network_key: generate_security_key()
-                            };
-                            if (this.config.debug) {
-                                console.log("new security details: ", this.security);
-                            }
-					
-                            fs.writeFile( this.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.security ), "utf8", function(err, result) {
-                                if(err) console.log('file write error:', err);
-                            });
-                    
-        				} 
-                        
-                    });
-    			} 
-                catch (error) {
-    				console.error("Error while checking/opening security file: " + error.message);
-    			}
-                
+    			console.log("-----DOWNLOAD COMPLETE, STARTING INSTALL-----");                
                 
                 const command_to_run = `cd ${this.zigbee2mqtt_dir_path}; npm install -g typescript; npm i --save-dev @types/node; npm ci`; //npm ci --production
                 if (this.config.debug) {
