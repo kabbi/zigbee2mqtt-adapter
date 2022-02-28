@@ -28,6 +28,7 @@
   "options": {
     "default": {
       "southern_hemisphere": false,
+	  "measurement_poll_interval": "60",
       "local_zigbee2mqtt": true,
 	  "disable_improved_security": false,
       "auto_update": false,
@@ -47,6 +48,18 @@
 		"southern_hemisphere": {
           "type": "boolean",
           "description": "If you have devices that measure the ambient air pressure, this addon can act as a barometer and generate a local weather prediction for you. This feature will need to know if you're on the northern or southern hemisphere. Enable this option to indicate that you live on the southern hemisphere."
+        },
+        "measurement_poll_interval": {
+          "description": "Advanced. Some devices need to be asked what their latest value is. For example some smart sockets that measure electricity need this. The default is to do this once every 60 seconds. Select a lower value if you want more frequent measurements.",
+          "enum": [
+            "10",
+            "30",
+            "60",
+            "120",
+            "300",
+            "600"
+          ],
+          "type": "string"
         },
 		"local_zigbee2mqtt": {
           "type": "boolean",
@@ -144,7 +157,7 @@
     }
   },
   "short_name": "zigbee2mqtt",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",

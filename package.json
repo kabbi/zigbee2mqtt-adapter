@@ -1,13 +1,13 @@
 {
   "name": "zigbee2mqtt-adapter",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Connect to your Zigbee devices. Builds on the open source Zigbee2MQTT project.",
   "scripts": {
     "lint": "eslint ."
   },
   "main": "index.js",
   "homepage": "https://github.com/kabbi/zigbee2mqtt-adapter",
-  "author": "Kabbi",
+  "author": "Kabbi & CandleSmartHome.com",
   "license": "MPL-2.0",
   "repository": {
     "type": "git",
