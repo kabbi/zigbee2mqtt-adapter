@@ -81,6 +81,11 @@ class ZigbeeMqttAdapter extends Adapter {
 		if (typeof this.config.auto_update == "undefined") {
 			this.config.auto_update = true;
 		}
+		if (typeof this.config.measurement_poll_interval == "undefined") {
+			this.config.measurement_poll_interval = '60';
+		}
+        
+        
         
 		//if (typeof this.config.virtual_brightness_alternative == "undefined") {
 		//	this.config.virtual_brightness_alternative = true;
@@ -659,6 +664,7 @@ class ZigbeeMqttAdapter extends Adapter {
                         //"  debounce: 1\n" +
                         //"  debounce_ignore: action\n" +
 					    "  legacy: false\n" +
+                        "  measurement_poll_interval: " + this.config.measurement_poll_interval + "\n" +
                         "  filtered_attributes: ['Action group', 'Action rate', 'xy']\n";
 
                 //if(!this.config.virtual_brightness_alternative){
@@ -1123,6 +1129,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                     console.log("device has contact, leak, action, vibration or similar property, so will likely not send data very often. Offline message should be ignored.");
                                 }
                                 device.connectedNotify(true);
+                                device.connected = true;
                             }
                             else{
                                 if (this.config.debug) {
@@ -1157,6 +1164,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                         }
             							this.devices[device_id].connected = false;
             							device.connectedNotify(false);
+                                        device.connected = false;
             						}
                                 }
                                 else{
@@ -1167,6 +1175,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                     if(this.persistent_data.devices_overview[device_id].type == 'Router'){
                                         //console.log('offline, and router, so toggling to offline.');
                                         device.connectedNotify(false);
+                                        device.connected = false;
                                     }
                                 }
                             }
@@ -1177,6 +1186,7 @@ class ZigbeeMqttAdapter extends Adapter {
     						}
     						this.devices[device_id].connected = true;
     						device.connectedNotify(true);
+                            device.connected = true;
     					}
     				}
 
@@ -1963,6 +1973,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     // Recognize that the device is connected (since we just received a message from it)
         			this.devices[device_id].connected = true;
         			device.connectedNotify(true);
+                    device.connected = true;
 
                
 
@@ -2105,10 +2116,12 @@ class ZigbeeMqttAdapter extends Adapter {
 				if (deviceDefinition.properties.state) { // If the device has a state property, then initially set it to disconnected.
                     //console.log("addDevice: spotted state in properties");
 					device.connectedNotify(false);
+                    device.connected = false;
 					//let timerId = setTimeout(() => this.try_getting_state(info.ieee_address), 11000); // 11 seconds after creating the device, an extra /get will be used to try and get the actual state
 				}
                 else{
                     device.connectedNotify(true);
+                    device.connected = true;
                 }
 
                 // Regenerate other appendages too
@@ -2582,6 +2595,7 @@ class MqttProperty extends Property {
 		this.setCachedValue(propertyDescription.value);
 		this.device.notifyPropertyChanged(this);
 		this.options = propertyDescription;
+        this.value = propertyDescription.value;
 	}
 
 
@@ -2590,6 +2604,7 @@ class MqttProperty extends Property {
 			console.log("in setValue of property '" + this.name + "', where value = " + value + " and this.options: ");
 			console.log("- this.options: " + this.options);
 		}
+        this.value = value;
 
 		return new Promise((resolve, reject) => {
 			super

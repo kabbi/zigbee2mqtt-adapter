@@ -26,22 +26,21 @@
 	font-family: 'Open Sans', sans-serif;
 	font-weight: normal;
 	font-size:1.8rem;
-  margin: 0 auto;
-  display: block;
-  padding: 1rem;
-  font-size: 1.8rem;
-  background-size: 2.8rem;
-  background-repeat: no-repeat;
-  background-position: 0;
+	margin: 0 auto;
+	display: block;
+	padding: 1rem;
+	font-size: 1.8rem;
+	background-size: 2.8rem;
+	background-repeat: no-repeat;
+	background-position: 0;
 	/*background-image: url('../images/menu-icon.svg');*/
 	width:16rem;
 	margin:0 auto;
+    display:flex;
+    align-items:center;
 }
 
 
-#extension-zigbee2mqtt-adapter-view button{
-    cursor:pointer;
-}
 /*
 #extension-zigbee2mqtt-adapter-title #extension-zigbee2mqtt-adapter-tutorial-button{
 	opacity:0;
@@ -59,8 +58,9 @@
 
 #extension-zigbee2mqtt-adapter-view button{
 	font-size: 1.6rem;
-	padding: 1rem 2rem;
+	padding: 1rem;
 	border: none;
+    cursor:pointer;
 }
 #extension-zigbee2mqtt-adapter-view button:focus{
 	outline: none;
@@ -74,6 +74,12 @@
 #extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-update a{
 	color:#999;
 }
+
+#extension-zigbee2mqtt-adapter-view p{
+    line-height: 2.7rem;
+}
+    
+
 
 .extension-zigbee2mqtt-adapter-italic{
 	font-style:italic;
@@ -307,6 +313,13 @@
 	display:block;
 }
 */
+
+.extension-zigbee2mqtt-adapter-vlak{
+    background-color:rgba(0,0,0,.2);
+    padding:2rem;
+    border-radius:.5rem;
+    margin-bottom:2rem;
+}
 
 .extension-zigbee2mqtt-adapter-read-about-risks{
 	cursor:pointer;
@@ -704,6 +717,10 @@
 	.extension-zigbee2mqtt-adapter-description{
 		width:calc(100% - 10rem);
 	}
+    
+    #extension-zigbee2mqtt-adapter-view button{
+    	padding: 1rem 2rem;
+    }
 }
 
 

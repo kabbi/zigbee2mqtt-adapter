@@ -3,7 +3,7 @@
 	    constructor() {
 	      	super('zigbee2mqtt-adapter');
       		
-			this.addMenuEntry('Zigbee 2 MQTT');
+			this.addMenuEntry('Zigbee devices');
 
 	    	this.content = 'Error loading content';
 

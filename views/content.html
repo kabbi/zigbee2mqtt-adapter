@@ -99,23 +99,28 @@
 				<div id="extension-zigbee2mqtt-adapter-security-container">
 				</div>
 				<div id="extension-zigbee2mqtt-adapter-security-form" class="extension-zigbee2mqtt-adapter-centered-page">
-                    <h3>Security</h3>
-					<p>The addon will have generated a random network ID and network password when it was installed. You might want to write these down. Whenever these are changed, you will need to re-pair all your devices. After changing these codes you will have to restart your device before the new codes will take effect.</p> 
-					<p>If these two fields are empty, it likely means the security codes were not generated yet. This can happen if you installed this addon at versions below 0.7.0, or if you manually disabled advanced security in the addon's settings.</p>
-                    <label for="extension-zigbee2mqtt-adapter-security-pan-id">PAN ID</label><br/>
-                    <input id="extension-zigbee2mqtt-adapter-security-pan-id" type="text" name="extension-zigbee2mqtt-adapter-security-pan-id" value="" style="width:100%"/>
-                    <br/><br/>
-					<label for="extension-zigbee2mqtt-adapter-security-network-key">Network key</label><br/>
-                    <input id="extension-zigbee2mqtt-adapter-security-network-key" type="text" name="extension-zigbee2mqtt-adapter-security-network-key" value="" style="width:100%"/>
-                    <br/><br/>
-                    <button id="extension-zigbee2mqtt-adapter-save-security-button" class="text-button">SAVE</button>
-                    <br/><br/>
                     
-                    <h3>Re-install Zigbee2MQTT</h3>
-                    <p>You can manually update Zigbee2MQTT to the latest avaialble version by deleting and re-installing it. This might make the controller compatible with newer devices.</p>
-                    <p>Updating Zigbee2MQTT is not without risk. If there are compatibility issues, you may be in more trouble. It's unlikely, but in the worst case you might have to re-pair all your devices. Be sure to write down the security codes (shown above) first.</p>
-                    <p>If you don't see any security codes, this is probably because you have been using this addon before 2022. To avoid re-pairing all your devices you should disable the extra security feature in this addon's settings before you continue.</p>
-                    <button id="extension-zigbee2mqtt-adapter-reinstall-button" class="text-button">RE-INSTALL</button>
+                    <div class="extension-zigbee2mqtt-adapter-vlak">
+                        <h3>Security</h3>
+    					<p>The addon will have generated a random network ID and network password when it was installed. You might want to write these down. Whenever these are changed, you will need to re-pair all your devices. After changing these codes you will have to restart your device before the new codes will take effect.</p> 
+    					<p>If these two fields are empty, it likely means the security codes were not generated yet. This can happen if you installed this addon at versions below 0.7.0, or if you manually disabled advanced security in the addon's settings.</p>
+                        <label for="extension-zigbee2mqtt-adapter-security-pan-id">PAN ID</label><br/>
+                        <input id="extension-zigbee2mqtt-adapter-security-pan-id" type="text" name="extension-zigbee2mqtt-adapter-security-pan-id" value="" style="width:100%"/>
+                        <br/><br/>
+    					<label for="extension-zigbee2mqtt-adapter-security-network-key">Network key</label><br/>
+                        <input id="extension-zigbee2mqtt-adapter-security-network-key" type="text" name="extension-zigbee2mqtt-adapter-security-network-key" value="" style="width:100%"/>
+                        <br/><br/>
+                        <button id="extension-zigbee2mqtt-adapter-save-security-button" class="text-button">SAVE</button>
+                        <br/><br/>
+                    </div>
+                    
+                    <div class="extension-zigbee2mqtt-adapter-vlak">
+                        <h3>Re-install Zigbee2MQTT</h3>
+                        <p>You can manually update Zigbee2MQTT to the latest avaialble version by deleting and re-installing it. This might make the controller compatible with newer devices.</p>
+                        <p>Updating Zigbee2MQTT is not without risk. If there are compatibility issues, you may be in more trouble. It's unlikely, but in the worst case you might have to re-pair all your devices. Be sure to write down the security codes (shown above) first.</p>
+                        <p>If you don't see any security codes, this is probably because you have been using this addon before 2022. To avoid re-pairing all your devices you should disable the extra security feature in this addon's settings before you continue.</p>
+                        <button id="extension-zigbee2mqtt-adapter-reinstall-button" class="text-button">RE-INSTALL</button>
+                    </div>
 
 				</div>
 
