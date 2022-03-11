@@ -421,7 +421,7 @@
 	        }).catch((e) => {
 	  			//console.log("Error sending init request: " + e.toString());
                 
-                document.getElementById('extension-zigbee2mqtt-adapter-content-container').innerHTML = '<div style="text-align:center"><h1>The Zigbee2Mqtt addon seems to have stopped</h1><p>It might just be a temporary connection error. Try refreshing the page.</p></div>';
+                document.getElementById('extension-zigbee2mqtt-adapter-content-container').innerHTML = '<div style="text-align:center"><h1>The Zigbee2Mqtt addon did not respond (yet)</h1><p>It might just be a temporary connection error. Try refreshing the page in a few seconds.</p></div>';
 				//document.getElementById('extension-zigbee2mqtt-adapter-response-data').innerText = "Error sending init request: " + e.toString();
 	        });
 		}

@@ -143,6 +143,8 @@ class ZigbeeMqttAdapter extends Adapter {
             console.log("not using local Z2M instance");
         }
 
+        this.client = null; // will hold MQTT client
+
         this.security = {pan_id: "", network_key: ""};
         
         this.z2m_installed_succesfully = false;
@@ -2489,7 +2491,15 @@ class ZigbeeMqttAdapter extends Adapter {
 		if (this.config.debug) {
 			console.log("in unload");
 		}
-        this.client.end(); // stop MQTT 
+        try{
+            if(this.client != null){
+                this.client.end(); // stop MQTT 
+            }
+        }
+        catch(e){
+            console.log("error stopping MQTT client: ", e);
+        }
+        
         this.save_persistent_data();
 		await this.stop_zigbee2mqtt();
 		/*
