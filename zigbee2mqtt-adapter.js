@@ -113,22 +113,31 @@ class ZigbeeMqttAdapter extends Adapter {
 				if (typeof this.config.serial_port == "undefined" || this.config.serial_port == "" || this.config.serial_port == null) {
 					console.log("Serial port is not defined in settings. Will attempt auto-detect.");
 					this.config.serial_port = null; //"/dev/ttyAMA0";
-					let result = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
-					//console.log("output from ls -l/dev/serial/by-id was: ", result);
-                    result = result.split(/\r?\n/);
-					for (const i in result) {
-						if (this.config.debug) {
-							console.log("line: " + result[i]);
-						}
-						if (result[i].length == 3 && result[i].includes("->")) { // If there is only one USB device, grab what you can.
-							this.config.serial_port = "/dev/" + result[i].split("/").pop();
-						}
-						// In general, be picky, and look for hints that we found a viable Zigbee stick
-						if (result[i].toLowerCase().includes("cc253") || result[i].toLowerCase().includes("conbee") || result[i].toLowerCase().includes('cc26x') || result[i].toLowerCase().includes('cc265') || result[i].toLowerCase().includes('igbee') ){ // CC26X2R1, CC253, CC2652
-							this.config.serial_port = "/dev/" + result[i].split("/").pop();
-							console.log("- USB stick spotted at: " + this.config.serial_port);
-						}
-					}
+                    
+                    if (fs.existsSync('/dev/serial/by-id')) {
+    					let result = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
+    					//console.log("output from ls -l/dev/serial/by-id was: ", result);
+                        result = result.split(/\r?\n/);
+    					for (const i in result) {
+    						if (this.config.debug) {
+    							console.log("line: " + result[i]);
+    						}
+    						if (result[i].length == 3 && result[i].includes("->")) { // If there is only one USB device, grab what you can.
+    							this.config.serial_port = "/dev/" + result[i].split("/").pop();
+    						}
+    						// In general, be picky, and look for hints that we found a viable Zigbee stick
+    						if (result[i].toLowerCase().includes("cc253") || result[i].toLowerCase().includes("conbee") || result[i].toLowerCase().includes('cc26x') || result[i].toLowerCase().includes('cc265') || result[i].toLowerCase().includes('igbee') ){ // CC26X2R1, CC253, CC2652
+    							this.config.serial_port = "/dev/" + result[i].split("/").pop();
+    							console.log("- USB stick spotted at: " + this.config.serial_port);
+    						}
+    					}
+                    }
+                    else{
+                        if (this.config.debug) {
+                            console.log('/dev/serial/by-id directory did not exist - no serial devices connected');
+                        }
+                        this.sendPairingPrompt("No Zigbee USB stick detected");
+                    }
 				}
                 else{
                     console.log("this.config.serial_port seems to be pre-defined: ", this.config.serial_port);
@@ -2043,7 +2052,10 @@ class ZigbeeMqttAdapter extends Adapter {
 		if (this.config.debug) {
 			console.log('Publising message: ' + JSON.stringify(msg) + ' to topic: ' + topic);
 		}
-		this.client.publish(`${this.config.prefix}/${topic}`, JSON.stringify(msg));
+        if(this.client != null){
+            this.client.publish(`${this.config.prefix}/${topic}`, JSON.stringify(msg));
+        }
+		
 	}
 
 
@@ -2450,7 +2462,7 @@ class ZigbeeMqttAdapter extends Adapter {
 		if (this.config.debug) {
 			console.log('in startPairing');
 		}
-        if(typeof this.client != 'undefined'){
+        if(typeof this.client != 'undefined' && this.client != null){
     		this.client.publish(`${this.config.prefix}/bridge/request/permit_join`, '{"value": true}');
 
     		this.client.publish(`${this.config.prefix}/bridge/config/devices/get`);
@@ -2471,7 +2483,9 @@ class ZigbeeMqttAdapter extends Adapter {
     			if (this.config.debug) {
     				console.log("setting permitJoin back to off");
     			}
-    			this.client.publish(`${this.config.prefix}/bridge/request/permit_join`, '{"value": false}'); // set permitJoin back to off
+                if(this.client != null){
+    			    this.client.publish(`${this.config.prefix}/bridge/request/permit_join`, '{"value": false}'); // set permitJoin back to off
+                }
     		}
             else {
     			if (this.config.debug) {
