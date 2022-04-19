@@ -337,7 +337,7 @@
 	box-sizing:border-box;
 	margin-top:2rem;
 	margin-bottom:2rem;
-	overflow-x: scroll;
+	overflow-x: auto;
 	text-align:center;
 }
 #extension-zigbee2mqtt-adapter-graphviz-container > svg{

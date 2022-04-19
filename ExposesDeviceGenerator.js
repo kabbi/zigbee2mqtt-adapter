@@ -562,7 +562,7 @@ class ExposesDeviceGenerator {
         						device['@type'].push('Light');
         					}
         				}
-        				else if(expose.name == "occupied_heating_setpoint" || expose.name == "occupied_cooling_setpoint" || expose.name == "comfort_temperature" || expose.name == "eco_temperature"){
+        				else if(expose.name == "occupied_heating_setpoint" || expose.name == "occupied_cooling_setpoint" || expose.name == "comfort_temperature" || expose.name == "eco_temperature"  || expose.name == "current_heating_setpoint"){
         					device.properties[expose.property]['@type'] = 'TargetTemperatureProperty';
         					if(device['@type'].indexOf("Thermostat") == -1){
         						device['@type'].push('Thermostat');

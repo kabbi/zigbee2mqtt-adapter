@@ -1247,7 +1247,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                             }
                                             else{
                                                 if (this.config.debug) {
-                                                     console.log("? ? ?");
+                                                    console.log("? ? ?");
                                                     console.log("Warning, device is still in the proces of being interviewed OR is not supported:");
                                                     console.log(device.manufacturer, device.model_id, device.ieee_address);
                                                     console.log(device);
@@ -2068,7 +2068,9 @@ class ZigbeeMqttAdapter extends Adapter {
 				};
 			}
         }
-        catch(e){console.log("Error: could not create initial entry in devices_overview: " + e);}
+        catch(e){
+            console.log("Error: could not create initial entry in devices_overview: " + e);
+        }
 
 
         try{
@@ -2372,7 +2374,9 @@ class ZigbeeMqttAdapter extends Adapter {
                                 
                             }
                         }
-                        catch(e){console.log("Error in appendages regen loop:", e)}
+                        catch(e){
+                            console.log("Error in appendages regen loop:", e);
+                        }
                     }
                 }
             }
@@ -2434,7 +2438,9 @@ class ZigbeeMqttAdapter extends Adapter {
     			}
     		});
         }
-        catch(e){console.log("Error in removeDevice: ", e);}
+        catch(e){
+            console.log("Error in removeDevice: ", e);
+        }
 		
 	}
 
