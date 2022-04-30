@@ -628,7 +628,7 @@
 
 #extension-zigbee2mqtt-adapter-serial-hint{
     max-width:60rem;
-    margin:2rem auto;
+    margin:10rem auto;
     padding:2rem;
     background-color:rgba(0,0,0,.2);
     text-align:center;
@@ -642,14 +642,14 @@
 /*  spinner  */
 
 
-.extension-privacy-manager-spinner {
+.extension-zigbee2mqtt-adapter-spinner {
   display: inline-block;
   position: relative;
   width: 80px;
   height: 80px;
   margin:0 auto;
 }
-.extension-privacy-manager-spinner div {
+.extension-zigbee2mqtt-adapter-spinner div {
   position: absolute;
   top: 33px;
   width: 13px;
@@ -658,23 +658,23 @@
   background: rgba(255,255,255,.5);
   animation-timing-function: cubic-bezier(0, 1, 1, 0);
 }
-.extension-privacy-manager-spinner div:nth-child(1) {
+.extension-zigbee2mqtt-adapter-spinner div:nth-child(1) {
   left: 8px;
-  animation: extension-privacy-manager-spinner1 0.6s infinite;
+  animation: extension-zigbee2mqtt-adapter-spinner1 0.6s infinite;
 }
-.extension-privacy-manager-spinner div:nth-child(2) {
+.extension-zigbee2mqtt-adapter-spinner div:nth-child(2) {
   left: 8px;
-  animation: extension-privacy-manager-spinner2 0.6s infinite;
+  animation: extension-zigbee2mqtt-adapter-spinner2 0.6s infinite;
 }
-.extension-privacy-manager-spinner div:nth-child(3) {
+.extension-zigbee2mqtt-adapter-spinner div:nth-child(3) {
   left: 32px;
-  animation: extension-privacy-manager-spinner2 0.6s infinite;
+  animation: extension-zigbee2mqtt-adapter-spinner2 0.6s infinite;
 }
-.extension-privacy-manager-spinner div:nth-child(4) {
+.extension-zigbee2mqtt-adapter-spinner div:nth-child(4) {
   left: 56px;
-  animation: extension-privacy-manager-spinner3 0.6s infinite;
+  animation: extension-zigbee2mqtt-adapter-spinner3 0.6s infinite;
 }
-@keyframes extension-privacy-manager-spinner1 {
+@keyframes extension-zigbee2mqtt-adapter-spinner1 {
   0% {
     transform: scale(0);
   }
@@ -682,7 +682,7 @@
     transform: scale(1);
   }
 }
-@keyframes extension-privacy-manager-spinner3 {
+@keyframes extension-zigbee2mqtt-adapter-spinner3 {
   0% {
     transform: scale(1);
   }
@@ -690,7 +690,7 @@
     transform: scale(0);
   }
 }
-@keyframes extension-privacy-manager-spinner2 {
+@keyframes extension-zigbee2mqtt-adapter-spinner2 {
   0% {
     transform: translate(0, 0);
   }

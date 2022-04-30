@@ -267,7 +267,6 @@ class ExposesDeviceGenerator {
 	
     
     flip_value_on_and_off(expose){
-        
         return expose;   
     }
     

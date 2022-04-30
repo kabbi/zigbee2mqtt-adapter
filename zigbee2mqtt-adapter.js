@@ -51,10 +51,10 @@ class ZigbeeMqttAdapter extends Adapter {
 		//
 		// STARTING THE ADDON
 		//
-
+        
 		super(addonManager, 'ZigbeeMqttAdapter', manifest.name);
 		this.config = manifest.moziot.config;
-
+        this.ready = false;
 		//this.current_os = os.platform().toLowerCase();
 
 
@@ -73,6 +73,10 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
         this.reverse_list_contact = ['RH3001']; // All the devices for which the contact property should be reversed. RH3001 is a great usb-rechargeable contact sensor.
+        
+        this.data_blur_options =       ['Off','1 minute','2 minutes','5 minutes','10 minutes','15 minutes','30 minutes','1 hour'];
+        this.data_blur_option_seconds = [0    ,60        ,120        ,300        ,600         ,900         ,1800        , 3600   ];
+
 
 		// Handle missing default values
 		if (typeof this.config.local_zigbee2mqtt == "undefined") {
@@ -82,7 +86,7 @@ class ZigbeeMqttAdapter extends Adapter {
 			this.config.auto_update = true;
 		}
 		if (typeof this.config.measurement_poll_interval == "undefined") {
-			this.config.measurement_poll_interval = '60';
+			this.config.measurement_poll_interval = '60'; // tells Z2M how often to poll sockets that measure energy use but need to be periodically polled for their data.
 		}
         
         
@@ -93,7 +97,9 @@ class ZigbeeMqttAdapter extends Adapter {
 		//}
 
 		if (typeof this.config.manual_toggle_response == "undefined") {
-			console.log("this.config.manual_toggle_response was undefined. Set to BOTH");
+            if (this.config.debug) {
+			    console.log("this.config.manual_toggle_response was undefined. Set to BOTH");
+            }
 			this.config.manual_toggle_response = "both";
 		}
 
@@ -113,31 +119,7 @@ class ZigbeeMqttAdapter extends Adapter {
 				if (typeof this.config.serial_port == "undefined" || this.config.serial_port == "" || this.config.serial_port == null) {
 					console.log("Serial port is not defined in settings. Will attempt auto-detect.");
 					this.config.serial_port = null; //"/dev/ttyAMA0";
-                    
-                    if (fs.existsSync('/dev/serial/by-id')) {
-    					let result = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
-    					//console.log("output from ls -l/dev/serial/by-id was: ", result);
-                        result = result.split(/\r?\n/);
-    					for (const i in result) {
-    						if (this.config.debug) {
-    							console.log("line: " + result[i]);
-    						}
-    						if (result[i].length == 3 && result[i].includes("->")) { // If there is only one USB device, grab what you can.
-    							this.config.serial_port = "/dev/" + result[i].split("/").pop();
-    						}
-    						// In general, be picky, and look for hints that we found a viable Zigbee stick
-    						if (result[i].toLowerCase().includes("cc253") || result[i].toLowerCase().includes("conbee") || result[i].toLowerCase().includes('cc26x') || result[i].toLowerCase().includes('cc265') || result[i].toLowerCase().includes('igbee') ){ // CC26X2R1, CC253, CC2652
-    							this.config.serial_port = "/dev/" + result[i].split("/").pop();
-    							console.log("- USB stick spotted at: " + this.config.serial_port);
-    						}
-    					}
-                    }
-                    else{
-                        if (this.config.debug) {
-                            console.log('/dev/serial/by-id directory did not exist - no serial devices connected');
-                        }
-                        this.sendPairingPrompt("No Zigbee USB stick detected");
-                    }
+                    this.config.serial_port = this.look_for_usb_stick();
 				}
                 else{
                     console.log("this.config.serial_port seems to be pre-defined: ", this.config.serial_port);
@@ -145,7 +127,7 @@ class ZigbeeMqttAdapter extends Adapter {
 			} catch (e) {
 				console.log("Error while trying to read serial port: ", e);
                 this.config.serial_port == null
-                this.sendPairingPrompt("Error: no Zigbee USB stick detected");
+                this.sendPairingPrompt("Error. Looking for Zigbee USB stick failed.");
 			}
 		}
         else{
@@ -178,7 +160,6 @@ class ZigbeeMqttAdapter extends Adapter {
 		    this.config.virtual_brightness_alternative_speed = 10;
 		}
         
-            
         //console.log("this.config.virtual_brightness_alternative = " + this.config.virtual_brightness_alternative);
         //this.persistent_data.virtual_brightness_alternatives = {};
 
@@ -525,6 +506,8 @@ class ZigbeeMqttAdapter extends Adapter {
             
         }, 120000);
         */
+        
+        this.ready = true;
 
 	}
 
@@ -532,7 +515,49 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 
-
+    look_for_usb_stick(){
+		if (this.config.debug) {
+			console.log("in look_for_usb_stick");
+		}
+        
+        var serial_port = null;
+        
+        try{
+            if (fs.existsSync('/dev/serial/by-id')) {
+    			let result = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
+    			//console.log("output from ls -l/dev/serial/by-id was: ", result);
+                result = result.split(/\r?\n/);
+    			for (const i in result) {
+    				if (this.config.debug) {
+    					console.log("line: " + result[i]);
+    				}
+    				if (result[i].length == 3 && result[i].includes("->")) { // If there is only one USB device, grab what you can.
+    					serial_port = "/dev/" + result[i].split("/").pop();
+    				}
+    				// In general, be picky, and look for hints that we found a viable Zigbee stick
+    				if (result[i].toLowerCase().includes("cc253") || result[i].toLowerCase().includes("conbee") || result[i].toLowerCase().includes('cc26x') || result[i].toLowerCase().includes('cc265') || result[i].toLowerCase().includes('igbee') ){ // CC26X2R1, CC253, CC2652
+    					serial_port = "/dev/" + result[i].split("/").pop();
+    					console.log("- USB stick spotted at: " + serial_port);
+    				}
+    			}
+            }
+            else{
+                if (this.config.debug) {
+                    console.log('/dev/serial/by-id directory did not exist - no serial devices connected');
+                }
+            }
+        
+            if(serial_port == null){
+                this.sendPairingPrompt("No Zigbee USB stick detected");
+            }
+        }
+        catch(e){
+            console.log("Error while looking for USB stick: ", e);
+        }
+        
+        
+        return serial_port;
+    }
 
 
 
@@ -768,7 +793,7 @@ class ZigbeeMqttAdapter extends Adapter {
             this.client.subscribe(`${this.config.prefix}/bridge/response/device/ota_update/check`);
             
             if(this.z2m_started == false){
-                console.log("MQTT is now connected. Next, starting Zigbee2MQTT (since it will now also be able to connect to MQTT)");
+                console.log("MQTT is now connected. Next, starting Zigbee2MQTT");
                 this.really_run_zigbee2mqtt();
             }
             else{
@@ -888,7 +913,7 @@ class ZigbeeMqttAdapter extends Adapter {
             this.zigbee2mqtt_subprocess.stdout.on('data', (data) => { // 
                 //Here is where the output goes
                 
-                console.log('z2m stdout: ' + data);
+                //console.log('z2m stdout: ' + data);
                 
                 //console.log('parent_scope: ', parent_scope);
                 
@@ -1058,10 +1083,14 @@ class ZigbeeMqttAdapter extends Adapter {
     			}
                 if(data.toString() == 'offline'){
                     this.z2m_state = false;
-                    console.log("Z2M has stopped");
+                    if (this.config.debug) {
+                        console.log("handleIncomingMessage: to /bridge/state: Z2M has stopped");
+                    }
                 }
                 else{
-                    console.log("Z2M is now running");
+                    if (this.config.debug) {
+                        console.log("handleIncomingMessage: to /bridge/state: Z2M is now running");
+                    }
                     this.z2m_state = true;
                     //this.ping_things();
                     
@@ -1322,7 +1351,7 @@ class ZigbeeMqttAdapter extends Adapter {
     				}
 
 
-                    // data transmission allowed check
+                    // PRIVACY - Data transmission allowed check
                     const data_transmission_property = device.findProperty('data_transmission');
                     if (!data_transmission_property) {
                         if (this.config.debug) {
@@ -1341,6 +1370,86 @@ class ZigbeeMqttAdapter extends Adapter {
                     }
 
 
+
+                    // PRIVACY - Data blur
+                    
+                    var data_blur = 0;
+                    var data_blur_property_value = 'Off';
+                    var use_blur = false;
+                    const data_blur_property = device.findProperty('data_blur');
+                    if (!data_blur_property) {
+                        if (this.config.debug) {
+                            console.log("- device has no data blur property");
+                        }
+                    }
+                    else{
+                        use_blur = true;
+                        console.log("data_blur_property value: ", data_blur_property.value);
+                        data_blur_property_value = data_blur_property.value;
+                        const blur_options_index = this.data_blur_options.indexOf( data_blur_property.value );
+                        
+                        if(blur_options_index >= 0){
+                            data_blur = this.data_blur_option_seconds[blur_options_index];
+                        }
+                        if (this.config.debug) {
+                            console.log("data blur: ", data_blur);
+                        }
+                        /*
+                        if(data_blur_property.value == 'Off'){
+                            data_blur = 0
+                            if (this.config.debug) {
+                                console.log("data blur is Off");
+                            }
+                        }
+                        
+                        else if(data_blur_property.value == '1 minute'){
+                            data_blur = 60
+                            if (this.config.debug) {
+                                console.log("data blur is 1 minute");
+                            }
+                        }
+                        else if(data_blur_property.value == '2 minutes'){
+                            data_blur = 120
+                            if (this.config.debug) {
+                                console.log("data blur is 1 minute");
+                            }
+                        }
+                        else if(data_blur_property.value == '5 minutes'){
+                            data_blur = 300
+                            if (this.config.debug) {
+                                console.log("data blur is 5 minutes");
+                            }
+                        }
+                        else if(data_blur_property.value == '10 minutes'){
+                            data_blur = 600
+                            if (this.config.debug) {
+                                console.log("data blur is 10 minutes");
+                            }
+                        }
+                        else if(data_blur_property.value == '15 minutes'){
+                            data_blur = 900
+                            if (this.config.debug) {
+                                console.log("data blur is 15 minute");
+                            }
+                        }
+                        else if(data_blur_property.value == '30 minutes'){
+                            data_blur = 1800
+                            if (this.config.debug) {
+                                console.log("data blur is 30 minutes");
+                            }
+                        }
+                        else if(data_blur_property.value == '1 hour'){
+                            data_blur = 3600
+                            if (this.config.debug) {
+                                console.log("data blur is 1 hour");
+                            }
+                        }
+                        */
+                    }
+
+
+
+                    // Action
     				if (msg.action && device.events.get(msg.action)) { // if there's an action (event), and the action exists in the device
                         if (this.config.debug) {
                             console.log("creating event from action");
@@ -1440,13 +1549,15 @@ class ZigbeeMqttAdapter extends Adapter {
                     //  LOOP OVER AND ADD/UPDATE THE PROPERTIES FROM THE INCOMING MESSAGE
                     //
                 
-                
+                    var save_new_blur_timestamp = false;
+                    const current_timestamp = new Date().getTime();
+                        
     				for (const key of Object.keys(msg)) { // loop over properties in the message
                         if (this.config.debug) {
                             //console.log(" #");
                             //console.log(key);
                         }
-
+                        
 
                     
                         //
@@ -1469,7 +1580,8 @@ class ZigbeeMqttAdapter extends Adapter {
                             continue;
                         }
 
-
+                        
+                        
                         //
                         //  MODIFY SOME VALUES TO BETTER FOR
                         //
@@ -1581,7 +1693,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                     console.log("calling handleDeviceAdded");
                                 }
                                 this.handleDeviceAdded(device);
-    						} 
+    						}
                             else {
     							if (this.config.debug) {
     								console.log("- ignoring update property");
@@ -1593,7 +1705,7 @@ class ZigbeeMqttAdapter extends Adapter {
     						property = device.findProperty(key);
     						if (!property) {
                                 if (this.config.debug) {
-                                    console.log("Error: missing property still has not been created");
+                                    console.log("Error: missing property still has not been created. Skipping.");
                                 }
     							continue;
     						}
@@ -1681,8 +1793,8 @@ class ZigbeeMqttAdapter extends Adapter {
         										extra_toggle_property.setCachedValue(extra_boolean); // Technically this should now use the fromMqtt construction, but in practise these extra generated properties all use booleans normally, so translation is not necessary.
         										device.notifyPropertyChanged(extra_toggle_property);
                                             
-                                                this.handle_persistent_value(zigbee_id, 'toggle', extra_boolean, true, false);
-                                                this.save_persistent_data();
+                                                this.save_persistent_value(zigbee_id, 'toggle', extra_boolean, true, false);
+                                                //this.save_persistent_data();
                                             
         										if (this.config.debug) {
         											console.log("extra_boolean updated to: " + extra_boolean);
@@ -1729,8 +1841,8 @@ class ZigbeeMqttAdapter extends Adapter {
         										extra_property.setCachedValue(extra_boolean);
         										device.notifyPropertyChanged(extra_property);
                                             
-                                                this.handle_persistent_value(zigbee_id, 'toggle', extra_boolean, true, false);
-                                                this.save_persistent_data();
+                                                this.save_persistent_value(zigbee_id, 'toggle', extra_boolean, true, false);
+                                                //this.save_persistent_data();
                                                 
         										if (this.config.debug) {
         											console.log("extra toggle property switched to its opposite: " + extra_boolean);
@@ -1765,8 +1877,8 @@ class ZigbeeMqttAdapter extends Adapter {
         										extra_property.setCachedValue(extra_boolean);
         										device.notifyPropertyChanged(extra_property);
                                             
-                                                this.handle_persistent_value(zigbee_id, 'toggle', extra_boolean, true, false);
-                                                this.save_persistent_data();
+                                                this.save_persistent_value(zigbee_id, 'toggle', extra_boolean, true, false);
+                                                //this.save_persistent_data();
                                             
         										if (this.config.debug) {
         											console.log("extra_boolean updated to: " + extra_boolean);
@@ -1794,14 +1906,17 @@ class ZigbeeMqttAdapter extends Adapter {
                                             else {
                                                 if (this.config.debug) {
                                                     console.log("Arrow click extra_property.value: ", extra_property.value);
+                                                    console.log("switching push button to on for one second");
                                                 }
                                                 
-                                                console.log("switching push button to on for one second");
+                                                
         										extra_property.setCachedValue(true);
         										device.notifyPropertyChanged(extra_property);
                                                 
                                                 setTimeout(() => {
-                                                    console.log("switching push button back to off");
+                                                    if (this.config.debug) {
+                                                        console.log("switching push button back to off");
+                                                    }
             										extra_property.setCachedValue(false);
             										device.notifyPropertyChanged(extra_property);
                                                 }, 1000);
@@ -1943,11 +2058,226 @@ class ZigbeeMqttAdapter extends Adapter {
         						console.log(key + " -> " + msg[key]);
                             }
                             
-                            property.setCachedValue(msg[key]);
-        					device.notifyPropertyChanged(property);
+                            
+                            
+                            
+                            //console.log("\nPROPERTY:");
+                            //console.log(property);
+                            
+                            
+                            
+                            
+                            //
+                            // DATA BLUR
+                            //
+                            
+                            
+                            
+                            
+                            if(use_blur){
+                                
+                                
+                                var use_blur_really = false
+                                
+                                if( key != 'linkquality' && key != 'battery'){
+                                    if(typeof property.readOnly != 'undefined'){
+                                        //console.log("readOnly spotted");
+                                        if(property.readOnly == true){
+                                            //console.log("property was readOnly");
+                            
+                                            if(property.type == 'integer'){
+                                                //console.log("readOnly integer spotted");
+                                                use_blur_really = true;
+                                            }
+                                            else if(property.type == 'number'){
+                                                //console.log("readOnly number spotted");
+                                                use_blur_really = true;
+                                            }
+                                        }
+                                    }
+                                }    
+                                else{
+                                    if (this.config.debug) {
+                                        console.log("blur is skipping: ", key);
+                                    }
+                                }
+                    
+                                if(use_blur_really){
+                                    var value_for_ui = null;
+                                    //var clear_blur_buffer = false;
+                                
+                                    if(typeof this.devices[device_id].blur == 'undefined'){
+                                        if (this.config.debug) {
+                                            console.log("device didn't have a blur preference yet. Setting it now to: ", data_blur);
+                                        }
+                                        this.devices[device_id].blur = data_blur;
+                                    }
+                                    else{
+                                        if (this.config.debug) {
+                                            console.log("device had blur preference: ", data_blur);
+                                        }
+                                    }
+                            
+                                    // First, check if the blur factor has changed. If so, then update the blur_start timestamp.
+                                    if(this.devices[device_id].blur != data_blur){
+                                        if (this.config.debug) {
+                                            console.log("user changed the blur factor! at ", key);
+                                            console.log("- from: ", this.devices[device_id].blur);
+                                            console.log("- to: ", data_blur);
+                                        }
+                                
+                                        if(typeof property.blur_buffer == 'undefined'){
+                                            if (this.config.debug) {
+                                                console.log("setting empty blur buffer on property: ", key);
+                                            }
+                                            property.blur_buffer = [];
+                                        }
+                                        else{
+                                            if (this.config.debug) {
+                                                console.log("blur buffer existed already: ", property.blur_buffer);
+                                            }
+                                            // Figure out what to do with the existing values in the blur buffer. Continue appending, or send average?
+                                            if(this.devices[device_id].blur < data_blur){
+                                                if (this.config.debug) {
+                                                    console.log("User wants to extend the blur period");
+                                                }
+                                            }
+                                            else{
+                                                if (this.config.debug) {
+                                                    console.log("User wants to shorten the blur period");
+                                                }
+                                                //clear_blur_buffer = true;
+                                                save_new_blur_timestamp = true;
+                                            }
+                                        }
+                                
+                                        // Set the new threshold.
+                                        this.devices[device_id].blur_start = current_timestamp;// - (data_blur * 1000);
+                                        if (this.config.debug) {
+                                            console.log(" --> this.devices[device_id].blur_start: ", this.devices[device_id].blur_start);
+                                        }
+                                
+                                        if(this.devices[device_id].blur > 0){
+                                            // the old blur factor was bigger than 0, so the old values form the buffer, plus the new one, should be averaged.
+                                            // TODO: in the future, perhaps if the duration lengthens, then data isn't allowed to be sent through.
+                                    
+                                            //clear_blur_buffer = true; // flush the existing data in the buffer
+                                    
+                                        }
+                                        else{
+                                            // The device didn't have blur before, so no need to do anything with the old buffer.
+                                            // The just received value will become the first item in the buffer
+                                     
+                                    
+                                        }
+                                
+                                    }
+                            
+                                    //console.log("save_new_blur_timestamp: ", save_new_blur_timestamp);
+                                    // If the blur duration hasn't changed, but is bigger than 0
+                                    // Or: if the new duration is 0, but there was still some data in the buffer
+                                    if(data_blur > 0 || save_new_blur_timestamp){ // save_new_blur_timestamp indicates that the buffer should be flushed for a new round
+                                
+                                        if(typeof this.devices[device_id].blur_start == 'undefined' || this.devices[device_id].blur_start == null ){
+                                            this.devices[device_id].blur_start = current_timestamp; // - (data_blur * 1000);
+                                            if (this.config.debug) {
+                                                console.log("Error. fixed missing blur start: ", this.devices[device_id].blur_start);
+                                            }
+                                        }
+                                        if(typeof property.blur_buffer == 'undefined'){
+                                            if (this.config.debug) {
+                                                console.log("Error, somehow still empty blur buffer on property: ", key);
+                                            }
+                                            property.blur_buffer = [];
+                                        }
+                                
+                                        //const threshold = this.devices[device_id].blur_start + (this.devices[device_id].blur * 1000);
+                                        const threshold = current_timestamp - (this.devices[device_id].blur * 1000);
+                                        
+                                        if (this.config.debug) {
+                                            console.log('property.blur_buffer.length: ', property.blur_buffer.length);
+                                            console.log("this.devices[device_id].blur_start: ", this.devices[device_id].blur_start);
+                                            console.log("- threshold: ", threshold, );
+                                            console.log("- current_timestamp: ", current_timestamp);
+                                            console.log("- delta: ", this.devices[device_id].blur_start - threshold );
+                                        }
+                                        
+                                        // Send average
+                                        if( this.devices[device_id].blur_start < threshold){
+                                            //this.devices[device_id].blur_start = current_timestamp // this is handled at the device level later
+                                            // Average value should be calculated and sent through.
+                                            if (this.config.debug) {
+                                                console.log("flushing blur buffer");
+                                                console.log("property.blur_buffer: ", property.blur_buffer);
+                                            }
+                                            save_new_blur_timestamp = true;
+                                            
+                                            // CALCULATE AVERAGE AND SEND
+                                            if(typeof property.blur_buffer == 'undefined'){
+                                                console.log('ERROR while calculating average: undefined blur buffer');
+                                            }
+                                            
+                                            if(property.blur_buffer.length != 0){
+                                                var total = 0;
+                                                for(var bi = 0; bi < property.blur_buffer.length; bi++) { // bi = buffer index
+                                                    //console.log(">> " + property.blur_buffer[bi]);
+                                                    total += property.blur_buffer[bi];
+                                                }
+                                                
+                                                value_for_ui = total / property.blur_buffer.length;
+                                                if (this.config.debug) {
+                                                    console.log("total: ", total);
+                                                    console.log("sending average: ", value_for_ui);
+                                                }
+                                                property.blur_buffer.length = 0; // clear the buffer
+                                            }
+                                            
+                                    
+                                        }
+                                
+                                        // Add value to buffer
+                                        else{
+                                            // blur period not yet complete, will add value to buffer.
+                                            if (this.config.debug) {
+                                                console.log("blur period not yet complete, will add value to buffer: ", key, msg[key]);
+                                            }
+                                            property.blur_buffer.push(msg[key]);
+                                        }
+                                
+                                    }
+                                    else{
+                                        // No data blur, the same as last time.
+                                        value_for_ui = msg[key];
+                                    }
+                            
+                                    if(value_for_ui != null){
+                                        if (this.config.debug) {
+                                            console.log("value for UI after blur check: ", value_for_ui );
+                                        }
+                                        property.setCachedValue( value_for_ui );
+                    					device.notifyPropertyChanged(property);
+                                    }
+                                }
+                                
+                                else{
+                                    property.setCachedValue( msg[key] );
+                					device.notifyPropertyChanged(property);
+                                }
+                                
+                            }
+                            
+                            // Device has no option for data blurring
+                            else{
+                                //console.log("use_blur was false");
+                                property.setCachedValue( msg[key] );
+            					device.notifyPropertyChanged(property);
+                            }
+                            
+                            
+                            
                             
                             try{
-                                // save updated value to devices_overview in case it has to be regenerated at init next time. this.handle_persistent_data cannot be used here, as we don't know enough about the data, so we go around and update the value only.
+                                // save updated value to devices_overview in case it has to be regenerated at init next time. this.handle_persistent_data() (which would normally be used to handle this) cannot be used here, as we don't know enough about the data, so we go around and update the value only.
                                 if(typeof this.persistent_data.devices_overview[device_id] != 'undefined'){
                                     if(typeof this.persistent_data.devices_overview[device_id]['appendages'] != 'undefined'){
                                         if(typeof this.persistent_data.devices_overview[device_id]['appendages'][key] != 'undefined'){
@@ -1974,22 +2304,44 @@ class ZigbeeMqttAdapter extends Adapter {
                         
                         
                     
-    				    } catch (error) {
-    					    console.log("Error while checking if brightness alternative should be used: " + error);
+    				    } 
+                        catch (error) {
+    					    console.log("Error while checking (blurred) values for  UI : " + error);
     				    }
 
     				} // end of looping over all the keys in the incoming data message
 
 
                     // Recognize that the device is connected (since we just received a message from it)
-        			this.devices[device_id].connected = true;
-        			device.connectedNotify(true);
-                    device.connected = true;
+        			if(this.devices[device_id].connected == false){
+                        if (this.config.debug) {
+                            console.log("- device was in disconnected state. Changing that to connected");
+                        }
+                        this.devices[device_id].connected = true;
+            			device.connectedNotify(true);
+                        device.connected = true;
+        			}
+                    
+
+                    // Finally, if the blur factor changed, we save that //TODO: save to persistence should happen in the property
+                    if(this.devices[device_id].blur != data_blur){
+                        if (this.config.debug) {
+                            console.log("saving new blur factor: ", data_blur);
+                        }
+                        this.devices[device_id].blur = data_blur;
+                        this.save_persistent_value(zigbee_id, 'data_blur', data_blur_property_value, false, false);
+                        
+                    }
+                    
+                    if(save_new_blur_timestamp){
+                        this.devices[device_id].blur_start = current_timestamp;
+                    }
+                    
 
                
 
     			} catch (error) {
-    				console.log("Zigbee2MQWTT adonL: Error parsing incoming message: " + error);
+    				console.log("Zigbee2MQTT addon: Error parsing incoming message: " + error);
     			}
     		}
 
@@ -2099,7 +2451,9 @@ class ZigbeeMqttAdapter extends Adapter {
             var deviceDefinition;
             
             if(this.config.use_old_devices_description){
-                console.log("using a combination of device descriptions from devices.js and, if the device is not in that list, use Exposes data as the source instead.");
+                if (this.config.debug) {
+                    console.log("using a combination of device descriptions from devices.js and, if the device is not in that list, use Exposes data as the source instead.");
+                }
     			deviceDefinition = Devices[info.model_id];
 
     			if (!deviceDefinition) {
@@ -2144,16 +2498,19 @@ class ZigbeeMqttAdapter extends Adapter {
                 if (this.config.debug) {
                     console.log("at end of addDevice, will call attempt_regen to add any appendage properties that were discovered later");
                 }
-                //this.attempt_regen('z2m-' + info.ieee_address);
                 device = this.attempt_regen(device, 'z2m-' + info.ieee_address); // device and device_id
 
                 // Add data transmission property
                 if (this.config.debug) {
                     console.log("adding data transmission property to new device (only if data_transmission doesn't exist yet)");
                 }
-                //this.attempt_new_property(info.ieee_address, "data_transmission", true, false); // device name, property name, value (true) and readOnly (false)
-                
                 device = this.attempt_new_property(device, "data_transmission", true, false, false); // initial value, not read-only, no percentage
+                
+                // Add data blur property
+                
+                device = this.add_blur_property(device,'Off')
+                
+                
                 
                 if (this.config.debug) {
                     console.log("calling handleDeviceAdded");
@@ -2218,7 +2575,7 @@ class ZigbeeMqttAdapter extends Adapter {
         		}
 
                 if (this.config.debug) {
-                    console.log("attempt_new_property: checking is property already exists in device: " + property_name);
+                    console.log("attempt_new_property: checking if property already exists in device: " + property_name);
                 }
                 var property = device.findProperty(property_name);
                 
@@ -2276,7 +2633,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     
                     // Save the values in persistent data, if they don't already exist there.
                     const zigbee_id = device.id.replace('z2m-','');
-                    this.handle_persistent_value(zigbee_id,property_name,value,read_only,percentage);
+                    this.save_persistent_value(zigbee_id,property_name,value,read_only,percentage);
                     
                 }
                 else{
@@ -2300,32 +2657,171 @@ class ZigbeeMqttAdapter extends Adapter {
 	}
 
 
-    // Gets the persistent value, and if those don't exist, it sets the provided values as the initial persistent value
-    handle_persistent_value(zigbee_id, property_name, value=0, read_only=true, percentage=false){
-        //console.log("in handlePersistentValue for property: " + property_name);
+
+    // Add data-blur property
+	add_blur_property(device, property_value) {
+        /*
+        var device_id = zigbee_id;
+        if(!device_id.startsWith("z2m-")){
+            console.log("attempt_new_property: adding z2m- to device id");
+            device_id = 'z2m-' + device_id;
+        }
+        */
+        if (this.config.debug) {
+            console.log("in add_blur_property");
+        }
+        
+        const device_id = device.id;
+        const zigbee_id = device.id.replace('z2m-','');
+        const property_name = 'data_blur';
+        var data_blur = null;
+        
         try{
-            if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id] != 'undefined'){
-                if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'] != 'undefined'){
-                    //console.log("- existing appendages data: ", this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages']);
-                    if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name] != 'undefined'){
-                        if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name]['value'] != 'undefined'){
-                            //console.log("handle_persistent_value is returning this value from the devices_overview: ", this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name]['value']);
-                            return this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name]['value'];
-                        }
-                    }
-                    else{
-                        console.log("property name was not present in appendages dictionary? Appendages: ", this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages']);
-                    }
-                }
+            if(typeof this.persistent_data.devices_overview[device_id]['appendages'][property_name]['value'] != 'undefined'){
+                property_value = this.persistent_data.devices_overview[device_id]['appendages'][property_name]['value'];
             }
         }
         catch(e){
-            console.log("ExposesDeviceGenerator: error in getPersistentValue: ", e);
+            if (this.config.debug) {
+                console.log("no value for data blur property in persistent data yet");
+            }
+            property_value = 'Off';
         }
+        
+        const blur_options_index = this.data_blur_options.indexOf( property_value );
+        
+        if(blur_options_index >= 0){
+            data_blur = this.data_blur_option_seconds[blur_options_index];
+        }
+        else{
+            if (this.config.debug) {
+                console.log("error, blur property value in persistent data was not a possibility");
+            }
+            property_value = 'Off';
+            data_blur = 0;
+        }
+        if (this.config.debug) {
+            console.log("- property_value: ", property_value);
+            console.log("- data blur: ", data_blur);
+        }
+        
+        
+        //console.log("device in attempt_new_property: ", device);
+        
+		try{
+            //var device = this.getDevice(device_id);
+            if(device){
+                
+                //if (this.config.debug) {
+        			//console.log("in attempt_new_property for device: " + device_id + " and property_name: " + property_name);
+        		//	console.log("initial data_blur property value: " + property_value);
+        		//}
+                
+                var property = device.findProperty('data_blur');
+                
+                if(!property){
+                    if (this.config.debug) {
+                        console.log("the blur property DID NOT exist yet");
+                    }
+                    
+                    //console.log('device.getPropertyDescriptions(): ', device.getPropertyDescriptions());
+                    //console.log('device: ', device);
+                    //console.log("add_blur_property: device.get_property_descriptions(): ", device.get_property_descriptions());
+                    
+                    const properties = device.getPropertyDescriptions();
+                    
+                    var add_blur = false;
+                    Object.keys(properties).forEach(function(key) {
+                       //console.log(key + " -> " + properties[key]);
+                       
+                       if( properties[key].name != 'linkquality' && properties[key].name != 'battery'){
+                           if(typeof properties[key].readOnly != 'undefined'){
+                               //console.log("readOnly spotted");
+                               if(properties[key].readOnly == true){
+                                   //console.log("device has a read-only property");
+                               
+                                   if(properties[key].type == 'integer'){
+                                       //console.log("readOnly integer spotted");
+                                       add_blur = true;
+                                   }
+                                   else if(properties[key].type == 'number'){
+                                       //console.log("readOnly number spotted");
+                                       add_blur = true;
+                                   }
+                               }
+                           }
+                       }
+                       
+                    });
+                    
+                    if(add_blur == false){
+                        if (this.config.debug) {
+                            console.log("this device does not need the data blur property (no read-only numbers)");
+                        }
+                        return;
+                    }
+                    
+                    
+                    //const read_only = false;
+                    //const percentage = false;
+                    //const value = false;
+                    
+                    // Save the values in persistent data, if they don't already exist there.
+                    
+                    //property_value = this.get_persistent_value(zigbee_id,property_name,value,false,false);
+                    //console.log("this.get_persistent_value updated initial blur property_value: ", property_value);
+                    
+            		const desc = {
+                        'name': property_name,
+            			'title': 'Data blur',
+            			'description': 'Smooth out sensor values over time',
+            			'readOnly': false,
+            			'type': 'string',
+                        'enum': this.data_blur_options,
+                        'value': property_value
+            		};
+            
+                    
+            		const property = new MqttProperty(device, property_name, desc);
+            		device.properties.set(property_name, property);
+            		if (this.config.debug) {
+            			console.log("data blur property should now be generated");
+            		}
+                    
+                    device.blur = data_blur;
+                    
+                }
+                else{
+                    if (this.config.debug) {
+                        console.log("attempt_new_property: the property already existed: " + property_name);
+                    }
+                }
+                
+
+                
+            }
+            
+
+		}
+        catch (error){
+            console.log("Error in add_blur_property: " + error);
+        }
+        
+        return device;
+
+	}
+
+
+
+    // Saves the persistent value, and if those don't exist, it sets the provided values as the initial persistent value
+    save_persistent_value(zigbee_id, property_name, value=0, read_only=true, percentage=false){
+        console.log("in save_persistent_value for property: " + property_name);
         
         try{
             if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id] == 'undefined'){
-                //console.log("appendage property was not yet present in devices_overview. Adding it now.");
+                if (this.config.debug) {
+                    console.log("appendage property was not yet present in persistent devices_overview. Adding it now.");
+                }
                 this.persistent_data.devices_overview['z2m-' + zigbee_id] = {'appendages':{}, 'zigbee_id':zigbee_id, 'update':{'state':'idle'}}
             }
             if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'] == 'undefined'){
@@ -2341,7 +2837,72 @@ class ZigbeeMqttAdapter extends Adapter {
             this.save_persistent_data();
         }
         catch(e){
-            console.log("Error in handle_persistent_value while creating initial persistent data in devices_overview: ", e);
+            console.log("Error in save_persistent_value while creating initial persistent data in devices_overview: ", e);
+        }
+        if (this.config.debug) {
+            console.log("this.persistent_data.devices_overview[device_id]: ", this.persistent_data.devices_overview['z2m-' + zigbee_id]);
+        }
+        return value;
+    }
+    
+    
+    get_persistent_value(zigbee_id, property_name, value, read_only=true, percentage=false){
+        try{
+            var value_existed = false;
+            try{
+                if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id] != 'undefined'){
+                    if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'] != 'undefined'){
+                        //console.log("- existing appendages data: ", this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages']);
+                        if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name] != 'undefined'){
+                            if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name]['value'] != 'undefined'){
+                                //console.log("get_persistent_value is returning this value from the devices_overview: ", this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name]['value']);
+                                //existed = true;
+                                value_existed = true;
+                                value = this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name]['value'];
+                                //return value; //this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name]['value'];
+                            }
+                        }
+                        else{
+                            console.log("property name was not present in appendages dictionary? Appendages: ", this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages']);
+                        }
+                    }
+                }
+            }
+            catch(e){
+                if (this.config.debug) {
+                    console.log("error in get_persistent_value: ", e);
+                }
+            }
+        
+            if(value_existed == false){
+                try{
+                    if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id] == 'undefined'){
+                        console.log("property was not yet present in persistent devices_overview. Adding it now.");
+                        this.persistent_data.devices_overview['z2m-' + zigbee_id] = {'appendages':{}, 'zigbee_id':zigbee_id, 'update':{'state':'idle'}}
+                    }
+                    if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'] == 'undefined'){
+                        //console.log("appendage property was present but had no appendages dictionary. Adding it now.");
+                        this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'] = {};
+                    }
+        
+                    //console.log("initial appendages value was missing in devices_overview, so creating it now. Value: " + value);
+                    this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name] = {};
+                    this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name]['value'] = value;
+                    this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name]['read_only'] = read_only;
+                    this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'][property_name]['percentage'] = percentage;
+                    this.save_persistent_data();
+                }
+                catch(e){
+                    if (this.config.debug) {
+                        console.log("Error in get_persistent_value while creating initial persistent data in devices_overview: ", e);
+                    }
+                }
+            }
+        }
+        catch(e){
+            if (this.config.debug) {
+                console.log("error in get_persistent_value: ", e);
+            }
         }
         
         return value;
@@ -2379,7 +2940,13 @@ class ZigbeeMqttAdapter extends Adapter {
                                         console.log("regen: parsing appendages property: ", property_name);
                                         console.log("regen: parsing appendages property values: ", prop);
                                     }
-                                    device = this.attempt_new_property(device, property_name, prop.value, prop.read_only, prop.percentage);
+                                    if(property_name == 'data_blur'){
+                                        device = this.add_blur_property(device, prop.value);
+                                    }
+                                    else{
+                                        device = this.attempt_new_property(device, property_name, prop.value, prop.read_only, prop.percentage);
+                                    }
+                                    
                                     //console.log("property should be regenerated");
                                 }
                                 
@@ -2414,7 +2981,9 @@ class ZigbeeMqttAdapter extends Adapter {
     				try {
                         if(deviceId.startsWith('z2m-')){
                             const zigbee_id = deviceId.replace('z2m-','');
-                            console.log("Telling Z2M to remove: " + zigbee_id);
+                            if (this.config.debug) {
+                                console.log("Telling Z2M to remove: " + zigbee_id);
+                            }
                             //this.client.publish(`${this.config.prefix}/bridge/request/device/remove`, zigbee_id);
                             this.client.publish(`${this.config.prefix}/bridge/request/device/remove`, '{"id": "' + zigbee_id + '","force":true}');
                         }
@@ -2626,6 +3195,7 @@ class MqttProperty extends Property {
 		this.device.notifyPropertyChanged(this);
 		this.options = propertyDescription;
         this.value = propertyDescription.value;
+        
 	}
 
 
@@ -2635,6 +3205,15 @@ class MqttProperty extends Property {
 			console.log("- this.options: " + this.options);
 		}
         this.value = value;
+        
+        if(this.name == "data_transmission" && this.name == "data_blur"){
+            try{
+                this.device.adapter.persistent_data.devices_overview[this.device.id]['appendages'][this.name]['value'] = value;
+            }
+            catch(e){
+                console.log("Error saving data_transmission or data_blur property value to persistent data: ", e);
+            }
+        }
 
 		return new Promise((resolve, reject) => {
 			super
@@ -2679,7 +3258,7 @@ class MqttProperty extends Property {
                     
 
                     // Publish to Zigbee network
-                    if(this.name != "data_transmission"){ // all properties except the data_transmission property
+                    if(this.name != "data_transmission" && this.name != "data_blur"){ // all properties except the data_transmission property
                         if (this.device.adapter.config.debug) {
                             console.log("sending '" + updatedValue + "' to Z2M via toMqtt:", {[this.options.property]: toMqtt(updatedValue),});
                         }
@@ -2692,11 +3271,7 @@ class MqttProperty extends Property {
         					});
                         //}
                     }
-                    else{
-                        if (this.device.adapter.config.debug) {
-                            console.log("not sending value of data_transmission property to zigbee network");
-                        }
-                    }
+                    
                     
                     this.device.notifyPropertyChanged(this);
                     

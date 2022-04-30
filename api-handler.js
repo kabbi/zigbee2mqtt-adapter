@@ -70,6 +70,12 @@ class Zigbee2MQTTHandler extends APIHandler {
 					} catch (error) {
 						console.log(error);
 					}
+                    
+                    // If the missing USB stick is not an issue, then pretend it was found to avoid a warning in the UI
+                    var serial_port_value = this.adapter.config.serial_port;
+                    if(this.adapter.config.local_zigbee2mqtt == false){
+                        serial_port_value = "usb_stick_not_needed";
+                    }
 
 
 					return new APIResponse({
@@ -84,7 +90,7 @@ class Zigbee2MQTTHandler extends APIHandler {
                             'updating_firmware': this.adapter.updating_firmware,
                             'update_result': this.adapter.update_result,
                             'debug': this.adapter.config.debug,
-                            'serial': this.adapter.config.serial_port
+                            'serial': serial_port_value
 						}),
 					});
 
@@ -449,6 +455,33 @@ class Zigbee2MQTTHandler extends APIHandler {
 
 					
 				} 
+                
+                else if(action == 'look_for_usb_stick'){
+                    
+                    var state = false;
+                    try{
+                        this.adapter.config.serial_port = this.adapter.look_for_usb_stick();
+                        if(this.adapter.config.serial_port != null){
+                            this.adapter.sendPairingPrompt("Zigbee USB stick detected");
+                            state = true;
+                            if(this.adapter.z2m_started == false){
+                                this.adapter.run_zigbee2mqtt();
+                            }
+                        }
+                    }
+                    catch(e){
+                        console.log("Error: API handler: look_for_usb_stick failed: ", e);
+                    }
+                    
+					return new APIResponse({
+						status: 200,
+						contentType: 'application/json',
+						content: JSON.stringify({
+							'state': state
+						}),
+					});
+                    
+                }
                 
                 
                 else {

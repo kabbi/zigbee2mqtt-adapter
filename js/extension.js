@@ -108,7 +108,7 @@
 			// Attach click event to update map button
 			document.getElementById('extension-zigbee2mqtt-adapter-update-map-button').addEventListener('click', (event) => {
 				//console.log("clicked on update map button");
-				document.getElementById("extension-zigbee2mqtt-adapter-graphviz-container").innerHTML = '<img class="extension-zigbee2mqtt-adapter-spinner" src="/extensions/zigbee2mqtt-adapter/images/spinner.gif">';
+				document.getElementById("extension-zigbee2mqtt-adapter-graphviz-container").innerHTML = '<div class="extension-zigbee2mqtt-adapter-spinner"><div></div><div></div><div></div><div></div></div>';
 				document.getElementById('extension-zigbee2mqtt-adapter-update-map-button').disabled = true;
 				
 				this.asked_for_map = true;
@@ -192,6 +192,37 @@
             });
 
 
+            
+
+            // Scan for USB stick button
+            document.getElementById('extension-zigbee2mqtt-adapter-look-for-usb-stick-button').addEventListener('click', (event) => {
+                //console.log("re-install button clicked");
+                //console.log(new_pan_id,new_network_key);
+                
+                document.getElementById('extension-zigbee2mqtt-adapter-look-for-usb-stick-button').style.display = 'none';
+                
+                
+		        window.API.postJson(
+		         "/extensions/zigbee2mqtt-adapter/api/ajax",
+					{"action":"look_for_usb_stick"}
+
+		        ).then((body) => {
+                    console.log("look_for_usb_stick response: ", body);
+                    if(body['state'] == true){
+                        console.log("USB stick was detected!");
+                        document.getElementById('extension-zigbee2mqtt-adapter-serial-hint').style.display = 'none';
+                        window.location.reload(false);
+                    }
+                    else{
+                        document.getElementById('extension-zigbee2mqtt-adapter-look-for-usb-stick-button').style.display = 'inline-block';
+                    }
+                    
+		        }).catch((e) => {
+		  			console.log("Error is look_for_usb_stick request: " + e);
+                    document.getElementById('extension-zigbee2mqtt-adapter-look-for-usb-stick-button').style.display = 'inline-block';
+		        });
+                
+            });
             
 
 
@@ -371,16 +402,19 @@
 			        this.updating_z2m = true;
                     
     				if(typeof list2 != 'undefined'){
-                        list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Still installing...</h2><br/><img src="/extensions/zigbee2mqtt-adapter/images/spinner.gif" width="32" height="32" alt="Please refresh the page in a while..."/ style="opacity:.5"><br/><p>It takes about 30 minutes for Zigbee2MQTT to be fully downloaded and installed.</p><p>Come back a little later. If this message is gone, that means the intallation has finished.</p><p style="font-style:italic">Do not power-off or restart this controller until installation is complete!</p></div>';
+                        list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Still installing...</h2><br/><div class="extension-zigbee2mqtt-adapter-spinner"><div></div><div></div><div></div><div></div></div><br/><p>It takes about 30 minutes for Zigbee2MQTT to be fully downloaded and installed.</p><p>Come back a little later. If this message is gone, that means the intallation has finished.</p><p style="font-style:italic">Do not power-off or restart this controller until installation is complete!</p></div>';
     				    return;
     				}
                     else{
                         alert("The Zigbee2MQTT addon is still installing itself. Please wait about 30 minutes before rebooting the system.");
                     }
                 }
+                else if(body.serial == null){
+                    document.getElementById('extension-zigbee2mqtt-adapter-serial-hint').style.display = 'block';
+                }
                 else if(body.started == false){
     				if(typeof list2 != 'undefined'){
-                        list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Zigbee2MQTT has not started (yet).</h2><br/><img src="/extensions/zigbee2mqtt-adapter/images/spinner.gif" width="32" height="32" alt="Please refresh the page in a while..."/ style="opacity:.5"><br/><p>It may be that it is still starting up. If this message is still here after two minutes, then something is probably wrong. In that case, try rebooting your controller.</p><p>Also make sure no other Zigbee addons are running, and that the Zigbee USB stick is plugged in.</p></div>';
+                        list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Zigbee2MQTT has not started (yet).</h2><br/><div class="extension-zigbee2mqtt-adapter-spinner"><div></div><div></div><div></div><div></div></div><br/><p>It may be that it is still starting up. If this message is still here after two minutes, then something is probably wrong. In that case, try rebooting your controller.</p><p>Also make sure no other Zigbee addons are running.</p></div>';
     				    return;
     				}
                 }
@@ -394,14 +428,15 @@
                         //console.log("Zigbee2MQTT: the target element no longer exists. User has likely switched to another page.");
                     }
                 }
-                
+                /*
                 if(typeof body.serial != 'undefined'){
                     //console.log("body.serial was not undefined. It was: " + body.serial);
                     if(body.serial == null && body.installed == true){
-                        //console.log('no USB stick detected?');
-                        document.getElementById('extension-zigbee2mqtt-adapter-serial-hint').style.display = 'block';
+                        console.log('no USB stick detected?');
+                        
                     }
                 }
+                */
                 
                 if(typeof body.security != 'undefined'){
                     //console.log("security values were present in init data. pan_id: " + body.security.pan_id);
@@ -753,7 +788,7 @@
 				} // end of for loop
 			
                 if(list.innerHTML == ""){
-                    list.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>No Zigbee devices paired yet</h2><br/><p>Go to the Things page and click on the (+) button if you want to connect a new Zigbee device.</p></div>';
+                    list.innerHTML = '<div style="margin:10rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>No Zigbee devices paired yet</h2><p>Go to the Things page and click on the (+) button if you want to connect a new Zigbee device.</p></div>';
                 }
                 
                 if(this.updating_firmware){
