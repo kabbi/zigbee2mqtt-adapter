@@ -1384,7 +1384,9 @@ class ZigbeeMqttAdapter extends Adapter {
                     }
                     else{
                         use_blur = true;
-                        console.log("data_blur_property value: ", data_blur_property.value);
+                        if (this.config.debug) {
+                            console.log("data_blur_property value: ", data_blur_property.value);
+                        }
                         data_blur_property_value = data_blur_property.value;
                         const blur_options_index = this.data_blur_options.indexOf( data_blur_property.value );
                         
@@ -2815,7 +2817,9 @@ class ZigbeeMqttAdapter extends Adapter {
 
     // Saves the persistent value, and if those don't exist, it sets the provided values as the initial persistent value
     save_persistent_value(zigbee_id, property_name, value=0, read_only=true, percentage=false){
-        console.log("in save_persistent_value for property: " + property_name);
+        if (this.config.debug) {
+            console.log("in save_persistent_value for property: " + property_name);
+        }
         
         try{
             if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id] == 'undefined'){
@@ -2863,7 +2867,9 @@ class ZigbeeMqttAdapter extends Adapter {
                             }
                         }
                         else{
-                            console.log("property name was not present in appendages dictionary? Appendages: ", this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages']);
+                            if (this.config.debug) {
+                                console.log("property name was not present in appendages dictionary? Appendages: ", this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages']);
+                            }
                         }
                     }
                 }
@@ -2877,7 +2883,9 @@ class ZigbeeMqttAdapter extends Adapter {
             if(value_existed == false){
                 try{
                     if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id] == 'undefined'){
-                        console.log("property was not yet present in persistent devices_overview. Adding it now.");
+                        if (this.config.debug) {
+                            console.log("property was not yet present in persistent devices_overview. Adding it now.");
+                        }
                         this.persistent_data.devices_overview['z2m-' + zigbee_id] = {'appendages':{}, 'zigbee_id':zigbee_id, 'update':{'state':'idle'}}
                     }
                     if(typeof this.persistent_data.devices_overview['z2m-' + zigbee_id]['appendages'] == 'undefined'){
