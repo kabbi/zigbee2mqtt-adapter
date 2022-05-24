@@ -741,9 +741,9 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 	stop_zigbee2mqtt() {
-        if (this.config.debug) {
-            console.log("in stop-zigbee2mqtt");
-        }
+		if (this.config.debug) {
+		    console.log("in stop-zigbee2mqtt");
+		}
 		try {
 			this.zigbee2mqtt_subprocess.kill();
 		} catch (error) {
