@@ -70,7 +70,9 @@ class ZigbeeMqttAdapter extends Adapter {
 		addonManager.addAdapter(this);
 		this.exposesDeviceGenerator = new ExposesDeviceGenerator(this, this.config);
 
-
+        if(typeof this.config == 'undefined'){
+            console.log("ERROR, THIS.CONFIG IS UNDEFINED! (sqlite error?)");
+        }
 
         this.reverse_list_contact = ['RH3001']; // All the devices for which the contact property should be reversed. RH3001 is a great usb-rechargeable contact sensor.
         
@@ -739,6 +741,9 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 	stop_zigbee2mqtt() {
+        if (this.config.debug) {
+            console.log("in stop-zigbee2mqtt");
+        }
 		try {
 			this.zigbee2mqtt_subprocess.kill();
 		} catch (error) {
@@ -793,7 +798,9 @@ class ZigbeeMqttAdapter extends Adapter {
             this.client.subscribe(`${this.config.prefix}/bridge/response/device/ota_update/check`);
             
             if(this.z2m_started == false){
-                console.log("MQTT is now connected. Next, starting Zigbee2MQTT");
+                if (this.config.debug) {
+                    console.log("MQTT is now connected. Next, starting Zigbee2MQTT");
+                }
                 this.really_run_zigbee2mqtt();
             }
             else{
