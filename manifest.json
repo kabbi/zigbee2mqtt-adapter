@@ -151,13 +151,13 @@
         },
         "debug": {
           "type": "boolean",
-          "description": "Advanced. Used to find issues if this addon isn't working properly. If enabled, you can find more details about its functioning in the internal log (found under settings -> development)."
+          "description": "Advanced. Used to find issues if this addon isn't working properly. If enabled, you can find more details about its functioning in the internal log."
         }
       }
     }
   },
   "short_name": "zigbee2mqtt",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
