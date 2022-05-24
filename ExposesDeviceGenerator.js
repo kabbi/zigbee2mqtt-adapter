@@ -478,13 +478,16 @@ class ExposesDeviceGenerator {
         					//console.log("expose.name ends with state, so adding onOfProperty @type");
                             //console.log("device['@type'] = ", device['@type']);
                             //console.log( device['@type'].indexOf('Lock') );
-        					if(device['@type'].includes("Lock")){
+        					if(device['@type'].indexOf("Lock") > -1){
                                 //console.log("IS LOCK");
                                 if(expose.access == 1){
             						device.properties[expose.property]['@type'] = 'LockedProperty'; // read-only
             					}else{
                                     //console.log("IS ACTIONABLE LOCK");
             						device.properties[expose.property]['@type'] = 'OnOffProperty'; // should be read-only. But it might work?
+                					if(device['@type'].indexOf("OnOffSwitch") == -1){
+                						device['@type'].push('OnOffSwitch');
+                					}
                                     /*
                                     // Experiment to add actions to a lock, as the spec prefers. However, actions are (currently) not compatible with Voco voice control, so I abandoned this for now. Also had trouble receiving the action.
                                     try{
@@ -534,8 +537,14 @@ class ExposesDeviceGenerator {
                                 //console.log("IS NOT LOCK");
                                 if(expose.access == 1){
             						device.properties[expose.property]['@type'] = 'PushedProperty';
+                					if(device['@type'].indexOf("PushButton") == -1){
+                						device['@type'].push('PushButton');
+                					}
             					}else{
             						device.properties[expose.property]['@type'] = 'OnOffProperty';
+                					if(device['@type'].indexOf("OnOffSwitch") == -1){
+                						device['@type'].push('OnOffSwitch');
+                					}
             					}
                             }
 
