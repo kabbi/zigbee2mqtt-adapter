@@ -86,6 +86,7 @@
 			
 			<div id="extension-zigbee2mqtt-adapter-tab-map" class="extension-zigbee2mqtt-adapter-tab">
 				<div id="extension-zigbee2mqtt-adapter-graphviz-container">
+                    <img id="extension-zigbee2mqtt-adapter-network-map-icon" src="/extensions/zigbee2mqtt-adapter/images/network-map.svg" alt="network map"/>
 				</div>
 				<div id="extension-zigbee2mqtt-adapter-map" class="extension-zigbee2mqtt-adapter-centered-page">
 					<p>Here you can find out how your Zigbee devices have organised themselves into a network. Depending on the size of your network, updating the map can take up to two minutes. During this time your Zigbee network may be very unresponsive.</p> 
@@ -111,8 +112,9 @@
     					<label for="extension-zigbee2mqtt-adapter-security-network-key">Network key</label><br/>
                         <input id="extension-zigbee2mqtt-adapter-security-network-key" type="text" name="extension-zigbee2mqtt-adapter-security-network-key" value="" style="width:100%"/>
                         <br/><br/>
-                        <button id="extension-zigbee2mqtt-adapter-save-security-button" class="text-button">SAVE</button>
-                        <br/><br/>
+                        <div>
+                            <button id="extension-zigbee2mqtt-adapter-save-security-button" class="text-button">SAVE</button>
+                        </div>
                     </div>
                     
                     <div class="extension-zigbee2mqtt-adapter-vlak">
@@ -120,7 +122,9 @@
                         <p>You can manually update Zigbee2MQTT to the latest avaialble version by deleting and re-installing it. This might make the controller compatible with newer devices.</p>
                         <p>Updating Zigbee2MQTT is not without risk. If there are compatibility issues, you may be in more trouble. It's unlikely, but in the worst case you might have to re-pair all your devices. Be sure to write down the security codes (shown above) first.</p>
                         <p>If you don't see any security codes, this is probably because you have been using this addon before 2022. To avoid re-pairing all your devices you should disable the extra security feature in this addon's settings before you continue.</p>
-                        <button id="extension-zigbee2mqtt-adapter-reinstall-button" class="text-button">RE-INSTALL</button>
+                        <div>
+                            <button id="extension-zigbee2mqtt-adapter-reinstall-button" class="text-button">RE-INSTALL</button>
+                        </div>
                     </div>
 
 				</div>
