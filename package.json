@@ -42,7 +42,7 @@
     "css/extension.css",
     "js/extension.js",
     "js/graphviz.js",
-    "images/menu-icon.svg",
+    "images/*.svg",
     "images/spinner.gif",
     "views/content.html"
   ]
