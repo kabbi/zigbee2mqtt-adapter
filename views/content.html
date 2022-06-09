@@ -86,6 +86,7 @@
 			
 			<div id="extension-zigbee2mqtt-adapter-tab-map" class="extension-zigbee2mqtt-adapter-tab">
 				<div id="extension-zigbee2mqtt-adapter-graphviz-container">
+                    <img id="extension-zigbee2mqtt-adapter-network-map-icon" src="/extensions/zigbee2mqtt-adapter/images/network-map.svg" alt="network map"/>
 				</div>
 				<div id="extension-zigbee2mqtt-adapter-map" class="extension-zigbee2mqtt-adapter-centered-page">
 					<p>Here you can find out how your Zigbee devices have organised themselves into a network. Depending on the size of your network, updating the map can take up to two minutes. During this time your Zigbee network may be very unresponsive.</p> 
@@ -111,8 +112,9 @@
     					<label for="extension-zigbee2mqtt-adapter-security-network-key">Network key</label><br/>
                         <input id="extension-zigbee2mqtt-adapter-security-network-key" type="text" name="extension-zigbee2mqtt-adapter-security-network-key" value="" style="width:100%"/>
                         <br/><br/>
-                        <button id="extension-zigbee2mqtt-adapter-save-security-button" class="text-button">SAVE</button>
-                        <br/><br/>
+                        <div>
+                            <button id="extension-zigbee2mqtt-adapter-save-security-button" class="text-button">SAVE</button>
+                        </div>
                     </div>
                     
                     <div class="extension-zigbee2mqtt-adapter-vlak">
@@ -120,7 +122,9 @@
                         <p>You can manually update Zigbee2MQTT to the latest avaialble version by deleting and re-installing it. This might make the controller compatible with newer devices.</p>
                         <p>Updating Zigbee2MQTT is not without risk. If there are compatibility issues, you may be in more trouble. It's unlikely, but in the worst case you might have to re-pair all your devices. Be sure to write down the security codes (shown above) first.</p>
                         <p>If you don't see any security codes, this is probably because you have been using this addon before 2022. To avoid re-pairing all your devices you should disable the extra security feature in this addon's settings before you continue.</p>
-                        <button id="extension-zigbee2mqtt-adapter-reinstall-button" class="text-button">RE-INSTALL</button>
+                        <div>
+                            <button id="extension-zigbee2mqtt-adapter-reinstall-button" class="text-button">RE-INSTALL</button>
+                        </div>
                     </div>
 
 				</div>
@@ -134,12 +138,7 @@
 					<p>Zigbee2MQTT is an open source software project in which hundreds of people have worked together to support as many Zigbee devices as possible. This addon builds on their work.</p>
 					<p>To learn more about the project, and learn which devices are supported, visit <a target="_blank" href="https://www.zigbee2mqtt.io">www.zigbee2mqtt.io</a>.</p>
 					<p>&nbsp;</p>
-                    <h2>Privacy features</h2>
-                    <p>Devices that have sensors will offer the ability to "blur" their data. This means only one average value will be created over a certain period. For example, while a humidity sensor might normally send a new value every minute, you could lower this to once every 30 minutes instead. This allows you to collect less data from sensors that might otherwise reveal sensitive behaviour patterns. For example, humidity sensors could reveal when people had sex.</p>
-                    <p>You can also fully disable data collection. If you do this, any data coming from the device will be ignored. This is a privacy feature, allowing you to stop recording data for a while.</p>
-                    <p>Tip: create rules to automatically change levels of data collection. For example, a sensor could be fully collected during the day, but be disabled or less accurate during the night. Similarly, you could only enable security sensors when nobody is home.</p>
-                    
-					<h2>A word about firmware updates</h2>
+					<h4>A word about firmware updates</h4>
 					<p>This addon can help you keep your devices up to date with the latest firmware. Not all manufacturers support this, but <a target="_blank" href="https://www.zigbee2mqtt.io/information/ota_updates.html">some do</a>. IKEA, for example.</p>
 					<p>Keeping Zigbee devices up to date isn't vital. Since Zigbee devices do not connect to the internet by themselves, they are less likely to be hacked.</p>
 					<p>Before you update a device, always make sure you do some <a target="_blank" href="https://github.com/Koenkk/zigbee2mqtt/issues?q=is%3Aissue+is%3Aopen+firmware">research</a>. While firmware updates should generally improve security and perhaps even add features, in some cases there may be downsides associated with updating firmware on your devices.</p>
@@ -150,6 +149,7 @@
 					<!--<p>In theory, when you remove a thing from the gateway, it will also be unpaired from your Zigbee network. However, your Zigbee device will likely still contain your Zigbee network settings. If you want to sell your device, make sure to do a full reset. Details on how to do this may be found on the website of the manufacturer.</p>-->
                     <ul>
                         <li>A Link quality below 20 is considered bad.</li>
+                        <li>If you disable data transmission, any data coming from the device will be ignored. This is a privacy feature, allowing you to stop recording data for a while.</li>
                     </ul>
 					
 				</div>

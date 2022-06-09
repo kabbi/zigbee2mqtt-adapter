@@ -75,14 +75,10 @@
 	color:#999;
 }
 
-#extension-zigbee2mqtt-adapter-view ul,
-#extension-zigbee2mqtt-adapter-view li,
 #extension-zigbee2mqtt-adapter-view p{
     line-height: 2.7rem;
 }
     
-
-
 
 
 .extension-zigbee2mqtt-adapter-italic{
@@ -229,13 +225,14 @@
 #extension-zigbee2mqtt-adapter-content {
 	display:flex;
 	flex-direction: column;
-	flex-direction: column;
-	overflow: auto;
-	position: relative;
+	/*overflow: auto;
+	position: relative;*/
 	text-align: left;
 	font-size: 1.6rem;
 	color: #fff;
 	height:auto;
+    max-width: 100rem;
+    margin: 0 auto;
 }
 
 #extension-zigbee2mqtt-adapter-content img{
@@ -265,6 +262,7 @@
 	color: #eee;
 	cursor:pointer;
 	font-size:1.8rem;
+    margin:0;
 }
 #extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-tab-buttons button:last-child{
 	float:right;
@@ -273,6 +271,10 @@
 #extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-tab-buttons button:hover{
 	background-color: rgba(0,0,0,0.1);
 	color:white;
+}
+
+#extension-zigbee2mqtt-adapter-tabs-container{
+    margin-top:2rem;
 }
 
 #extension-zigbee2mqtt-adapter-tabs-container > div{
@@ -339,15 +341,28 @@
 #extension-zigbee2mqtt-adapter-graphviz-container{
 	width:100%;
 	box-sizing:border-box;
-	margin-top:2rem;
+	margin-top:4rem;
 	margin-bottom:2rem;
 	overflow-x: auto;
 	text-align:center;
 }
 #extension-zigbee2mqtt-adapter-graphviz-container > svg{
 	border:1rem solid white;
+    box-sizing:border-box;
+    width:100%;
+    height:auto;
+    border-radius:.5rem;
 }
 
+#extension-zigbee2mqtt-adapter-graphviz-container > svg text{
+    font-family:sans-serif;
+    letter-spacing: -.5px;
+}
+
+#extension-zigbee2mqtt-adapter-graphviz-container #extension-zigbee2mqtt-adapter-network-map-icon{
+    max-width:25%;
+    margin-top:4rem;
+}
 
 
 
@@ -437,9 +452,6 @@
 	text-align:center;
 }
 
-.extension-zigbee2mqtt-adapter-centered-page{
-	border-bottom:1px solid rgba(255,255,255,.3);
-}
 
 
 .extension-zigbee2mqtt-adapter-line1{
@@ -643,6 +655,20 @@
 
 
 
+/*  ADVANCED  */
+
+#extension-zigbee2mqtt-adapter-reinstall-button,
+#extension-zigbee2mqtt-adapter-save-security-button{
+    display:block;
+    margin-left:auto;
+}
+
+
+
+
+
+
+
 /*  spinner  */
 
 
@@ -735,19 +761,18 @@
 		height:100vh; 
 		/*width:100vw;*/
         
+        /*
         position:absolute;
 		left:9.6rem;
         top: 0;
-        /*
-		
-        */
         width: calc(100% - 9.6rem);
 		padding-right:9.6rem;
+        */
 	}
 	
 	#extension-zigbee2mqtt-adapter-content-container{
 		height:auto;
-		width: calc(100% - 3rem);
+		width: 100%;
 	}
 	
 }
