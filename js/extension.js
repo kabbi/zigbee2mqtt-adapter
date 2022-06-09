@@ -3,9 +3,9 @@
 	    constructor() {
 	      	super('zigbee2mqtt-adapter');
       		
-			this.addMenuEntry('Zigbee');
+			this.addMenuEntry('Zigbee devices');
 
-	    	this.content = '';
+	    	this.content = 'Error loading content';
 
             this.debug = false;
 			this.asked_for_map = false;
@@ -18,14 +18,13 @@
 			fetch(`/extensions/${this.id}/views/content.html`)
 	        .then((res) => res.text())
 	        .then((text) => {
-				console.log("fetched html:");
-				//console.log(text);
+						//console.log("fetched html:");
+						//console.log(text);
 	         	this.content = text;
-	  		 	  
-                    if( document.location.href.endsWith("extensions/zigbee2mqtt-adapter") ){
-					    //console.log(document.location.href);
-	  		  		    this.show();
-	  		  	    }
+	  		 	  if( document.location.href.endsWith("extensions/zigbee2mqtt-adapter") ){
+					//console.log(document.location.href);
+	  		  		this.show();
+	  		  	}
 	        })
 	        .catch((e) => console.error('Failed to fetch content:', e));
 	    }
@@ -33,7 +32,7 @@
 
 
 	  show() {
-			console.log("in show");
+			//console.log("in show");
 			//console.log("this.content:");
 			//console.log(this.content);
 			
@@ -45,19 +44,6 @@
 			catch(e){
 				//console.log("no interval to clear?: " + e);
 			}
-            
-            const main_view = document.getElementById('extension-zigbee2mqtt-adapter-view');
-            
-			//console.log("main view:");
-			//console.log(main_view);
-			if(this.content == ''){
-				//console.log("show: content was empty");
-				//main_view.innerHTML = "<h1>Error loading, try reloading the page</h1>";
-
-				return;
-			}
-            main_view.innerHTML = this.content;
-            
             
             try{
         	    API.getThings().then((things) => {
@@ -99,9 +85,16 @@
 			}
             
             
+			//console.log("main view:");
+			//console.log(main_view);
+			if(this.content == '' || this.content == 'Error loading content'){
+				//console.log("show: content was empty");
+				this.content = "Loading error (fetched HTML was empty)";
+				return;
+			}
 			
-			
-			
+			const main_view = document.getElementById('extension-zigbee2mqtt-adapter-view');
+			main_view.innerHTML = this.content;
 
 			const list = document.getElementById('extension-zigbee2mqtt-adapter-list');
 		
