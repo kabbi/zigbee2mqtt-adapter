@@ -182,7 +182,7 @@ class ExposesDeviceGenerator {
 						if(this.config.debug){
 							console.log("it's a lamp");
 						}
-						device['@type'].unshift('Light');
+						device['@type'].push('Light');
 					}
 					else if(exposes_info['type'] == "switch"){
 						if(this.config.debug){
@@ -197,9 +197,9 @@ class ExposesDeviceGenerator {
                             device['@type'].unshift('OnOffSwitch');
                         }
                         */
-                        device['@type'].unshift('OnOffSwitch');
+                        device['@type'].push('OnOffSwitch');
 					}
-					else if(exposes_info['type'] == "lock"){
+					else if(exposes_info['type'] == "lock" && exposes_info['property'] != 'child_lock'){
 						if(this.config.debug){
 							console.log("it's a lock");
 						}
