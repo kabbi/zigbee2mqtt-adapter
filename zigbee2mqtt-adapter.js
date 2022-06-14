@@ -1185,7 +1185,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                 const property = device.findProperty('state');
                                 if (property) {
                                     if (this.config.debug) {
-                                        console.log("ofline, and found state property");
+                                        console.log("offline, and found state property");
                                     }
             						// Set state to off
             						if (this.config.manual_toggle_response == "toggle off" || this.config.manual_toggle_response == "both") {
@@ -1229,7 +1229,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
     					} else if (data == "online") { //  && device.connected == false ){
     						if (this.config.debug) {
-    							console.log("O N L I N E");
+    							console.log("O N L I N E. device_id: " + device_id);
     						}
     						this.devices[device_id].connected = true;
     						device.connectedNotify(true);
@@ -1395,7 +1395,7 @@ class ZigbeeMqttAdapter extends Adapter {
                             console.log("data_blur_property value: ", data_blur_property.value);
                         }
                         data_blur_property_value = data_blur_property.value;
-                        const blur_options_index = this.data_blur_options.indexOf( data_blur_property.value );
+                        const blur_options_index = this.data_blur_options.indexOf( data_blur_property.value ); // off, 1 minute, 2 minutes, etc
                         
                         if(blur_options_index >= 0){
                             data_blur = this.data_blur_option_seconds[blur_options_index];
@@ -1573,35 +1573,47 @@ class ZigbeeMqttAdapter extends Adapter {
                         //  SOME PROPERTIES ARE IGNORED
                         //
                     
-                        if( key == "action_group" || key == "action_rate" || key == "action_step_size" || key == "action_transition_time"){ // Action rate isn't very useful for anything, so skip that.
+                        if( key == "action_group" || 
+                            key == "action_rate" || 
+                            key == "action_step_size" || 
+                            key == "action_transition_time" ||
+                            key == "color_mode" || 
+                            //key == "color_temp_startup" ||
+                            key == "indicator_mode" ||
+                            key == "last_seen"
+                        ){ // Action rate isn't very useful for anything, so skip that.
+                                
     						if (this.config.debug) {
-    							console.log("- ignoring property: " + key);
+    							console.log("- ignoring property: " + key + ", with value: " + msg[key]);
     						}
                             continue;
                         }
                     
 
-
+                        /*
                         if( key == "last_seen"){
                             if (this.config.debug) {
                                 console.log('last_seen spotted. value: ' + msg[key]);
                             }
                             continue;
                         }
+                        */
 
                         
                         
                         //
-                        //  MODIFY SOME VALUES TO BETTER FOR
+                        //  MODIFY SOME VALUES
                         //
 
     					//console.log("updating this property:");
     					//console.log(property);
                         
+                        
                         if (key == 'lock') {
                             if(msg[key].toLowerCase() == 'lock'){msg[key] == 'locked';}
                             if(msg[key].toLowerCase() == 'unlock'){msg[key] == 'unlocked';}
                         }
+                        
                         // this should really be handled by a litle fuction in exposesDeviceGenerator.
                     
                     
@@ -1611,34 +1623,34 @@ class ZigbeeMqttAdapter extends Adapter {
     						if (this.config.debug) {
                                 console.log("- spotted update information: ", msg[key]);
                             }
-    						//if (!this.updating_firmware) {
-                                if(typeof msg[key]['state'] != 'undefined'){
+                            //if (!this.updating_firmware) {
+                            if(typeof msg[key]['state'] != 'undefined'){
                                 
-                                    this.persistent_data.devices_overview[device_id]['update'] =  msg[key];
-                                    /*
-                                    if(msg[key]['state'] == 'available'){
-                                        this.persistent_data.devices_overview[zigbee_id]['update_available'] = true;
-                                        this.persistent_data.devices_overview[zigbee_id]['update_progress'] = 0;
-                                        //msg['update_available'] = true;
-                                    }
-                                    else if(msg[key]['state'] == 'updating'){
-                                        console.log("THIS DEVICE IS UPDATING ITS FIRMWARE");
-                                        this.persistent_data.devices_overview[zigbee_id]['update_available'] = false;
-                                        //msg['update_available'] = false;
-                                        this.updating_firmware = true;
-                                        if(typeof msg[key]['progress'] != 'undefined'){
-                                            console.log("firmware update progress: ", msg[key]['progress']);
-                                            //this.updating_firmware_progress = msg[key]['progress'];
-                                            this.persistent_data.devices_overview[zigbee_id]['update_progress'] = msg[key]['progress'];
-                                        }
-                                    }
-                                    else if(msg[key]['state'] == 'idle'){
-                                        this.persistent_data.devices_overview[zigbee_id]['update_available'] = false;
-                                        //msg['update_available'] = false;
-                                        this.persistent_data.devices_overview[zigbee_id]['update_progress'] = 0;
-                                    }
-                                    */
+                                this.persistent_data.devices_overview[device_id]['update'] =  msg[key];
+                                /*
+                                if(msg[key]['state'] == 'available'){
+                                    this.persistent_data.devices_overview[zigbee_id]['update_available'] = true;
+                                    this.persistent_data.devices_overview[zigbee_id]['update_progress'] = 0;
+                                    //msg['update_available'] = true;
                                 }
+                                else if(msg[key]['state'] == 'updating'){
+                                    console.log("THIS DEVICE IS UPDATING ITS FIRMWARE");
+                                    this.persistent_data.devices_overview[zigbee_id]['update_available'] = false;
+                                    //msg['update_available'] = false;
+                                    this.updating_firmware = true;
+                                    if(typeof msg[key]['progress'] != 'undefined'){
+                                        console.log("firmware update progress: ", msg[key]['progress']);
+                                        //this.updating_firmware_progress = msg[key]['progress'];
+                                        this.persistent_data.devices_overview[zigbee_id]['update_progress'] = msg[key]['progress'];
+                                    }
+                                }
+                                else if(msg[key]['state'] == 'idle'){
+                                    this.persistent_data.devices_overview[zigbee_id]['update_available'] = false;
+                                    //msg['update_available'] = false;
+                                    this.persistent_data.devices_overview[zigbee_id]['update_progress'] = 0;
+                                }
+                                */
+                            }
                             //}
                             continue;
     					}
@@ -2489,42 +2501,61 @@ class ZigbeeMqttAdapter extends Adapter {
             }
 
 			if (deviceDefinition) {
-				var device = new MqttDevice(this, 'z2m-' + info.ieee_address, info.model_id, deviceDefinition);
+				try{
+                    var device = new MqttDevice(this, 'z2m-' + info.ieee_address, info.model_id, deviceDefinition);
 				
-                //const zigbee_id = info.ieee_address;
-				if (deviceDefinition.properties.state) { // If the device has a state property, then initially set it to disconnected.
-                    //console.log("addDevice: spotted state in properties");
-					device.connectedNotify(false);
-                    device.connected = false;
-					//let timerId = setTimeout(() => this.try_getting_state(info.ieee_address), 11000); // 11 seconds after creating the device, an extra /get will be used to try and get the actual state
-				}
-                else{
-                    device.connectedNotify(true);
-                    device.connected = true;
-                }
+                    //const zigbee_id = info.ieee_address;
+    				if (deviceDefinition.properties.state) { // If the device has a state property, then initially set it to disconnected.
+                        //console.log("addDevice: spotted state in properties");
+    					device.connectedNotify(false);
+                        device.connected = false;
+    					//let timerId = setTimeout(() => this.try_getting_state(info.ieee_address), 11000); // 11 seconds after creating the device, an extra /get will be used to try and get the actual state
+    				}
+                    else{
+                        device.connectedNotify(true);
+                        device.connected = true;
+                    }
 
-                // Regenerate other appendages too
-                if (this.config.debug) {
-                    console.log("at end of addDevice, will call attempt_regen to add any appendage properties that were discovered later");
-                }
-                device = this.attempt_regen(device, 'z2m-' + info.ieee_address); // device and device_id
+                    // Regenerate other appendages too
+                    if (this.config.debug) {
+                        console.log("at end of addDevice, will call attempt_regen to add any appendage properties that were discovered later");
+                    }
+                    device = this.attempt_regen(device, 'z2m-' + info.ieee_address); // device and device_id
 
-                // Add data transmission property
-                if (this.config.debug) {
-                    console.log("adding data transmission property to new device (only if data_transmission doesn't exist yet)");
-                }
-                device = this.attempt_new_property(device, "data_transmission", true, false, false); // initial value, not read-only, no percentage
+                    //console.log("1111: ", device);
+                    // Add data transmission property and data blur property
+                    if (this.config.debug) {
+                        console.log("adding data transmission property to new device (only if data_transmission doesn't exist yet)");
+                    }
+                    try{
+                        device = this.attempt_new_property(device, "data_transmission", true, false, false); // initial value, not read-only, no percentage
+                        //console.log("2222: ", device);
+                        device = this.add_blur_property(device,'Off');
+                        //console.log("3333: ", device);
+            		} catch (error) {
+            			console.log("Later error in adding privacy proerties: " + error);
+            		}
                 
-                // Add data blur property
+                    // handleDeviceAdded
+                    if (this.config.debug) {
+                        console.log("calling handleDeviceAdded");
+                    }
+                    try{
+                        if(typeof device != 'undefined'){
+                            this.handleDeviceAdded(device);
+                        }
+                        else{
+                            console.log("ERROR - final device was undefined. Could not call handleDeviceAdded!");
+                        }
+                        
+            		} catch (error) {
+            			console.log("Later error in handleDeviceAdded: " + error);
+            		}
+                    
+        		} catch (error) {
+        			console.log("Later error in handling deviceDefinition: " + error);
+        		}
                 
-                device = this.add_blur_property(device,'Off')
-                
-                
-                
-                if (this.config.debug) {
-                    console.log("calling handleDeviceAdded");
-                }
-                this.handleDeviceAdded(device);
 			}
             else{
                 console.log('Error: could not create device using exposesDeviceGenerator');
@@ -2677,7 +2708,7 @@ class ZigbeeMqttAdapter extends Adapter {
         }
         */
         if (this.config.debug) {
-            console.log("in add_blur_property");
+            console.log("\nin add_blur_property");
         }
         
         const device_id = device.id;
@@ -2697,7 +2728,7 @@ class ZigbeeMqttAdapter extends Adapter {
             property_value = 'Off';
         }
         
-        const blur_options_index = this.data_blur_options.indexOf( property_value );
+        const blur_options_index = this.data_blur_options.indexOf( property_value ); // off, 1 minute, 2 minutes, etc
         
         if(blur_options_index >= 0){
             data_blur = this.data_blur_option_seconds[blur_options_index];
@@ -2730,7 +2761,7 @@ class ZigbeeMqttAdapter extends Adapter {
                 
                 if(!property){
                     if (this.config.debug) {
-                        console.log("the blur property DID NOT exist yet");
+                        console.log("the blur property DID NOT exist yet. Checking if its needed...");
                     }
                     
                     //console.log('device.getPropertyDescriptions(): ', device.getPropertyDescriptions());
@@ -2740,69 +2771,84 @@ class ZigbeeMqttAdapter extends Adapter {
                     const properties = device.getPropertyDescriptions();
                     
                     var add_blur = false;
-                    Object.keys(properties).forEach(function(key) {
-                       //console.log(key + " -> " + properties[key]);
-                       
-                       if( properties[key].name != 'linkquality' && properties[key].name != 'battery'){
-                           if(typeof properties[key].readOnly != 'undefined'){
-                               //console.log("readOnly spotted");
-                               if(properties[key].readOnly == true){
-                                   //console.log("device has a read-only property");
-                               
-                                   if(properties[key].type == 'integer'){
-                                       //console.log("readOnly integer spotted");
-                                       add_blur = true;
-                                   }
-                                   else if(properties[key].type == 'number'){
-                                       //console.log("readOnly number spotted");
-                                       add_blur = true;
-                                   }
-                               }
-                           }
-                       }
-                       
-                    });
                     
-                    if(add_blur == false){
+                    const props_keys_list = Object.keys(properties);
+                    
+                    for(var p = 0; p < props_keys_list.length; p++){
+                        const key = props_keys_list[p];
+                        
+                        if (this.config.debug) {
+                            console.log("blur check: " + key ); //+ " -> ", properties[key]);
+                        }
+                       
+                        if( key != 'linkquality' && key != 'battery'){
+                            
+                            if(typeof properties[key].readOnly != 'undefined'){
+                                //console.log("readOnly spotted");
+                                if(properties[key].readOnly == true){
+                                    console.log("blur check: spotted a read-only property: " + key);
+                               
+                                    if(properties[key].type == 'integer'){
+                                        if (this.config.debug) {
+                                            console.log("readOnly integer spotted, adding blur: " + key);
+                                        }
+                                        add_blur = true;
+                                    }
+                                    else if(properties[key].type == 'number'){
+                                        if (this.config.debug) {
+                                            console.log("readOnly number spotted, adding blur: " + key);
+                                        }
+                                        add_blur = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    if(add_blur == true){
+                        if (this.config.debug) {
+                            console.log("adding blur property to device");
+                        }
+                        //const read_only = false;
+                        //const percentage = false;
+                        //const value = false;
+                    
+                        // Save the values in persistent data, if they don't already exist there.
+                    
+                        //property_value = this.get_persistent_value(zigbee_id,property_name,value,false,false);
+                        //console.log("this.get_persistent_value updated initial blur property_value: ", property_value);
+                    
+                		const desc = {
+                            'name': property_name,
+                			'title': 'Data blur',
+                			'description': 'Smooth out sensor values over time',
+                			'readOnly': false,
+                			'type': 'string',
+                            'enum': this.data_blur_options,
+                            'value': property_value
+                		};
+            
+                    
+                		const property = new MqttProperty(device, property_name, desc);
+                		device.properties.set(property_name, property);
+                		if (this.config.debug) {
+                			console.log("data blur property should now be generated");
+                		}
+                    
+                        device.blur = data_blur;
+                    }
+                    else{
                         if (this.config.debug) {
                             console.log("this device does not need the data blur property (no read-only numbers)");
                         }
-                        return;
                     }
                     
                     
-                    //const read_only = false;
-                    //const percentage = false;
-                    //const value = false;
-                    
-                    // Save the values in persistent data, if they don't already exist there.
-                    
-                    //property_value = this.get_persistent_value(zigbee_id,property_name,value,false,false);
-                    //console.log("this.get_persistent_value updated initial blur property_value: ", property_value);
-                    
-            		const desc = {
-                        'name': property_name,
-            			'title': 'Data blur',
-            			'description': 'Smooth out sensor values over time',
-            			'readOnly': false,
-            			'type': 'string',
-                        'enum': this.data_blur_options,
-                        'value': property_value
-            		};
-            
-                    
-            		const property = new MqttProperty(device, property_name, desc);
-            		device.properties.set(property_name, property);
-            		if (this.config.debug) {
-            			console.log("data blur property should now be generated");
-            		}
-                    
-                    device.blur = data_blur;
                     
                 }
                 else{
                     if (this.config.debug) {
-                        console.log("attempt_new_property: the property already existed: " + property_name);
+                        console.log("add_blur_property: the property already existed: " + property_name);
                     }
                 }
                 

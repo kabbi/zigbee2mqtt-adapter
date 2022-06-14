@@ -36,12 +36,16 @@ class ExposesDeviceGenerator {
 	generateDevice(info, zigbee_id, model_id) {
         try{
             if(info == null){
-                console.log("Error, no exposes data (info was null)");
+                if(this.config.debug){
+                    console.log("Error, no exposes data (info was null)");
+                }
     			return;
             }
             
     		if (!info.supported || !info.definition || !info.definition.exposes) {
-                console.log("Error, missing exposes data, cannot generate device: ", info);
+                if(this.config.debug){
+                    console.log("Error, missing exposes data, cannot generate device: ", info);
+                }
     			return;
     		}
         
@@ -61,7 +65,14 @@ class ExposesDeviceGenerator {
 				console.debug('Device', info.friendly_name, 'exposes:', JSON.stringify(info.definition.exposes));
 			}
 			
-			device.name = info.definition.description;
+            
+            var cleaned_name = info.definition.description;
+            cleaned_name.replace("/", " ");
+			cleaned_name.replace(/ *\([^)]*\) */g, "");
+            cleaned_name.replace("TRADFRI ","");
+            
+            device.name = cleaned_name; //info.definition.description;
+            
 		
 			//console.log(device);
 		
@@ -76,6 +87,19 @@ class ExposesDeviceGenerator {
             
 			device = this.parse_device(info.definition.exposes, device, property_names_list);
 		
+            // Remove lock capability if it's also an energy monitor
+            if ( device['@type'].indexOf('Lock') != -1 && device['@type'].indexOf('EnergyMonitor') != -1 ){
+                for( var f = 0; f < device['@type'].length; f++){
+                    if ( device['@type'][f] === 'Lock') { 
+                        device['@type'].splice(f, 1); 
+                        f--;
+                        if(this.config.debug){
+                            console.log("removed lock capability");
+                        }
+                    }
+                }
+            }
+        
 			//console.log("= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = ");
 			//console.log("device is now:");
 			//console.log(device);
@@ -123,7 +147,9 @@ class ExposesDeviceGenerator {
 			console.log("Error in device pre-parsing: " + error)
 		}
 		
-        console.log("pre-parsed property_names_list: ", property_names_list);
+        if(this.config.debug){
+            console.log("pre-parsed property_names_list: ", property_names_list);
+        }
 		return property_names_list;
 	}
 	
@@ -145,9 +171,10 @@ class ExposesDeviceGenerator {
         if(this.config.debug){
             console.log(" ");
             console.log("+ + + + + + + + + + + + + parse_device + + + + + + + + + + + + + + + + + + + + + + + +");
+            console.log(device);
         }
         
-		console.log(device);
+		
 		try{
 			
 			if(typeof exposes_info['features'] != "undefined"){
@@ -211,6 +238,9 @@ class ExposesDeviceGenerator {
 						}
 						device['@type'].push('Thermostat');
 					}
+                    
+                    
+                    
 				
 				}
 			}
@@ -234,12 +264,23 @@ class ExposesDeviceGenerator {
 					if( typeof exposes_info[k]["access"] != "undefined" ){
                         //console.log("access data spotted at current level");
 						if(typeof exposes_info[k]['property'] != "undefined"){
-                            console.log('exposes_info[k][property]: ', exposes_info[k]['property']);
-							if( exposes_info[k]['property'] != "x" && exposes_info[k]['property'] != "y" && exposes_info[k]['property'] != "action_group" && exposes_info[k]['property'] != "action_rate" && exposes_info[k]['property'] != "indicator_mode" && exposes_info[k]['property'] != "color_mode"  && exposes_info[k]['property'] != "xy"){ // Skip the color fragments
+                            if(this.config.debug){
+                                console.log('exposes_info[k][property]: ', exposes_info[k]['property']);
+                            }
+							if( exposes_info[k]['property'] != "x" && // Skip the color fragments
+                                exposes_info[k]['property'] != "y" && 
+                                exposes_info[k]['property'] != "action_group" && 
+                                exposes_info[k]['property'] != "action_rate" && 
+                                exposes_info[k]['property'] != "indicator_mode" && // Some power sockets allow users to change how the LED should behave. It's a bit much.
+                                exposes_info[k]['property'] != "color_mode"  && 
+                                exposes_info[k]['property'] != "xy"
+                            ){ 
 								device = this.parse_property(exposes_info[k], device, property_names_list);
                             }
                             else{
-                                //console.log("skipping an exposed property: " + exposes_info[k]['property'] );
+                                if(this.config.debug){
+                                    console.log("skipping an exposed property: " + exposes_info[k]['property'] );
+                                }
                             }
 						}
                         else{
@@ -281,6 +322,10 @@ class ExposesDeviceGenerator {
             console.log("+");
         }
         
+        // In rare occasions the property description may be missing.  E.g. with the IKEA Fyrtur blinds. This places at least some string there.
+        if(typeof expose.description == 'undefined'){
+            expose.description = expose.property;
+        }
         //console.log("parse_property: is device undefined? " + typeof device);
         
         try{
@@ -379,7 +424,7 @@ class ExposesDeviceGenerator {
             					device.actions[expose.property] = this.enumPropertyToStringAction(expose);
             				} else {
                                 if(device.model_id == 'STARKVIND Air purifier'){
-                                    device.properties[expose.property] = this.STARKVINDenumPropertyToStringProperty(expose);
+                                    device.properties[expose.property] = this.STARKVINDenumPropertyToStringProperty(expose); // Starkvind's enum is.. unique. It's handled differently to give it's mode dropdown the same values as the options on the physical device.
                                 }else{
                                     device.properties[expose.property] = this.enumPropertyToStringProperty(expose);
                                 }
@@ -474,71 +519,120 @@ class ExposesDeviceGenerator {
                 
                 // add capabilities information
     			if(typeof expose['property'] != "undefined" && device.properties[expose.property] != 'undefined'){
-                    console.log("expose.property = " + expose.property);
+                    if(this.config.debug){
+                        console.log("expose.property = " + expose.property);
+                        //console.log("full expose: ", expose);
+                    }
                     
                     try{
                         //if( expose.property.endsWith("state") ){
-        				if( expose.property == "state") {
-        					console.log("expose.property ends with state, so adding onOfProperty @type / lock");
-                            console.log("device['@type'] = ", device['@type']);
-                            console.log("device['@type'].indexOf('Lock'): ", device['@type'].indexOf('Lock') );
-        					if(device['@type'].indexOf('Lock') > -1){
-                                console.log("IS LOCK");
-                                if(expose.access == 1){
-            						device.properties[expose.property]['@type'] = 'LockedProperty'; // read-only
-            					}else{
-                                    console.log("IS ACTIONABLE LOCK");
-            						device.properties[expose.property]['@type'] = 'OnOffProperty'; // should be read-only. But it might work?
-                					if(device['@type'].indexOf("OnOffSwitch") == -1){
-                						device['@type'].unshift('OnOffSwitch');
+        				if( expose.property == "state" ) { // Tradfri roller blinds also use a property called state, but it's an enum, not a boolean
+                            if(this.config.debug){
+        					    console.log("expose.property ends with state, so adding onOfProperty @type / lock");
+                                console.log("device['@type'] = ", device['@type']);
+                                console.log("device['@type'].indexOf('Lock'): ", device['@type'].indexOf('Lock') );
+                            }
+                            
+                            if( expose['type'] == 'binary' ){
+            					if(device['@type'].indexOf('Lock') > -1){
+                                    if(this.config.debug){
+                                        console.log("IS LOCK");
+                                    }
+                                    if(expose.access == 1){
+                						device.properties[expose.property]['@type'] = 'LockedProperty'; // read-only
+                					}else{
+                                        if(this.config.debug){
+                                            console.log("IS ACTIONABLE LOCK");
+                                        }
+                						device.properties[expose.property]['@type'] = 'OnOffProperty'; // should be read-only. But it might work?
+                    					if(device['@type'].indexOf("OnOffSwitch") == -1){
+                    						device['@type'].unshift('OnOffSwitch');
+                    					}
+                                        /*
+                                        // Experiment to add actions to a lock, as the spec prefers. However, actions are (currently) not compatible with Voco voice control, so I abandoned this for now. Also had trouble receiving the action.
+                                        try{
+                                            // Add actions for the lock
+                                    		var lock_action = new Object();
+                                    		lock_action.title = 'Lock now';
+                                    		lock_action.description = 'Lock the locking mechanism';
+                                    		//lock_action.input = this.binaryPropertyToBooleanProperty(binary);
+                                            lock_action.input = 'ON';
+                                            lock_action['@type'] = 'LockAction';
+                                            //lock_action.expose = expose.property;
+                                    		device.actions[expose.property + '-lock'] = lock_action;
+                            
+                                    		var unlock_action = new Object();
+                                    		unlock_action.title = 'Unlock now';
+                                    		unlock_action.description = 'Unlock the locking mechanism';
+                                            unlock_action.input = 'OFF';
+                                    		//unlock_action.input = this.binaryPropertyToBooleanProperty(binary);
+                                            unlock_action['@type'] = 'UnlockAction';
+                                            //unlock_action.expose = expose.property;
+                                    		device.actions[expose.property + '-unlock'] = unlock_action;
+                                        }
+                                        catch(e){
+                                            console.log(e);
+                                        }
+                                        */
+                            
+                                        //console.log("device.actions:", device.actions);
+                            
+                            
+                                        /*
+                                        this.add_action('lock', {
+                                            '@type': 'LockAction',
+                                            'title': 'Lock',
+                                            'description': 'Lock the locking mechanism',
+                                        })
+                                        this.add_action('unlock', {
+                                            '@type': 'UnlockAction',
+                                            'title': 'Unlock',
+                                            'description': 'Unlock the locking mechanism',
+                                        })
+                                        */
+                            
                 					}
-                                    /*
-                                    // Experiment to add actions to a lock, as the spec prefers. However, actions are (currently) not compatible with Voco voice control, so I abandoned this for now. Also had trouble receiving the action.
-                                    try{
-                                        // Add actions for the lock
-                                		var lock_action = new Object();
-                                		lock_action.title = 'Lock now';
-                                		lock_action.description = 'Lock the locking mechanism';
-                                		//lock_action.input = this.binaryPropertyToBooleanProperty(binary);
-                                        lock_action.input = 'ON';
-                                        lock_action['@type'] = 'LockAction';
-                                        //lock_action.expose = expose.property;
-                                		device.actions[expose.property + '-lock'] = lock_action;
-                            
-                                		var unlock_action = new Object();
-                                		unlock_action.title = 'Unlock now';
-                                		unlock_action.description = 'Unlock the locking mechanism';
-                                        unlock_action.input = 'OFF';
-                                		//unlock_action.input = this.binaryPropertyToBooleanProperty(binary);
-                                        unlock_action['@type'] = 'UnlockAction';
-                                        //unlock_action.expose = expose.property;
-                                		device.actions[expose.property + '-unlock'] = unlock_action;
+                                }
+                                else{
+                                    if(this.config.debug){
+                                        console.log("IS NOT LOCK");
                                     }
-                                    catch(e){
-                                        console.log(e);
-                                    }
-                                    */
+                                    if(expose.access == 1){
+                						device.properties[expose.property]['@type'] = 'PushedProperty';
+                    					if(device['@type'].indexOf("PushButton") == -1){
+                    						device['@type'].push('PushButton');
+                    					}
+                					}else{
+                						device.properties[expose.property]['@type'] = 'OnOffProperty';
+                    					if(device['@type'].indexOf("OnOffSwitch") == -1){
+                    						device['@type'].unshift('OnOffSwitch');
+                    					}
+                					}
+                                }
                             
-                                    //console.log("device.actions:", device.actions);
-                            
-                            
-                                    /*
-                                    this.add_action('lock', {
-                                        '@type': 'LockAction',
-                                        'title': 'Lock',
-                                        'description': 'Lock the locking mechanism',
-                                    })
-                                    this.add_action('unlock', {
-                                        '@type': 'UnlockAction',
-                                        'title': 'Unlock',
-                                        'description': 'Unlock the locking mechanism',
-                                    })
-                                    */
-                            
-            					}
+                                if(device['@type'].indexOf('Light') > -1){
+                                    if(expose.access == 1){
+                						device.properties[expose.property]['@type'] = 'PushedProperty';
+                    					if(device['@type'].indexOf("PushButton") == -1){
+                    						device['@type'].push('PushButton');
+                    					}
+                					}else{
+                						device.properties[expose.property]['@type'] = 'OnOffProperty';
+                    					if(device['@type'].indexOf("OnOffSwitch") == -1){
+                    						device['@type'].unshift('OnOffSwitch');
+                    					}
+                					}
+                                }
                             }
                             else{
-                                console.log("IS NOT LOCK");
+                                console.log("state, but not binary");
+                            }
+                            
+                            
+
+        				}
+                        else if( expose.property == "fan_state" ) {
+                            if( expose['type'] == 'binary' ){
                                 if(expose.access == 1){
             						device.properties[expose.property]['@type'] = 'PushedProperty';
                 					if(device['@type'].indexOf("PushButton") == -1){
@@ -551,23 +645,33 @@ class ExposesDeviceGenerator {
                 					}
             					}
                             }
-
-        				}
+                            
+                        }
         				else if(expose.property.endsWith("brightness") ){
-        					device.properties[expose.property]['@type'] = 'BrightnessProperty';
+                            console.log("expose['type']: ", expose['type']);
+                            if (expose['type'] == "numeric" || expose['type'] == "integer"){
+                                console.log('brightness is also a number');
+                                device.properties[expose.property]['@type'] = 'BrightnessProperty';
+                            }
+        					
         				}
         				else if(expose.property == "cube_side" || expose.property == "angle" || expose.property == "illuminance_lux"){
         					device.properties[expose.property]['@type'] = 'LevelProperty';
         					if(device['@type'].indexOf("MultiLevelSensor") == -1){
-        						device['@type'].unshift('MultiLevelSensor');
+        						device['@type'].push('MultiLevelSensor');
         					}
         				}
+                        /*
         				else if(expose.property == "color_temp"){
         					device.properties[expose.property]['@type'] = 'ColorTemperatureProperty';
         					if(device['@type'].indexOf("Light") == -1){ // && device['@type'].length == 0
         						device['@type'].push('Light');
         					}
         				}
+                        else if(expose.property == "color_temp_startup"){
+                            device.properties[expose.property]['@type'] = 'ColorTemperatureProperty';
+                        }
+                        */
         				else if(expose.property == "color_xy" || expose.property == "color_hs"){
         					device.properties[expose.property]['@type'] = 'ColorProperty';
         					if(device['@type'].indexOf("Light") == -1){
@@ -673,6 +777,20 @@ class ExposesDeviceGenerator {
         						device['@type'].push('AirQualitySensor');
         					}
         				}
+        				else if(expose.property == "position" && expose['type'] == "numeric"){
+                            //console.log("\n\nPOSITION DETECTED");
+                            if(typeof expose['value_max'] != "undefined"){
+                                //console.log("POSITION MAXIMUM IS PRESENT");
+                                if(expose['value_max'] == 100){
+                					device.properties[expose.property]['@type'] = 'LevelProperty';
+                                    device.properties[expose.property]['unit'] = 'percent';
+                                    device.properties[expose.property]['multipleOf'] = 1;
+                					if(device['@type'].indexOf("MultiLevelSwitch") == -1){
+                						device['@type'].push('MultiLevelSwitch');
+                					}
+                                }
+                            }
+        				}
                     }
                     catch(e){
                         console.log("error in parse_device while trying to add capabilities: ", e);
@@ -746,7 +864,7 @@ class ExposesDeviceGenerator {
                                                             };
                     
                                  // This should always be false:
-                                fake_exposes_info['value'] = this.adapter.handle_persistent_value(device.zigbee_id,'pushed',false,true,false); // zigbee_id, property_name, value, read-only, percentage
+                                fake_exposes_info['value'] = this.adapter.get_persistent_value(device.zigbee_id,'pushed',false,true,false); // zigbee_id, property_name, value, read-only, percentage
                         
                                 property_names_list.push('pushed');
                                 device = this.parse_property(fake_exposes_info, device, property_names_list);
@@ -780,7 +898,7 @@ class ExposesDeviceGenerator {
                                     'value_step':1
                                 };
                                             
-                                const initial_value = this.adapter.handle_persistent_value(device.zigbee_id,'brightness',0,true,true); // zigbee_id, property_name, value, read-only, percentage
+                                const initial_value = this.adapter.get_persistent_value(device.zigbee_id,'brightness',0,true,true); // zigbee_id, property_name, value, read-only, percentage
                                 if(initial_value != null){
                                     fake_exposes_info['value'] = initial_value;
                                 }
@@ -821,7 +939,7 @@ class ExposesDeviceGenerator {
         						}
                         
 
-                                const initial_value = this.adapter.handle_persistent_value(device.zigbee_id,'toggle',false,true,false); // zigbee_id, property_name, value, read-only, percentage
+                                const initial_value = this.adapter.get_persistent_value(device.zigbee_id,'toggle',false,true,false); // zigbee_id, property_name, value, read-only, percentage
                                 if(initial_value != null){
                                     fake_exposes_info['value'] = initial_value;
                                 }
@@ -859,7 +977,7 @@ class ExposesDeviceGenerator {
                                     };
                                 
                                      // This should always be false:
-                                    fake_exposes_info['value'] = this.adapter.handle_persistent_value(device.zigbee_id,expose.values[i].toLowerCase(),false,true,false); // zigbee_id, property_name, value, read-only, percentage
+                                    fake_exposes_info['value'] = this.adapter.get_persistent_value(device.zigbee_id,expose.values[i].toLowerCase(),false,true,false); // zigbee_id, property_name, value, read-only, percentage
                                                     
                                     property_names_list.push(expose.values[i].toLowerCase());
                                     device = this.parse_property(fake_exposes_info, device, property_names_list);
