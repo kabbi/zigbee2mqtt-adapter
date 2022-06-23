@@ -625,7 +625,7 @@ class ExposesDeviceGenerator {
                                 }
                             }
                             else{
-                                console.log("state, but not binary");
+                                //console.log("state, but not binary");
                             }
                             
                             
@@ -648,9 +648,9 @@ class ExposesDeviceGenerator {
                             
                         }
         				else if(expose.property.endsWith("brightness") ){
-                            console.log("expose['type']: ", expose['type']);
+                            //console.log("expose['type']: ", expose['type']);
                             if (expose['type'] == "numeric" || expose['type'] == "integer"){
-                                console.log('brightness is also a number');
+                                //console.log('brightness is also a number');
                                 device.properties[expose.property]['@type'] = 'BrightnessProperty';
                             }
         					

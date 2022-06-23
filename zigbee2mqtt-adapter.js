@@ -251,16 +251,23 @@ class ZigbeeMqttAdapter extends Adapter {
                             console.log("Error reading persistent data file: " + error);
                         }
                         //console.log("READING PERSISTENT DATA NOW from data: ", data);
-                        this.persistent_data = JSON.parse(data);
+                        try {
+                            const parsed = JSON.parse(data);
+                            this.persistent_data = parsed;
+                        }
+                        catch (e) {
+                			console.error("Error while parsing loaded persistent data: ", e, data);
+                		}
                         //console.log(this.persistent_data);
                     });
+                    
                     
                 }
                 
             });
 		} 
-        catch (error) {
-			console.error("Error while checking/opening security file: " + error.message);
+        catch (e) {
+			console.error("Error while reading persistent data file: ",e);
 		}
 
 
@@ -2786,7 +2793,7 @@ class ZigbeeMqttAdapter extends Adapter {
                             if(typeof properties[key].readOnly != 'undefined'){
                                 //console.log("readOnly spotted");
                                 if(properties[key].readOnly == true){
-                                    console.log("blur check: spotted a read-only property: " + key);
+                                    //console.log("blur check: spotted a read-only property: " + key);
                                
                                     if(properties[key].type == 'integer'){
                                         if (this.config.debug) {
