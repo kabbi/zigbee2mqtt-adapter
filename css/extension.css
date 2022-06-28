@@ -642,6 +642,7 @@
 }
 
 
+#extension-zigbee2mqtt-adapter-usb-port-issue-hint,
 #extension-zigbee2mqtt-adapter-serial-hint{
     max-width:60rem;
     margin:10rem auto;
@@ -652,6 +653,9 @@
     border-radius:.5rem;
 }
 
+#extension-zigbee2mqtt-adapter-usb-port-issue-hint{
+    background-color:red;
+}
 
 
 

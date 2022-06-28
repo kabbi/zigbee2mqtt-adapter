@@ -140,6 +140,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
         this.security = {pan_id: "", network_key: ""};
         
+        this.usb_port_issue = false;
         this.z2m_installed_succesfully = false;
 		this.z2m_started = false;
         this.z2m_state = false;
@@ -259,7 +260,7 @@ class ZigbeeMqttAdapter extends Adapter {
                 			console.error("Error while parsing loaded persistent data: ", e, data);
                 		}
                         //console.log(this.persistent_data);
-                    });
+                    }); 
                     
                     
                 }
@@ -844,6 +845,8 @@ class ZigbeeMqttAdapter extends Adapter {
             return;
         }
         
+        this.usb_port_issue = false;
+        
 		process.env.ZIGBEE2MQTT_DATA = this.zigbee2mqtt_data_dir_path;
 		process.env.ZIGBEE2MQTT_CONFIG_MQTT_BASE_TOPIC = this.config.prefix;
 		process.env.ZIGBEE2MQTT_CONFIG_MQTT_SERVER = this.config.mqtt;
@@ -936,9 +939,10 @@ class ZigbeeMqttAdapter extends Adapter {
                 if( data.includes("rror while opening serialport") ){
                     console.log('ERROR: COULD NOT CONNECT TO THE USB STICK. PLEASE RESTART THE CONTROLLER. MAKE SURE OTHER ZIGBEE ADDONS ARE DISABLED.');
                     this.sendPairingPrompt("Zigbee stick did not respond, please restart the controller");
+                    this.usb_port_issue = true;
                 }
                 else if( data.includes("ailed to start") ){
-                    console.log("Yikes, failed to start Zigbee2MQTT. Try again later?");
+                    console.log("Yikes, failed to start Zigbee2MQTT. Killing it, just to be sure. Try again later?");
                     try{
                         execSync("pkill 'zigbee2mqtt-adapter/zigbee2mqtt/index.js'");
                     }
@@ -1108,6 +1112,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     this.z2m_state = true;
                     //this.ping_things();
                     
+                    /*
                     this.ping_interval = setTimeout(() => {
             
                         // this.config.manual_toggle_response
@@ -1116,7 +1121,7 @@ class ZigbeeMqttAdapter extends Adapter {
                         }
             
                     }, 3000); // 30 seconds after starting, we make sure we have to correct state for all the lights.
-                    
+                    */
                     
                 }
             }
@@ -1298,6 +1303,10 @@ class ZigbeeMqttAdapter extends Adapter {
                                                 this.addDevice(device);
                                             }
                                             else{
+                                                if(device.interview_completed == false && device.interviewing == true && device.supported == true){
+                                                    this.sendPairingPrompt("One moment: Detected a new Zigbee device");
+                                                }
+                                                
                                                 if (this.config.debug) {
                                                     console.log("? ? ?");
                                                     console.log("Warning, device is still in the proces of being interviewed OR is not supported:");

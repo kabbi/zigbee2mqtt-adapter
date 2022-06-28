@@ -390,7 +390,7 @@
 	
     
 	    //
-        //  INIT request
+        //  /INIT request
         //
         
 		request_devices_list(){
@@ -418,6 +418,9 @@
                 }
                 else if(body.serial == null){
                     document.getElementById('extension-zigbee2mqtt-adapter-serial-hint').style.display = 'block';
+                }
+                else if(body.usb_port_issue != false){
+                    document.getElementById('extension-zigbee2mqtt-adapter-usb-port-issue-hint').style.display = 'block';
                 }
                 else if(body.started == false){
     				if(typeof list2 != 'undefined'){
