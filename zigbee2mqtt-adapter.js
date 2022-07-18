@@ -537,7 +537,11 @@ class ZigbeeMqttAdapter extends Adapter {
                 if (!this.DEBUG) { // TODO: remove this again for more ping testing.
                     //this.ping_things();
                 }
-                console.log("\n\n CLOCK TICK\n\n");
+                
+                if (this.DEBUG) {
+                    console.log("\n\n CLOCK TICK\n\n");
+                }
+                
                 this.check_z2m_is_running();
             }
             
@@ -3222,13 +3226,17 @@ class ZigbeeMqttAdapter extends Adapter {
     async check_z2m_is_running() {
       try {
         const z2m_check_response = await execute("ps aux | grep zigbee2mqtt");
-         console.log("z2m_check_response: ", z2m_check_response);
+        if(this.DEBUG){
+            console.log("z2m_check_response: ", z2m_check_response);
+        }
         if(z2m_check_response.indexOf('node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/index.js') == -1){
-            console.log("Error, z2m does NOT seem to be running");
+            console.log("Error, z2m does NOT seem to be running calling. really_run_zigbee2mqtt again.");
             this.really_run_zigbee2mqtt();
         }
         else{
-            console.log("Z2M seems to be running ok");
+            if(this.DEBUG){
+                console.log("Z2M seems to be running ok");
+            }
         }
        
       } catch (error) {
