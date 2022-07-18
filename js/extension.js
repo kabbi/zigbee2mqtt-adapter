@@ -33,7 +33,7 @@
 
 
 	  show() {
-			//console.log("in show");
+			console.log("in show");
 			//console.log("this.content:");
 			//console.log(this.content);
 			
@@ -48,16 +48,16 @@
             
             const main_view = document.getElementById('extension-zigbee2mqtt-adapter-view');
             
-			//console.log("main view:");
-			//console.log(main_view);
+			console.log("main view: ", main_view);
 			if(this.content == ''){
-				//console.log("show: content was empty");
+				console.log("show: content was empty");
 				//main_view.innerHTML = "<h1>Error loading, try reloading the page</h1>";
 
 				return;
 			}
             main_view.innerHTML = this.content;
             
+            console.log("main view: ", main_view);
             
             try{
         	    API.getThings().then((things) => {
@@ -94,7 +94,7 @@
                 });
             }
 			catch(e){
-				//console.log("Error calling UI API: " + e);
+				console.log("Error calling API.getThings(): " + e);
                 this.request_devices_list();
 			}
             
@@ -383,8 +383,19 @@
 		
 		hide(){
 			//console.log("in hide");
-			clearInterval(window.zigbee2mqtt_interval);
-			this.view.innerHTML = "";
+			
+			try{
+                if(document.getElementById('extension-zigbee2mqtt-adapter-menu-item').classList.contains('selected') == false){
+                    clearInterval(window.zigbee2mqtt_interval);
+                    this.view.innerHTML = "";
+                }
+			}
+            catch(e){
+                console.log("Zigbee2mqtt addin: error in hide(): ", e);
+            }
+            
+            
+            
 		}
 		
 	
