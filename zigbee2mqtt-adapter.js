@@ -330,7 +330,7 @@ class ZigbeeMqttAdapter extends Adapter {
                         console.log("new security details: ", this.security);
                     }
 		
-                    fs.writeFile( this.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.security ), "utf8", function(err, result) {
+                    fs.writeFile( this.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.security ), "utf8", (err, result) => {
                         if(err){
                             console.log('security file write error:', err);
                             this.improve_security = false;
