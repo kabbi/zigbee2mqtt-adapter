@@ -1172,7 +1172,13 @@ class ZigbeeMqttAdapter extends Adapter {
             //  Parse incoming availability message
             //
 
-    		if (topic.endsWith('/availability')) { // either "online" or "offline" as payload
+    		if (topic.endsWith('/health_check')) {
+    			if (this.DEBUG) {
+                    console.log("\nReceived health check response message. Data = " + data.toString());
+                }
+            }
+
+    		else if (topic.endsWith('/availability')) { // either "online" or "offline" as payload
     			if (this.DEBUG) {
                     console.log("Received availability message. Data = " + data.toString());
                 }
@@ -1187,7 +1193,7 @@ class ZigbeeMqttAdapter extends Adapter {
     						console.log("- strange, got availability data for a device that wasn't created yet: " + device_id);
     					}
     					return;
-    				} 
+    				}
                     else {
                     
                         try{
@@ -3079,7 +3085,21 @@ class ZigbeeMqttAdapter extends Adapter {
     
     
     
-    
+    removeThing(deviceId){
+        try{
+    		if (this.DEBUG) {
+    			console.log("in removeThing. Calling removeDevice with deviceId: " + deviceId);
+                console.log("in removeThing. typeof deviceId: ", typeof deviceId);
+                console.log("in removeThing. typeof deviceId.id: ", deviceId.id);
+                console.log("in removeThing. deviceId keys: ", Object.keys(deviceId))
+    		}
+            this.removeDevice(deviceId.id);
+        }
+        catch(e){
+            console.log("ERROR in removeThing: ", e);
+        }
+		
+    }
 	removeDevice(deviceId) {
         try{
     		if (this.DEBUG) {
@@ -3121,6 +3141,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     
     				} catch (error) {
     					console.log("Error removing device from Z2M network: ", error);
+                        reject(device);
     				}
 
     			}

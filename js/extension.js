@@ -768,10 +768,10 @@
     							{'action':'delete','zigbee_id':items[item]['zigbee_id']}
     						).then((body) => { 
     							if(this.debug){
-                                    //console.log("delete item reaction: ");
+                                    console.log("delete zigbee item reaction: ", body);
     							    //console.log(body); 
     							    //if( body['state'] != true ){
-    							    pre.innerText = body['message'];
+    							    //pre.innerText = body['message'];
                                 }
                                 if(body['status'] == 'ok'){
                                     parent3.classList.add(".extension-zigbee2mqtt-adapter-hidden");
