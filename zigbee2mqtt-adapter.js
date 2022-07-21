@@ -151,7 +151,8 @@ class ZigbeeMqttAdapter extends Adapter {
         
         this.usb_port_issue = false;
         this.z2m_installed_succesfully = false;
-		this.z2m_started = false;
+		this.z2m_started = false; // true while running
+        this.z2m_should_be_running = false; // true is started at least once
         this.z2m_state = false;
 		this.waiting_for_map = false;
 		this.updating_firmware = false;
@@ -532,17 +533,22 @@ class ZigbeeMqttAdapter extends Adapter {
         // Every 10 seconds check if Zigbee2MQTT hasn't somehow crashed
         this.check_z2m_running = setInterval(() => {
             
-            if(this.z2m_started){
+            if(this.z2m_should_be_running){
                 // this.config.manual_toggle_response
                 if (!this.DEBUG) { // TODO: remove this again for more ping testing.
                     //this.ping_things();
                 }
                 
                 if (this.DEBUG) {
-                    console.log("\n\n CLOCK TICK\n\n");
+                    console.log("CLOCK TICK");
                 }
                 
                 this.check_z2m_is_running();
+            }
+            else{
+                if (this.DEBUG) {
+                    console.log("interval: this.z2m_should_be_running is still false, so not checking if z2m is running");
+                }
             }
             
             // node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/index.js
@@ -940,7 +946,7 @@ class ZigbeeMqttAdapter extends Adapter {
         this.z2m_installed_succesfully = true;
 		this.z2m_started = true;
 		this.addon_start_time = Date.now();
-
+        this.z2m_should_be_running = true;
         /*
 		if (this.DEBUG) {
 			this.zigbee2mqtt_subprocess = spawn('node', [this.zigbee2mqtt_file_path], {
