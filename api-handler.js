@@ -138,49 +138,43 @@ class Zigbee2MQTTHandler extends APIHandler {
 					}
 
 
-				} 
+				}
                 
-                else if (action == "update-map") {
-
-					if (!this.adapter.waiting_for_map || this.last_map_request_time + this.time_delay < Date.now()) {
-						if (this.config.debug) {
-							console.log("map update allowed");
+                
+                else if (action == "poll") {
+                    
+					var devices_as_list = [];
+					try {
+						for (const key in this.adapter.persistent_data.devices_overview) {
+							if (this.adapter.persistent_data.devices_overview.hasOwnProperty(key)) {
+								var device = this.adapter.persistent_data.devices_overview[key];
+                                //if(device['update']['state'] == "updating"){
+                                    
+                                //}
+								//if (this.adapter.updating_firmware) {
+								//	device['update_available'] = false;
+								//}
+								devices_as_list.push(device);
+							}
 						}
-						this.last_map_request_time = Date.now();
-						this.adapter.waiting_for_map = true;
-						//this.map = "";
-						const update_topic = 'bridge/request/networkmap';
-						//console.log("network map topic: " + update_topic);
-						const update_message = {
-							"type": "graphviz",
-							"routes": false
-						};
-						//console.log("network map message: " + update_message);
-						this.adapter.publishMessage(update_topic, update_message);
-						return new APIResponse({
-							status: 200,
-							contentType: 'application/json',
-							content: JSON.stringify({
-								'status': 'A new network map has been requested. Please wait.'
-							}),
-						});
-					} 
-                    else {
-						if (this.config.debug) {
-							console.log("map update delayed");
-						}
-						this.map = 'digraph G { "Breathe in" -> "Breathe out" "Breathe out" -> "Relax"}';
-						return new APIResponse({
-							status: 200,
-							contentType: 'application/json',
-							content: JSON.stringify({
-								'status': 'A new network map can only be requested once every 3 minutes.'
-							}),
-						});
+					} catch (error) {
+						console.log("Error in poll API handling: ", error);
 					}
-
-
-				} 
+                    
+					return new APIResponse({
+						status: 200,
+						contentType: 'application/json',
+						content: JSON.stringify({
+							'status': 'Updating... please wait',
+                            'devices':devices_as_list,
+							'map': this.map,
+							'updating_firmware': this.adapter.updating_firmware,
+							'update_result': this.adapter.update_result,
+                            'installed': this.adapter.z2m_installed_succesfully,
+                            'started': this.adapter.z2m_state,
+						}),
+					});
+				}
                 
                 
                 else if (action == "health_check") {
@@ -510,12 +504,12 @@ class Zigbee2MQTTHandler extends APIHandler {
                 
                 
                 else {
-					console.log("unhandled API action");
+					console.log("unhandled API action: ", action);
 					return new APIResponse({
 						status: 200,
 						contentType: 'application/json',
 						content: JSON.stringify({
-							'status': 'incorrect action'
+							'status': 'incorrect action: ' + action
 						}),
 					});
 				}

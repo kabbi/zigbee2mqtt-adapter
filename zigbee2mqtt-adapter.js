@@ -80,7 +80,7 @@ class ZigbeeMqttAdapter extends Adapter {
 		this.exposesDeviceGenerator = new ExposesDeviceGenerator(this, this.config);
 
         
-
+        
         
 
         this.reverse_list_contact = ['RH3001']; // All the devices for which the contact property should be reversed. RH3001 is a great usb-rechargeable contact sensor.
@@ -150,6 +150,8 @@ class ZigbeeMqttAdapter extends Adapter {
         this.security = {pan_id: "", network_key: ""};
         
         this.usb_port_issue = false;
+        
+        this.z2m_command = 'node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/index.js';
         this.z2m_installed_succesfully = false;
 		this.z2m_started = false; // true while running
         this.z2m_should_be_running = false; // true is started at least once
@@ -178,7 +180,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
 		// Availability checking
 		//this.ignored_first_availability_device_list = []; // For now this has been replaced with just ignoring availabiliy messages for 10 seconds.
-		this.addon_start_time = Date.now(); // During the first 10 second after Zigbee2MQTT starts, the availability messages are ignored.
+		//this.addon_start_time = Date.now(); // During the first 10 second after Zigbee2MQTT starts, the availability messages are ignored.
 		this.availability_interval = 3; // polls devices on the zigbee network every X minutes. Used to discover if lightbulb have been powered down manually.
 
 
@@ -537,10 +539,6 @@ class ZigbeeMqttAdapter extends Adapter {
                 // this.config.manual_toggle_response
                 if (!this.DEBUG) { // TODO: remove this again for more ping testing.
                     //this.ping_things();
-                }
-                
-                if (this.DEBUG) {
-                    console.log("CLOCK TICK");
                 }
                 
                 this.check_z2m_is_running();
@@ -968,14 +966,15 @@ class ZigbeeMqttAdapter extends Adapter {
             this.zigbee2mqtt_subprocess.stdout.setEncoding('utf8');
             this.zigbee2mqtt_subprocess.stdout.on('data', (data) => { // 
                 //Here is where the output goes
-                
-                //console.log('z2m stdout: ' + data);
+                if (this.DEBUG) {
+                    console.log('z2m stdout: ' + data);
+                }
                 
                 //console.log('parent_scope: ', parent_scope);
                 
                 data=data.toString();
                 
-                if( data.includes("rror while opening serialport") ){
+                if( data.includes("Error while opening serialport") ){
                     console.log('ERROR: COULD NOT CONNECT TO THE USB STICK. PLEASE RESTART THE CONTROLLER. MAKE SURE OTHER ZIGBEE ADDONS ARE DISABLED.');
                     this.sendPairingPrompt("Zigbee stick did not respond, please restart the controller");
                     this.usb_port_issue = true;
@@ -2702,7 +2701,8 @@ class ZigbeeMqttAdapter extends Adapter {
             			'description': this.applySentenceCase(property_name),
             			'readOnly': read_only,
             			'type': type,
-                        'value': value
+                        'value': value,
+                        'id': 'z2m-' + info.ieee_address + '/properties/' + property_name
             		};
             
                     if(type == "number"){
@@ -3251,24 +3251,85 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
     async check_z2m_is_running() {
-      try {
-        const z2m_check_response = await execute("ps aux | grep zigbee2mqtt");
-        if(this.DEBUG){
-            console.log("z2m_check_response: ", z2m_check_response);
-        }
-        if(z2m_check_response.indexOf('node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/index.js') == -1){
-            console.log("Error, z2m does NOT seem to be running calling. really_run_zigbee2mqtt again.");
-            this.really_run_zigbee2mqtt();
-        }
-        else{
-            if(this.DEBUG){
-                console.log("Z2M seems to be running ok");
+        try {
+            if(typeof this.addon_start_time != 'undefined'){
+                
+                
+                const z2m_check_response = await execute("ps aux | grep zigbee2mqtt");
+                if(this.DEBUG){
+                    console.log("z2m_check_response: ", z2m_check_response);
+                }
+                if(z2m_check_response.indexOf(this.z2m_command) == -1){
+                    console.log("Error, z2m does NOT seem to be running calling. really_run_zigbee2mqtt again.");
+                    fs.writeFile('/home/pi/.webthings/data/zigbee2mqtt-adapter/error.txt', z2m_check_response, err => {
+                      if (err) {
+                        console.error("error, zigbee2mqtt z2m_check_response error write error:", err);
+                      }
+                    });
+                
+                    this.really_run_zigbee2mqtt();
+                }
+                else{
+                
+                    const cur_time = Date.now();
+                    if(cur_time - this.addon_start_time > 600000){
+                        const lines = z2m_check_response.split("\n");
+            
+                        for (let l = 0; l < lines.length; l++) {
+                            console.log("line: ", lines[l]);
+                            if(lines[l].indexOf('node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/index.js') > -1){
+                                const parts = lines[l].split(" ");
+                                var parts_counter = 0;
+                                for (let ll = 0; ll < parts.length; ll++) {
+                                    console.log(ll + ". " + parts[ll]);
+                                    console.log("type: " + typeof parts[ll]);
+                                    console.log("length: " + parts[ll].length);
+                                    if(parts[ll].length != 0){
+                                        parts_counter++;
+                                        console.log("   <------- ", parts_counter);
+                                        if(parts_counter == 3){
+                                            console.log("three 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3");
+                                            const processor_usage = parseFloat(parts[ll]);
+                                            console.log("__________________________________________processor_usage: ", processor_usage);
+                                            if(processor_usage > 50){
+                                                console.log("Error, processor_usage above 50. Restarting zigbee2mqtt.");
+                                                fs.writeFile('/home/pi/.webthings/data/zigbee2mqtt-adapter/error_above_50.txt', z2m_check_response, err => {
+                                                  if (err) {
+                                                    console.error("error, zigbee2mqtt z2m_check_response error_above_50 write error:", err);
+                                                  }
+                                                });
+                                        
+                                                await execute("pkill 'node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/index.js'");
+                                                this.really_run_zigbee2mqtt();
+                                            }
+                                            else{
+                                                console.log("processor_usage below 50");
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else{
+                                console.log("zigbee2mqtt/index.js not in line");
+                            }
+                
+                        }
+            
+                        //if(this.DEBUG){
+                        //    console.log("Z2M seems to be running ok");
+                        //}
+                    }
+                    
+                
+                    
+                }
+                
             }
-        }
+            
        
-      } catch (error) {
-        console.error(error.toString());
-      }
+        } catch (error) {
+          console.error("check_z2m_is_running error: ", error.toString());
+        }
 
     }
 
@@ -3308,11 +3369,18 @@ class ZigbeeMqttAdapter extends Adapter {
 
 class MqttDevice extends Device {
 	constructor(adapter, id, modelId, description) {
+        
+        
 		super(adapter, id);
-		this.name = description.name;
+		
+        console.log("mqttDevice. id, modelId, description: ", id, modelId, description);
+        
+        this.name = description.name;
 		this['@type'] = description['@type'];
 		this.modelId = modelId;
 		this.connected = false;
+        //this.id = id;
+        this.title = description.name;
         
 		for (const [name, desc] of Object.entries(description.actions || {})) {
             //console.log('in MqttDevice init, importing action: ' + name);
@@ -3349,12 +3417,23 @@ class MqttDevice extends Device {
 
 class MqttProperty extends Property {
 	constructor(device, name, propertyDescription) {
-		super(device, name, propertyDescription);
-		this.setCachedValue(propertyDescription.value);
-		this.device.notifyPropertyChanged(this);
+        
+        console.log("mqtt property: device: ", device);
+        console.log("mqtt property: name: ", name);
+        console.log("mqtt property: propertyDescription: ", propertyDescription);
+
+        const wt_id = device.id + "/properties/" + name;
+		//super(device, name, propertyDescription);
+        super(device, wt_id, propertyDescription);
+        
+        this.name = wt_id; //name;
+        this.title = propertyDescription.title;
 		this.options = propertyDescription;
         this.value = propertyDescription.value;
+        this.id = wt_id;
         
+		this.setCachedValue(propertyDescription.value);
+		this.device.notifyPropertyChanged(this);
 	}
 
 
