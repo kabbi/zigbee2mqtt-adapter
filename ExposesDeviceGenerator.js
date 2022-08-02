@@ -330,16 +330,14 @@ class ExposesDeviceGenerator {
     				if(typeof expose["name"] != "undefined"){
     					if( expose["name"] == "local_temperature"){
     						expose.type = "float";
-    					}
-						
+    					}	
     				}
-				
     			}
 			    
                 
                 const device_id = device.id.split("/").pop();
                 
-                const wt_id_base = "/things/" + device_id + "/properties/";
+                const wt_id_base =  device_id + "-";
                 const wt_id = wt_id_base + expose.property;
                 if(this.config.debug){
                     console.log("device_id: ", device_id);

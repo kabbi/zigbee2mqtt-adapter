@@ -633,7 +633,7 @@ class ZigbeeMqttAdapter extends Adapter {
                             
                                 var device = this.getDevice(device_id);
                                 if(device){
-                                    const wt_id = "/things/" + device_id + "/properties/" + "state"; 
+                                    const wt_id = device_id + "-" + "state"; 
                  					var property = device.findProperty(wt_id);
                 					if (property) {
                                         //console.log("PINGING TO:");
@@ -1407,7 +1407,7 @@ class ZigbeeMqttAdapter extends Adapter {
     			try {
     				const zigbee_id = topic.split('/')[1];
                     const device_id = 'z2m-' + zigbee_id;
-                    const wt_id_base = "/things/" + device_id + "/properties/";
+                    const wt_id_base = device_id + "-";
                     
     				if (this.DEBUG) {
     					console.log("- zigbee_id = " + zigbee_id);
@@ -1762,7 +1762,7 @@ class ZigbeeMqttAdapter extends Adapter {
                         //  FIND PROPERTY OBJECT
                         //
 
-                        const wt_id = "/things/" + device_id + "/properties/" + key; // webthings id. These are unique for each property that exists.
+                        const wt_id = device_id + "-" + key; // webthings id. These are unique for each property that exists.
                         if (this.DEBUG) {
                             console.log("property wt_id = ", wt_id);
                         }
@@ -2681,7 +2681,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     console.log("initial device @type:", device['@type']);
                     console.log("attempt_new_property: checking if property already exists in device: " + property_name);
                 }
-                const wt_id_base = "/things/" + device.id + "/properties/";
+                const wt_id_base = device.id + "-";
                 var property = device.findProperty(wt_id_base + property_name);
                 
                 if(!property){
@@ -2733,7 +2733,7 @@ class ZigbeeMqttAdapter extends Adapter {
             		const property = new MqttProperty(device, property_name, desc);
                     
                     const device_id = device.id.split("/").pop();
-                    const wt_id = "/things/" + device_id + "/properties/" + property_name; // webthings id
+                    const wt_id = device_id + "-" + property_name; // webthings id
             		device.properties.set(wt_id, property);
             		if (this.DEBUG) {
             			console.log("new property should now be generated");
@@ -2825,7 +2825,7 @@ class ZigbeeMqttAdapter extends Adapter {
         		//	console.log("initial data_blur property value: " + property_value);
         		//}
                 
-                const wt_id_base = "/things/" + device.id + "/properties/";
+                const wt_id_base = device.id + "-";
                 var property = device.findProperty(wt_id_base + 'data_blur');
                 
                 if(!property){
@@ -2900,7 +2900,7 @@ class ZigbeeMqttAdapter extends Adapter {
                         
                 		const property = new MqttProperty(device, property_name, desc);
                         const device_id = device.id.split("/").pop();
-                        const wt_id = "/things/" + device_id + "/properties/" + property_name;
+                        const wt_id = device_id + "-" + property_name;
                         
                         
                         //device.properties.set(property_name, property);
@@ -3050,7 +3050,7 @@ class ZigbeeMqttAdapter extends Adapter {
             console.log("in attempt_regen with device_id: " + device_id);
             //console.log("device in attempt_regen: ", device.properties);
         }
-        const wt_id_base = "/things/" + device_id + "/properties/";
+        const wt_id_base = device_id + "-";
         
 		try{
             if(typeof this.persistent_data.devices_overview[device_id] != 'undefined'){
@@ -3437,7 +3437,7 @@ class MqttProperty extends Property {
         //console.log("mqtt property: name: ", name);
         //console.log("mqtt property: propertyDescription: ", propertyDescription);
 
-        const wt_id = "/things/" + device.id + "/properties/" + name;
+        const wt_id = device.id + "-" + name;
 		//super(device, name, propertyDescription);
         super(device, wt_id, propertyDescription);
         
