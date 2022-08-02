@@ -2053,9 +2053,6 @@ class ZigbeeMqttAdapter extends Adapter {
                                             if (this.DEBUG) {
                                                 console.log("(extra) brightness property existed. Updating it through alternative. this.persistent_data.virtual_brightness_alternatives[device_id] gave: " + JSON.stringify(this.persistent_data.virtual_brightness_alternatives[device_id]));
                                                 console.log("extra_property.value = " + extra_property.value);
-                                            }
-                                        
-                                            if (this.DEBUG) {
                                                 console.log("at the end, this.persistent_data.virtual_brightness_alternatives: " + JSON.stringify(this.persistent_data.virtual_brightness_alternatives));
                                             }
                                     
@@ -2163,7 +2160,6 @@ class ZigbeeMqttAdapter extends Adapter {
                             
                             
                             if(use_blur){
-                                
                                 
                                 var use_blur_really = false
                                 
@@ -2342,12 +2338,14 @@ class ZigbeeMqttAdapter extends Adapter {
                                         if (this.DEBUG) {
                                             console.log("value for UI after blur check: ", value_for_ui );
                                         }
+                                        //property.setValue(msg[key]);
                                         property.setCachedValue( value_for_ui );
                     					device.notifyPropertyChanged(property);
                                     }
                                 }
                                 
                                 else{
+                                    //property.setValue(msg[key]);
                                     property.setCachedValue( msg[key] );
                 					device.notifyPropertyChanged(property);
                                 }
@@ -2357,6 +2355,7 @@ class ZigbeeMqttAdapter extends Adapter {
                             // Device has no option for data blurring
                             else{
                                 //console.log("use_blur was false");
+                                //property.setValue(msg[key]);
                                 property.setCachedValue( msg[key] );
             					device.notifyPropertyChanged(property);
                             }
@@ -2572,6 +2571,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     var device = new MqttDevice(this, 'z2m-' + info.ieee_address, info.model_id, deviceDefinition);
 				
                     //const zigbee_id = info.ieee_address;
+                    // TODO: check if property ends with -state instead
     				if (deviceDefinition.properties.state) { // If the device has a state property, then initially set it to disconnected.
                         //console.log("addDevice: spotted state in properties");
     					device.connectedNotify(false);
@@ -2736,7 +2736,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     const wt_id = device_id + "-" + property_name; // webthings id
             		device.properties.set(wt_id, property);
             		if (this.DEBUG) {
-            			console.log("new property should now be generated");
+            			console.log("new property should now be generated. wt_id: ", wt_id);
             		}
                     
                     // Save the values in persistent data, if they don't already exist there.
@@ -2906,7 +2906,7 @@ class ZigbeeMqttAdapter extends Adapter {
                         //device.properties.set(property_name, property);
                 		device.properties.set(wt_id, property);
                 		if (this.DEBUG) {
-                			console.log("data blur property should now be generated");
+                			console.log("data blur property should now be generated. wt_id: ", wt_id);
                 		}
                     
                         device.blur = data_blur;
@@ -2917,16 +2917,12 @@ class ZigbeeMqttAdapter extends Adapter {
                         }
                     }
                     
-                    
-                    
                 }
                 else{
                     if (this.DEBUG) {
                         console.log("add_blur_property: the property already existed: " + property_name);
                     }
                 }
-                
-
                 
             }
             
@@ -3260,7 +3256,9 @@ class ZigbeeMqttAdapter extends Adapter {
 		}
         */
 
-		console.log("zigbee2mqtt should now be stopped. Goodbye.");
+		if(this.DEBUG){
+            console.log("zigbee2mqtt should now be stopped. Goodbye.");
+        }
 		return super.unload();
 	}
 
@@ -3291,23 +3289,23 @@ class ZigbeeMqttAdapter extends Adapter {
                         const lines = z2m_check_response.split("\n");
             
                         for (let l = 0; l < lines.length; l++) {
-                            console.log("line: ", lines[l]);
+                            //console.log("line: ", lines[l]);
                             if(lines[l].indexOf('node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/index.js') > -1){
                                 const parts = lines[l].split(" ");
                                 var parts_counter = 0;
                                 for (let ll = 0; ll < parts.length; ll++) {
-                                    console.log(ll + ". " + parts[ll]);
-                                    console.log("type: " + typeof parts[ll]);
-                                    console.log("length: " + parts[ll].length);
+                                    //console.log(ll + ". " + parts[ll]);
+                                    //console.log("type: " + typeof parts[ll]);
+                                    //console.log("length: " + parts[ll].length);
                                     if(parts[ll].length != 0){
                                         parts_counter++;
-                                        console.log("   <------- ", parts_counter);
+                                        //console.log("   <------- ", parts_counter);
                                         if(parts_counter == 3){
-                                            console.log("three 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3");
+                                            //console.log("three 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3");
                                             const processor_usage = parseFloat(parts[ll]);
-                                            console.log("__________________________________________processor_usage: ", processor_usage);
+                                            //console.log("__________________________________________processor_usage: ", processor_usage);
                                             if(processor_usage > 50){
-                                                console.log("Error, processor_usage above 50. Restarting zigbee2mqtt.");
+                                                //console.log("Error, processor_usage above 50. Restarting zigbee2mqtt.");
                                                 fs.writeFile('/home/pi/.webthings/data/zigbee2mqtt-adapter/error_above_50.txt', z2m_check_response, err => {
                                                   if (err) {
                                                     console.error("error, zigbee2mqtt z2m_check_response error_above_50 write error:", err);
@@ -3318,14 +3316,14 @@ class ZigbeeMqttAdapter extends Adapter {
                                                 this.really_run_zigbee2mqtt();
                                             }
                                             else{
-                                                console.log("processor_usage below 50");
+                                                //console.log("processor_usage below 50");
                                             }
                                         }
                                     }
                                 }
                             }
                             else{
-                                console.log("zigbee2mqtt/index.js not in line");
+                                //console.log("zigbee2mqtt/index.js not in line");
                             }
                 
                         }
@@ -3387,9 +3385,10 @@ class MqttDevice extends Device {
         
         
 		super(adapter, id);
-		
-        //console.log("mqttDevice. id, modelId, description: ", id, modelId, description);
         
+		if (this.adapter.config.debug) {
+            console.log("mqttDevice init. id, modelId, description: ", id, modelId, description);
+        }
         this.name = description.name;
 		this['@type'] = description['@type'];
 		this.modelId = modelId;
@@ -3398,15 +3397,31 @@ class MqttDevice extends Device {
         this.title = description.name;
         
 		for (const [name, desc] of Object.entries(description.actions || {})) {
-            //console.log('in MqttDevice init, importing action: ' + name);
+            if (this.adapter.config.debug) {
+                // TODO: use wt_id for actions too
+                console.log('in MqttDevice init, importing action: ', name, desc);
+            }
 			this.addAction(name, desc);
 		}
 		for (const [name, desc] of Object.entries(description.properties || {})) {
-            //console.log('in MqttDevice init, importing property: ' + name);
+            if (this.adapter.config.debug) {
+                console.log('in MqttDevice init, importing property: ', name, desc);
+            }
 			const property = new MqttProperty(this, name, desc);
-			this.properties.set(name, property);
+            var wt_id = name;
+            if(!wt_id.startsWith('z2m-')){
+                wt_id = id + "-" + name;
+            }
+            if (this.adapter.config.debug) {
+                console.log("setting property from MqttDevice. wt_id: ", wt_id);
+            }
+			this.properties.set(wt_id, property);
 		}
 		for (const [name, desc] of Object.entries(description.events || {})) {
+            if (this.adapter.config.debug) {
+                // TODO: use wt_id for actions too
+                console.log('in MqttDevice init, importing event: ', name, desc);
+            }
 			this.addEvent(name, desc);
 		}
 	}
@@ -3433,13 +3448,20 @@ class MqttDevice extends Device {
 class MqttProperty extends Property {
 	constructor(device, name, propertyDescription) {
         
-        //console.log("mqtt property: device: ", device);
-        //console.log("mqtt property: name: ", name);
-        //console.log("mqtt property: propertyDescription: ", propertyDescription);
-
-        const wt_id = device.id + "-" + name;
+        
+        
+        var wt_id = name;
+        if(!wt_id.startsWith('z2m-')){
+            wt_id = device.id + "-" + name;
+        }
 		//super(device, name, propertyDescription);
         super(device, wt_id, propertyDescription);
+        
+        if (this.device.adapter.config.debug) {
+            console.log("mqtt property: device: ", device);
+            console.log("mqtt property: name: ", name);
+            console.log("mqtt property: propertyDescription: ", propertyDescription);
+        }
         
         this.name = wt_id; //name;
         this.title = propertyDescription.title;
@@ -3526,7 +3548,7 @@ class MqttProperty extends Property {
                     }
                     
                     
-                    this.device.notifyPropertyChanged(this);
+                    this.device.notifyPropertyChanged(this); // TODO: where is the setCachedValue?
                     
 					resolve(updatedValue);
 					
