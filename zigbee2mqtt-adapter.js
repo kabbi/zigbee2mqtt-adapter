@@ -633,7 +633,8 @@ class ZigbeeMqttAdapter extends Adapter {
                             
                                 var device = this.getDevice(device_id);
                                 if(device){
-                					var property = device.findProperty('state');
+                                    const wt_id = "/things/" + device_id + "/properties/" + "state"; 
+                 					var property = device.findProperty(wt_id);
                 					if (property) {
                                         //console.log("PINGING TO:");
                                         //console.log(property);
@@ -1406,6 +1407,8 @@ class ZigbeeMqttAdapter extends Adapter {
     			try {
     				const zigbee_id = topic.split('/')[1];
                     const device_id = 'z2m-' + zigbee_id;
+                    const wt_id_base = "/things/" + device_id + "/properties/";
+                    
     				if (this.DEBUG) {
     					console.log("- zigbee_id = " + zigbee_id);
     				}
@@ -1417,9 +1420,9 @@ class ZigbeeMqttAdapter extends Adapter {
     					return;
     				}
 
-
+                    
                     // PRIVACY - Data transmission allowed check
-                    const data_transmission_property = device.findProperty('data_transmission');
+                    const data_transmission_property = device.findProperty(wt_id_base + 'data_transmission');
                     if (!data_transmission_property) {
                         if (this.DEBUG) {
                             console.log("- strange, data transmission property not found");
@@ -1443,7 +1446,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     var data_blur = 0;
                     var data_blur_property_value = 'Off';
                     var use_blur = false;
-                    const data_blur_property = device.findProperty('data_blur');
+                    const data_blur_property = device.findProperty(wt_id_base + 'data_blur');
                     if (!data_blur_property) {
                         if (this.DEBUG) {
                             console.log("- device has no data blur property");
@@ -1759,7 +1762,11 @@ class ZigbeeMqttAdapter extends Adapter {
                         //  FIND PROPERTY OBJECT
                         //
 
-    					var property = device.findProperty(key);
+                        const wt_id = "/things/" + device_id + "/properties/" + key; // webthings id. These are unique for each property that exists.
+                        if (this.DEBUG) {
+                            console.log("property wt_id = ", wt_id);
+                        }
+    					var property = device.findProperty(wt_id);
     					if (!property) {
     						if (this.DEBUG) {
     							console.log("- that property could not be found: " + key);
@@ -1783,7 +1790,7 @@ class ZigbeeMqttAdapter extends Adapter {
     						}
 
     						// Check if the missing property has succesfully been created. If so, then its value may be immediately set
-    						property = device.findProperty(key);
+    						property = device.findProperty(wt_id);
     						if (!property) {
                                 if (this.DEBUG) {
                                     console.log("Error: missing property still has not been created. Skipping.");
@@ -1869,7 +1876,7 @@ class ZigbeeMqttAdapter extends Adapter {
     											extra_boolean = true;
     										}
                                         
-        									const extra_toggle_property = device.findProperty('toggle');
+        									const extra_toggle_property = device.findProperty(wt_id_base + 'toggle');
         									if (extra_toggle_property) { 
         										extra_toggle_property.setCachedValue(extra_boolean); // Technically this should now use the fromMqtt construction, but in practise these extra generated properties all use booleans normally, so translation is not necessary.
         										device.notifyPropertyChanged(extra_toggle_property);
@@ -1885,7 +1892,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                             // PUSHED
                                             if(msg[key].toLowerCase() == "on"){
                                                 // Let's try looking for a pushed property too. This is only relevant if the action was "on".
-                                                const extra_pushed_property = device.findProperty('pushed');
+                                                const extra_pushed_property = device.findProperty(wt_id_base + 'pushed');
                                                 if(extra_pushed_property){
                                                     
                                                     // Turn it on...
@@ -1910,7 +1917,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                             if (this.DEBUG) {
                                                 console.log("toggle action spotted");
                                             }
-                                            extra_property = device.findProperty('toggle');
+                                            extra_property = device.findProperty(wt_id_base + 'toggle');
                                         
         									if (extra_property) { // this never happen, as actions are pre-defined in the device information, and the addon now uses that to generate these extra properties in the exposes device generator. But it can't hurt to have it in here, just in case.
         										
@@ -1947,7 +1954,7 @@ class ZigbeeMqttAdapter extends Adapter {
     											extra_boolean = true;
     										}
                                         
-        									const extra_property = device.findProperty('toggle');
+        									const extra_property = device.findProperty(wt_id_base + 'toggle');
         									if (!extra_property) {
         										console.log("no extra toggle property spotted, will attempt to generate it now");
                                                 this.attempt_new_property(device, 'toggle', extra_boolean, true, false); // value, read-only and percentage-type
@@ -1971,7 +1978,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                             if (this.DEBUG) {
                                                 console.log("arrow action spotted");
                                             }
-                                            extra_property = device.findProperty(msg[key].toLowerCase());
+                                            extra_property = device.findProperty(wt_id_base + msg[key].toLowerCase());
                                         
         									if (!extra_property) {
         										if (this.DEBUG) {
@@ -2030,7 +2037,7 @@ class ZigbeeMqttAdapter extends Adapter {
 								    
                                     
                                     
-                                        var extra_property = device.findProperty('brightness');
+                                        var extra_property = device.findProperty(wt_id_base + 'brightness');
     								    if (extra_property){
                                             if(typeof this.persistent_data.virtual_brightness_alternatives[device_id] == 'undefined'){
                                                 this.persistent_data.virtual_brightness_alternatives[device_id] = {'value':0,'direction':direction};
@@ -2672,12 +2679,10 @@ class ZigbeeMqttAdapter extends Adapter {
         			//console.log("in attempt_new_property for device: " + device_id + " and property_name: " + property_name);
         			console.log("attempt value: " + value);
                     console.log("initial device @type:", device['@type']);
-        		}
-
-                if (this.DEBUG) {
                     console.log("attempt_new_property: checking if property already exists in device: " + property_name);
                 }
-                var property = device.findProperty(property_name);
+                const wt_id_base = "/things/" + device.id + "/properties/";
+                var property = device.findProperty(wt_id_base + property_name);
                 
                 if(!property){
                     if (this.DEBUG) {
@@ -2701,8 +2706,7 @@ class ZigbeeMqttAdapter extends Adapter {
             			'description': this.applySentenceCase(property_name),
             			'readOnly': read_only,
             			'type': type,
-                        'value': value,
-                        'id': 'z2m-' + info.ieee_address + '/properties/' + property_name
+                        'value': value
             		};
             
                     if(type == "number"){
@@ -2727,7 +2731,10 @@ class ZigbeeMqttAdapter extends Adapter {
                     
                     
             		const property = new MqttProperty(device, property_name, desc);
-            		device.properties.set(property_name, property);
+                    
+                    const device_id = device.id.split("/").pop();
+                    const wt_id = "/things/" + device_id + "/properties/" + property_name; // webthings id
+            		device.properties.set(wt_id, property);
             		if (this.DEBUG) {
             			console.log("new property should now be generated");
             		}
@@ -2818,7 +2825,8 @@ class ZigbeeMqttAdapter extends Adapter {
         		//	console.log("initial data_blur property value: " + property_value);
         		//}
                 
-                var property = device.findProperty('data_blur');
+                const wt_id_base = "/things/" + device.id + "/properties/";
+                var property = device.findProperty(wt_id_base + 'data_blur');
                 
                 if(!property){
                     if (this.DEBUG) {
@@ -2889,9 +2897,14 @@ class ZigbeeMqttAdapter extends Adapter {
                             'value': property_value
                 		};
             
-                    
+                        
                 		const property = new MqttProperty(device, property_name, desc);
-                		device.properties.set(property_name, property);
+                        const device_id = device.id.split("/").pop();
+                        const wt_id = "/things/" + device_id + "/properties/" + property_name;
+                        
+                        
+                        //device.properties.set(property_name, property);
+                		device.properties.set(wt_id, property);
                 		if (this.DEBUG) {
                 			console.log("data blur property should now be generated");
                 		}
@@ -3037,6 +3050,8 @@ class ZigbeeMqttAdapter extends Adapter {
             console.log("in attempt_regen with device_id: " + device_id);
             //console.log("device in attempt_regen: ", device.properties);
         }
+        const wt_id_base = "/things/" + device_id + "/properties/";
+        
 		try{
             if(typeof this.persistent_data.devices_overview[device_id] != 'undefined'){
                 if(typeof this.persistent_data.devices_overview[device_id]['appendages'] != 'undefined'){
@@ -3047,7 +3062,7 @@ class ZigbeeMqttAdapter extends Adapter {
                         try{
                             if (this.persistent_data.devices_overview[device_id]['appendages'].hasOwnProperty(property_name)) {
                                 
-                                const property = device.findProperty(property_name);
+                                const property = device.findProperty(wt_id_base + property_name);
                                 if(property){
                                     if (this.DEBUG) {
                                         console.log("attempt regen is skipping, because it already found the property in device: " + property_name);
@@ -3373,7 +3388,7 @@ class MqttDevice extends Device {
         
 		super(adapter, id);
 		
-        console.log("mqttDevice. id, modelId, description: ", id, modelId, description);
+        //console.log("mqttDevice. id, modelId, description: ", id, modelId, description);
         
         this.name = description.name;
 		this['@type'] = description['@type'];
@@ -3418,11 +3433,11 @@ class MqttDevice extends Device {
 class MqttProperty extends Property {
 	constructor(device, name, propertyDescription) {
         
-        console.log("mqtt property: device: ", device);
-        console.log("mqtt property: name: ", name);
-        console.log("mqtt property: propertyDescription: ", propertyDescription);
+        //console.log("mqtt property: device: ", device);
+        //console.log("mqtt property: name: ", name);
+        //console.log("mqtt property: propertyDescription: ", propertyDescription);
 
-        const wt_id = device.id + "/properties/" + name;
+        const wt_id = "/things/" + device.id + "/properties/" + name;
 		//super(device, name, propertyDescription);
         super(device, wt_id, propertyDescription);
         

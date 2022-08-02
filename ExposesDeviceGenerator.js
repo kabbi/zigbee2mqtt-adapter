@@ -79,8 +79,8 @@ class ExposesDeviceGenerator {
             if(this.config.debug){
         		console.log(".");
                 console.log("final device: ", device);
-                console.log(".");
-                console.log(".");
+                console.log(" ");
+                console.log(" ");
                 console.log(" ");
                 console.log(" ");
             }
@@ -336,14 +336,24 @@ class ExposesDeviceGenerator {
 				
     			}
 			    
+                
+                const device_id = device.id.split("/").pop();
+                
+                const wt_id_base = "/things/" + device_id + "/properties/";
+                const wt_id = wt_id_base + expose.property;
+                if(this.config.debug){
+                    console.log("device_id: ", device_id);
+                    console.log("wt_id: ", wt_id);
+                }
+                
                 try{
         			switch (expose.type) {
         				// Generic type binary
         				case 'binary':
             				if (expose.access === this.ACCESS_MASK_ACTION) {
-            					device.actions[expose.property] = this.binaryPropertyToBooleanAction(expose);
+            					device.actions[wt_id] = this.binaryPropertyToBooleanAction(expose);
             				} else {
-            					device.properties[expose.property] = this.binaryPropertyToBooleanProperty(expose);
+            					device.properties[wt_id] = this.binaryPropertyToBooleanProperty(expose);
             				}
             				break;
 			
@@ -351,18 +361,18 @@ class ExposesDeviceGenerator {
         				// Generic type numeric - integer variant
         				case 'numeric':
             				if (expose.access === this.ACCESS_MASK_ACTION) {
-            					device.actions[expose.property] = this.numericPropertyToIntegerAction(expose);
+            					device.actions[wt_id] = this.numericPropertyToIntegerAction(expose);
             				} else {
-            					device.properties[expose.property] = this.numericPropertyToIntegerProperty(expose);
+            					device.properties[wt_id] = this.numericPropertyToIntegerProperty(expose);
             				}
             				break;
 				
 				
         				case 'float':
             				if (expose.access === this.ACCESS_MASK_ACTION) {
-            					device.actions[expose.property] = this.numericPropertyToFloatAction(expose);
+            					device.actions[wt_id] = this.numericPropertyToFloatAction(expose);
             				} else {
-            					device.properties[expose.property] = this.numericPropertyToFloatProperty(expose);
+            					device.properties[wt_id] = this.numericPropertyToFloatProperty(expose);
             				}
             				break;
 			
@@ -373,9 +383,9 @@ class ExposesDeviceGenerator {
             					device.actions[expose.property] = this.enumPropertyToStringAction(expose);
             				} else {
                                 if(device.model_id == 'STARKVIND Air purifier'){
-                                    device.properties[expose.property] = this.STARKVINDenumPropertyToStringProperty(expose);
+                                    device.properties[wt_id] = this.STARKVINDenumPropertyToStringProperty(expose);
                                 }else{
-                                    device.properties[expose.property] = this.enumPropertyToStringProperty(expose);
+                                    device.properties[wt_id] = this.enumPropertyToStringProperty(expose);
                                 }
             					
             				}
@@ -385,9 +395,9 @@ class ExposesDeviceGenerator {
         				// Generic type text
         				case 'text':
             				if (expose.access === this.ACCESS_MASK_ACTION) {
-            					device.actions[expose.property] = this.textPropertyToStringAction(expose);
+            					device.actions[wt_id] = this.textPropertyToStringAction(expose);
             				} else {
-            					device.properties[expose.property] = this.textPropertyToStringProperty(expose);
+            					device.properties[wt_id] = this.textPropertyToStringProperty(expose);
             				}
             				break;
                             
@@ -406,58 +416,58 @@ class ExposesDeviceGenerator {
                         if(this.config.debug){
                             console.log("there was value in the expose data, adding it to property: " + expose['value']);
                         }
-                        if(typeof device.properties[expose.property] != 'undefined'){
-                            device.properties[expose.property]['value'] = expose['value'];
+                        if(typeof device.properties[wt_id] != 'undefined'){
+                            device.properties[wt_id]['value'] = expose['value'];
                         }
                     }
                 
                     if(typeof expose['property'] != "undefined"){
                         //console.log("expose['property']: " + expose['property']);
-                        if(typeof device.properties[expose.property] != 'undefined'){
-                            device.properties[expose.property]['property'] = expose['property'];
+                        if(typeof device.properties[wt_id] != 'undefined'){
+                            device.properties[wt_id]['property'] = expose['property'];
                         }
                         
                     }
                 
 
                     // Add unit if available
-                    if(typeof expose['unit'] != "undefined" && device.properties[expose.property] != 'undefined'){
-                        device.properties[expose.property]['unit'] = expose['unit'];
+                    if(typeof expose['unit'] != "undefined" && device.properties[wt_id] != 'undefined'){
+                        device.properties[wt_id]['unit'] = expose['unit'];
                     
                         if( expose['unit'] == 'mV' || expose['unit'] == 'lqi'){
                             //console.log("spotted lqi");
-                            //device.properties[expose.property]['unit'] = 'volt';
-                            device.properties[expose.property]['multipleOf'] = 1;
-                            //device.properties[expose.property]['value'] = expose['value'] / 1000;
+                            //device.properties[wt_id]['unit'] = 'volt';
+                            device.properties[wt_id]['multipleOf'] = 1;
+                            //device.properties[wt_id]['value'] = expose['value'] / 1000;
                         }
                         else if( expose['unit'] == '°C' ){
-                            device.properties[expose.property]['unit'] = 'degree celsius';
-                            device.properties[expose.property]['multipleOf'] = 0.1;
+                            device.properties[wt_id]['unit'] = 'degree celsius';
+                            device.properties[wt_id]['multipleOf'] = 0.1;
                         }
                         else if( expose['unit'] == 'V' ){
-                            device.properties[expose.property]['unit'] = 'volt';
-                            device.properties[expose.property]['multipleOf'] = 0.1;
+                            device.properties[wt_id]['unit'] = 'volt';
+                            device.properties[wt_id]['multipleOf'] = 0.1;
                         
                         }
                         else if( expose['unit'] == 'A' ){
-                            device.properties[expose.property]['unit'] = 'ampere';
-                            device.properties[expose.property]['multipleOf'] = 0.01;
+                            device.properties[wt_id]['unit'] = 'ampere';
+                            device.properties[wt_id]['multipleOf'] = 0.01;
                         
                         }
                         else if( expose['unit'] == '%' ){
-                            device.properties[expose.property]['unit'] = 'percent';
-                            device.properties[expose.property]['multipleOf'] = 1;
+                            device.properties[wt_id]['unit'] = 'percent';
+                            device.properties[wt_id]['multipleOf'] = 1;
                         
                         }
                         else if( expose['unit'] == 'µg/m³' ){
-                            device.properties[expose.property]['minimum'] = 0;
-                            //device.properties[expose.property]['maximum'] = 65535;
+                            device.properties[wt_id]['minimum'] = 0;
+                            //device.properties[wt_id]['maximum'] = 65535;
                         }
                     }
                 
-                    if( expose['name'] == 'humidity' && device.properties[expose.property] != 'undefined'){
-                        device.properties[expose.property]['unit'] = 'percent';
-                        device.properties[expose.property]['multipleOf'] = 0.1;
+                    if( expose['name'] == 'humidity' && device.properties[wt_id] != 'undefined'){
+                        device.properties[wt_id]['unit'] = 'percent';
+                        device.properties[wt_id]['multipleOf'] = 0.1;
                     }
                 }
                 catch(e){
@@ -467,7 +477,7 @@ class ExposesDeviceGenerator {
                 
                 
                 // add capabilities information
-    			if(typeof expose['name'] != "undefined" && device.properties[expose.property] != 'undefined'){
+    			if(typeof expose['name'] != "undefined" && device.properties[wt_id] != 'undefined'){
                     //console.log("expose.name = " + expose.name);
                     
                     try{
@@ -478,10 +488,10 @@ class ExposesDeviceGenerator {
         					if(device['@type'].indexOf("Lock") > -1){
                                 //console.log("IS LOCK");
                                 if(expose.access == 1){
-            						device.properties[expose.property]['@type'] = 'LockedProperty'; // read-only
+            						device.properties[wt_id]['@type'] = 'LockedProperty'; // read-only
             					}else{
                                     //console.log("IS ACTIONABLE LOCK");
-            						device.properties[expose.property]['@type'] = 'OnOffProperty'; // should be read-only. But it might work?
+            						device.properties[wt_id]['@type'] = 'OnOffProperty'; // should be read-only. But it might work?
                 					if(device['@type'].indexOf("OnOffSwitch") == -1){
                 						device['@type'].push('OnOffSwitch');
                 					}
@@ -533,12 +543,12 @@ class ExposesDeviceGenerator {
                             else{
                                 //console.log("IS NOT LOCK");
                                 if(expose.access == 1){
-            						device.properties[expose.property]['@type'] = 'PushedProperty';
+            						device.properties[wt_id]['@type'] = 'PushedProperty';
                 					if(device['@type'].indexOf("PushButton") == -1){
                 						device['@type'].push('PushButton');
                 					}
             					}else{
-            						device.properties[expose.property]['@type'] = 'OnOffProperty';
+            						device.properties[wt_id]['@type'] = 'OnOffProperty';
                 					if(device['@type'].indexOf("OnOffSwitch") == -1){
                 						device['@type'].push('OnOffSwitch');
                 					}
@@ -547,121 +557,121 @@ class ExposesDeviceGenerator {
 
         				}
         				else if(expose.name.endsWith("brightness") ){
-        					device.properties[expose.property]['@type'] = 'BrightnessProperty';
+        					device.properties[wt_id]['@type'] = 'BrightnessProperty';
         				}
         				else if(expose.name == "cube_side" || expose.name == "angle" || expose.name == "illuminance_lux"){
-        					device.properties[expose.property]['@type'] = 'LevelProperty';
+        					device.properties[wt_id]['@type'] = 'LevelProperty';
         					if(device['@type'].indexOf("MultiLevelSensor") == -1){
         						device['@type'].push('MultiLevelSensor');
         					}
         				}
         				else if(expose.name == "color_temp"){
-        					device.properties[expose.property]['@type'] = 'ColorTemperatureProperty';
+        					device.properties[wt_id]['@type'] = 'ColorTemperatureProperty';
         					if(device['@type'].indexOf("Light") == -1){ // && device['@type'].length == 0
         						device['@type'].push('Light');
         					}
         				}
         				else if(expose.name == "color_xy" || expose.name == "color_hs"){
-        					device.properties[expose.property]['@type'] = 'ColorProperty';
+        					device.properties[wt_id]['@type'] = 'ColorProperty';
         					if(device['@type'].indexOf("Light") == -1){
         						device['@type'].push('Light');
         					}
         				}
         				else if(expose.name == "occupied_heating_setpoint" || expose.name == "occupied_cooling_setpoint" || expose.name == "comfort_temperature" || expose.name == "eco_temperature"  || expose.name == "current_heating_setpoint"){
-        					device.properties[expose.property]['@type'] = 'TargetTemperatureProperty';
+        					device.properties[wt_id]['@type'] = 'TargetTemperatureProperty';
         					if(device['@type'].indexOf("Thermostat") == -1){
         						device['@type'].push('Thermostat');
         					}
         				}
         				else if(expose.name == "local_temperature" || expose.name == "temperature" || expose.name == "cpu_temperature"){
-        					device.properties[expose.property]['@type'] = 'TemperatureProperty';
+        					device.properties[wt_id]['@type'] = 'TemperatureProperty';
         					if(device['@type'].indexOf("TemperatureSensor") == -1){
         						device['@type'].push('TemperatureSensor');
         					}
         				}
         				else if(expose.name == "humidity" || expose.name == "soil_moisture"){
-        					device.properties[expose.property]['@type'] = 'HumidityProperty';
+        					device.properties[wt_id]['@type'] = 'HumidityProperty';
         					if(device['@type'].indexOf("HumiditySensor") == -1){
         						device['@type'].push('HumiditySensor');
         					}
         				}
         				else if(expose.name == "pressure"){
-        					device.properties[expose.property]['@type'] = 'BarometricPressureProperty';
+        					device.properties[wt_id]['@type'] = 'BarometricPressureProperty';
         					if(device['@type'].indexOf("BarometricPressureSensor") == -1){
         						device['@type'].push('BarometricPressureSensor');
         					}
         				}
         				else if(expose.name == "presence" || expose.name == "occupancy" || expose.name == "vibration"){
-        					device.properties[expose.property]['@type'] = 'MotionProperty';
+        					device.properties[wt_id]['@type'] = 'MotionProperty';
         					if(device['@type'].indexOf("MotionSensor") == -1){
         						device['@type'].push('MotionSensor');
                                 //device['@type'] = ['MotionSensor'];
         					}
         				}
         				else if( expose.name == "contact"){
-        					device.properties[expose.property]['@type'] = 'OpenProperty';
+        					device.properties[wt_id]['@type'] = 'OpenProperty';
         					if(device['@type'].indexOf("DoorSensor") == -1){ // && device['@type'].length == 0){
         						device['@type'].push('DoorSensor');
         					}
         				}
         				else if(expose.name == "alarm" || expose.name == "sos" || expose.name == "carbon_monoxide" || expose.name == "gas"){
-        					device.properties[expose.property]['@type'] = 'AlarmProperty';
+        					device.properties[wt_id]['@type'] = 'AlarmProperty';
         					if(device['@type'].indexOf("Alarm") == -1){
         						device['@type'].push('Alarm');
         					}
         				}
                         /*
         				else if(expose.name == "lock"){
-        					device.properties[expose.property]['@type'] = 'LockedProperty';
+        					device.properties[wt_id]['@type'] = 'LockedProperty';
         					if(device['@type'].indexOf("Lock") == -1){
         						device['@type'].push('Lock');
         					}
         				}
                         */
         				else if(expose.name == "smoke"){
-        					device.properties[expose.property]['@type'] = 'SmokeProperty';
+        					device.properties[wt_id]['@type'] = 'SmokeProperty';
         					if(device['@type'].indexOf("SmokeSensor") == -1){
         						device['@type'].push('SmokeSensor');
         					}
         				}
         				else if(expose.name == "switch"){
-        					device.properties[expose.property]['@type'] = 'BooleanProperty';
+        					device.properties[wt_id]['@type'] = 'BooleanProperty';
         					if(device['@type'].indexOf("BinarySensor") == -1){
         						device['@type'].push('BinarySensor');
         					}
         				}
         				else if(expose.name == "water_leak"){
-        					device.properties[expose.property]['@type'] = 'LeakProperty';
+        					device.properties[wt_id]['@type'] = 'LeakProperty';
         					if(device['@type'].indexOf("LeakSensor") == -1){
         						device['@type'].push('LeakSensor');
         					}
         				}
         				else if(expose.name == "power"){
-        					device.properties[expose.property]['@type'] = 'InstantaneousPowerProperty';
+        					device.properties[wt_id]['@type'] = 'InstantaneousPowerProperty';
         					if(device['@type'].indexOf("EnergyMonitor") == -1){
         						device['@type'].push('EnergyMonitor');
         					}
         				}
         				else if(expose.name == "voltage"){
-        					device.properties[expose.property]['@type'] = 'VoltageProperty';
+        					device.properties[wt_id]['@type'] = 'VoltageProperty';
         					//if(device['@type'].indexOf("EnergyMonitor") == -1){
         					//	device['@type'].push('EnergyMonitor');
         					//}
         				}
         				else if(expose.name == "current"){
-        					device.properties[expose.property]['@type'] = 'CurrentProperty';
+        					device.properties[wt_id]['@type'] = 'CurrentProperty';
         					if(device['@type'].indexOf("EnergyMonitor") == -1){
         						device['@type'].push('EnergyMonitor');
         					}
         				}
         				else if(expose.name == "co2" || expose.name == "eco2" || expose.name == "voc"){
-        					device.properties[expose.property]['@type'] = 'ConcentrationProperty';
+        					device.properties[wt_id]['@type'] = 'ConcentrationProperty';
         					if(device['@type'].indexOf("AirQualitySensor") == -1){
         						device['@type'].push('AirQualitySensor');
         					}
         				}
         				else if(expose.name == "pm10" || expose.name == "pm25" || expose.name == "hcho"){
-        					device.properties[expose.property]['@type'] = 'DensityProperty';
+        					device.properties[wt_id]['@type'] = 'DensityProperty';
         					if(device['@type'].indexOf("AirQualitySensor") == -1){
         						device['@type'].push('AirQualitySensor');
         					}
@@ -680,7 +690,7 @@ class ExposesDeviceGenerator {
                         console.log("value_on was defined: " + expose['value_on']);
                     }
     				if( expose['value_on'] == "LOCK" || expose['value_on'] == "UNLOCK"){
-    					device.properties[expose.property]['@type'] = 'LockedProperty'; 
+    					device.properties[wt_id]['@type'] = 'LockedProperty'; 
     				}	
     			}
                 */
@@ -690,13 +700,13 @@ class ExposesDeviceGenerator {
                     console.log(">");
                     console.log("->");
                     console.log("--> contact");
-                    if(typeof device.properties[expose.property] != 'undefined'){
-                        console.log("--->", device.properties[expose.property]);
-                        if(typeof device.properties[expose.property]['value_off'] != 'undefined' && typeof device.properties[expose.property]['value_on'] != 'undefined'){
+                    if(typeof device.properties[wt_id] != 'undefined'){
+                        console.log("--->", device.properties[wt_id]);
+                        if(typeof device.properties[wt_id]['value_off'] != 'undefined' && typeof device.properties[wt_id]['value_on'] != 'undefined'){
                             console.log("----> FLIPPING?");
-                            //const old_off = device.properties[expose.property]['value_off'];
-                            //device.properties[expose.property]['value_off'] = device.properties[expose.property]['value_on'];
-                            //device.properties[expose.property]['value_on'] = old_off;
+                            //const old_off = device.properties[wt_id]['value_off'];
+                            //device.properties[wt_id]['value_off'] = device.properties[wt_id]['value_on'];
+                            //device.properties[wt_id]['value_on'] = old_off;
                     
                         }
                     }
@@ -737,8 +747,8 @@ class ExposesDeviceGenerator {
                                                             'value_off': 'on', 
                                                             'value_on': 'off'
                                                             };
-                    
-                                 // This should always be false:
+                                
+                                // This should always be false:
                                 fake_exposes_info['value'] = this.adapter.get_persistent_value(device.zigbee_id,'pushed',false,true,false); // zigbee_id, property_name, value, read-only, percentage
                         
                                 property_names_list.push('pushed');
@@ -748,8 +758,9 @@ class ExposesDeviceGenerator {
                                 if( device['@type'].indexOf('PushButton') == -1){ // In this case it's unfortunate that the WebThings Gateway can only handle one capability per type.
                                     device['@type'].push('PushButton');
                                 }
-                                device.properties['pushed']['@type'] = 'PushedProperty';
-                                device.properties['pushed'].origin = "exposes-generated-from-action";
+                                // TODO: instead of 'pushed' also use a more complex wt_id here
+                                device.properties[wt_id_base + 'pushed']['@type'] = 'PushedProperty';
+                                device.properties[wt_id_base + 'pushed'].origin = "exposes-generated-from-action";
                             }
                         }
                     
@@ -784,9 +795,10 @@ class ExposesDeviceGenerator {
                                 // add capability if there isn't one already
                                 if( device['@type'].indexOf('MultiLevelSensor') == -1){
                                     device['@type'].push('MultiLevelSensor');
-                                    device.properties['brightness']['@type'] = 'LevelProperty';
+                                    device.properties[wt_id_base + 'brightness']['@type'] = 'LevelProperty';
                                 }
-                                device.properties['brightness'].origin = "exposes-generated-from-action";
+                                // TODO: instead of 'brightness' also use a more complex wt_id here
+                                device.properties[wt_id_base + 'brightness'].origin = "exposes-generated-from-action";
                             }
                             else{
                                 console.log("GENERATING FROM ACTIONS: BRIGHTNESS PROPERTY ALREADY EXISTED");
@@ -812,8 +824,7 @@ class ExposesDeviceGenerator {
                                     'value_on':'on',
                                     'value_off':'off'
         						}
-                        
-
+                                
                                 const initial_value = this.adapter.get_persistent_value(device.zigbee_id,'toggle',false,true,false); // zigbee_id, property_name, value, read-only, percentage
                                 if(initial_value != null){
                                     fake_exposes_info['value'] = initial_value;
@@ -826,10 +837,10 @@ class ExposesDeviceGenerator {
                                 // add capability if there isn't one already
                                 if( device['@type'].indexOf('BinarySensor') == -1){
                                     device['@type'].push('BinarySensor');
-                                    device.properties['toggle']['@type'] = 'BooleanProperty';
+                                    device.properties[wt_id_base + 'toggle']['@type'] = 'BooleanProperty';
                                 
                                 }
-                                device.properties['toggle'].origin = "exposes-generated-from-action";
+                                device.properties[wt_id_base + 'toggle'].origin = "exposes-generated-from-action";
         					}
                             
         				} // End of property_names_list check
@@ -857,7 +868,7 @@ class ExposesDeviceGenerator {
                                     property_names_list.push(expose.values[i].toLowerCase());
                                     device = this.parse_property(fake_exposes_info, device, property_names_list);
                                 
-                                    device.properties[ expose.values[i].toLowerCase() ].origin = "exposes-generated-from-action";
+                                    device.properties[wt_id_base + expose.values[i].toLowerCase() ].origin = "exposes-generated-from-action";
             				    }
                             
                             }
