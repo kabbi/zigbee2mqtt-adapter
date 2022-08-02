@@ -2435,6 +2435,9 @@ class ZigbeeMqttAdapter extends Adapter {
 
     		// Handle incoming network map data
     		else if (topic.endsWith('/bridge/response/networkmap')) {
+                if (this.DEBUG) {
+                    console.log("RECEIVED NETWORK MAP? ", msg['data']);
+                }
     			this.apiHandler.map = msg['data']['value']; //'digraph G { "Welcome" -> "To" "To" -> "Privacy" "To" -> "ZIGBEE!"}';
     			this.waiting_for_map = false;
     		}
@@ -3391,6 +3394,7 @@ class MqttDevice extends Device {
         }
         this.name = description.name;
 		this['@type'] = description['@type'];
+        this['@context'] = "https://webthings.io/schemas/";
 		this.modelId = modelId;
 		this.connected = false;
         //this.id = id;
