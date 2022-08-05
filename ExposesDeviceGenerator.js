@@ -565,8 +565,8 @@ class ExposesDeviceGenerator {
         				}
         				else if(expose.name == "color"){
         					device.properties[wt_id]['@type'] = 'ColorProperty';
-        					if(device['@type'].indexOf("Light") == -1){ // && device['@type'].length == 0
-        						device['@type'].push('Light');
+        					if(device['@type'].indexOf("ColorControl") == -1){ // && device['@type'].length == 0
+        						device['@type'].push('ColorControl');
         					}
         				}
         				else if(expose.name == "color_temp"){
