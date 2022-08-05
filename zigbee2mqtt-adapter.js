@@ -3270,7 +3270,6 @@ class ZigbeeMqttAdapter extends Adapter {
         try {
             if(typeof this.addon_start_time != 'undefined'){
                 
-                
                 const z2m_check_response = await execute("ps aux | grep zigbee2mqtt");
                 if(this.DEBUG){
                     console.log("z2m_check_response: ", z2m_check_response);

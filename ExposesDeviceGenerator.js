@@ -563,6 +563,12 @@ class ExposesDeviceGenerator {
         						device['@type'].push('MultiLevelSensor');
         					}
         				}
+        				else if(expose.name == "color"){
+        					device.properties[wt_id]['@type'] = 'ColorProperty';
+        					if(device['@type'].indexOf("Light") == -1){ // && device['@type'].length == 0
+        						device['@type'].push('Light');
+        					}
+        				}
         				else if(expose.name == "color_temp"){
         					device.properties[wt_id]['@type'] = 'ColorTemperatureProperty';
         					if(device['@type'].indexOf("Light") == -1){ // && device['@type'].length == 0

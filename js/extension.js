@@ -7,6 +7,21 @@
 
 	    	this.content = '';
 
+            //console.log(window.API);
+
+            /*
+	        window.API.getThings()
+            .then((body) => {
+				
+                //console.log("THINGS: ", body);
+                
+				//document.getElementById("extension-zigbee2mqtt-adapter-graphviz-container").innerHTML = body.status;
+			    
+	        }).catch((e) => {
+	  			console.log("Error sending update map request: ", e);
+	        });
+            */
+
             this.debug = false;
 			this.asked_for_map = false;
 			this.updating_firmware = false;
@@ -33,7 +48,7 @@
 
 
 	  show() {
-			console.log("in show");
+			//console.log("in show");
 			//console.log("this.content:");
 			//console.log(this.content);
 			
@@ -48,7 +63,7 @@
             
             const main_view = document.getElementById('extension-zigbee2mqtt-adapter-view');
             
-			console.log("main view: ", main_view);
+			//console.log("main view: ", main_view);
 			if(this.content == ''){
 				console.log("show: content was empty");
 				//main_view.innerHTML = "<h1>Error loading, try reloading the page</h1>";
@@ -57,7 +72,7 @@
 			}
             main_view.innerHTML = this.content;
             
-            console.log("main view: ", main_view);
+            //console.log("main view: ", main_view);
             
             try{
         	    API.getThings().then((things) => {
@@ -126,11 +141,13 @@
 					{"action":"update-map"}
 
 		        ).then((body) => {
-							//console.log(body);
-							//document.getElementById("extension-zigbee2mqtt-adapter-graphviz-container").innerHTML = body.status;
-
+					if(this.debug){
+                        console.log("update-map response: ", body);
+                    }
+					//document.getElementById("extension-zigbee2mqtt-adapter-graphviz-container").innerHTML = body.status;
+				    
 		        }).catch((e) => {
-		  				//console.log("Error sending update map request: " + e.toString());
+		  			console.log("Error sending update map request: ", e);
 		        });
 			});
 
@@ -247,11 +264,11 @@
 						
 					  	window.API.postJson(`/extensions/${this.id}/api/ajax`,
 						{"action":"poll"}
-
+                        
 					        ).then((body) => {
 								if(this.debug){
-                                    //console.log("received poll response:");
-								    //console.log(body);
+                                    console.log("received poll response:");
+								    console.log(body);
                                 }
                                 
 								if(this.asked_for_map){
@@ -350,7 +367,9 @@
 					}
 				}
 				catch(e){
-                    //console.log("Zigbee2MQTT polling error: ", e);
+                    if(this.debug){
+                        console.log("Zigbee2MQTT polling error: ", e);
+                    }
                 }
 				
 			}, 3000);
