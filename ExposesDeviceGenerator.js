@@ -476,7 +476,7 @@ class ExposesDeviceGenerator {
                 
                 // add capabilities information
     			if(typeof expose['name'] != "undefined" && device.properties[wt_id] != 'undefined'){
-                    //console.log("expose.name = " + expose.name);
+                    //console.log("expose.name = " + expose.property);
                     
                     try{
         				if( expose.name.endsWith("state") ){
@@ -911,7 +911,7 @@ class ExposesDeviceGenerator {
         
 		const property = new Object();
 		property.type = 'boolean';
-		property.title = this.applySentenceCase(binary.name); // attempt to avoid the `on/off` property title
+		property.title = this.applySentenceCase(binary.property); // attempt to avoid the `on/off` property title
 		property.description = binary.description;
 		property.readOnly = this.accessToReadOnly(binary.access);
         property.property = binary.property;
@@ -959,7 +959,7 @@ class ExposesDeviceGenerator {
         try{
             
     		property.type = 'integer';
-    		property.title = this.applySentenceCase(numeric.name);
+    		property.title = this.applySentenceCase(numeric.property); // NOTE: THIS ONE USES PROPERTY INSTEAD OF NAME IN AN ATTEMPT TO AVOID DUPLICATES
     		property.description = numeric.description;
     		property.readOnly = this.accessToReadOnly(numeric.access);
             property.property = numeric.property;
@@ -1006,7 +1006,7 @@ class ExposesDeviceGenerator {
 	numericPropertyToFloatProperty(numeric) {
 		const property = new Object();
 		property.type = 'number';
-		property.title = this.applySentenceCase(numeric.name); // attempt to modify the name of the property
+		property.title = this.applySentenceCase(numeric.property); // attempt to modify the name of the property
 		property.description = numeric.description;
 		property.readOnly = this.accessToReadOnly(numeric.access);
 		if(!property.readOnly && typeof numeric.value_step == "undefined"){ // if this a variable the user can set, limit it to 2 decimals (otherwise default in gateway is 3).
@@ -1026,7 +1026,7 @@ class ExposesDeviceGenerator {
 	enumPropertyToStringProperty(enumeration) {
 		const property = new Object();
 		property.type = 'string';
-		property.title = this.applySentenceCase(enumeration.name);
+		property.title = this.applySentenceCase(enumeration.property);
 		property.description = enumeration.description;
 		property.readOnly = this.accessToReadOnly(enumeration.access);
 		property.enum = enumeration.values;
@@ -1038,7 +1038,7 @@ class ExposesDeviceGenerator {
 	STARKVINDenumPropertyToStringProperty(enumeration) {
 		const property = new Object();
 		property.type = 'string';
-		property.title = this.applySentenceCase(enumeration.name);
+		property.title = this.applySentenceCase(enumeration.property);
 		property.description = enumeration.description;
 		property.readOnly = this.accessToReadOnly(enumeration.access);
 		
@@ -1095,7 +1095,7 @@ class ExposesDeviceGenerator {
 	textPropertyToStringProperty(text) {
 		const property = new Object();
 		property.type = 'string';
-		property.title = this.applySentenceCase(text.name);
+		property.title = this.applySentenceCase(text.property);
 		property.description = text.description;
         property.property = text.property;
 		return property;
@@ -1107,7 +1107,7 @@ class ExposesDeviceGenerator {
 	*/
 	binaryPropertyToBooleanAction(binary) {
 		const action = new Object();
-		action.title = this.applySentenceCase(binary.name);
+		action.title = this.applySentenceCase(binary.property);
 		action.description = binary.description;
 		action.input = this.binaryPropertyToBooleanProperty(binary);
         action.property = binary.property;
@@ -1120,7 +1120,7 @@ class ExposesDeviceGenerator {
 	*/
 	binaryPropertyToLockAction(binary) {
 		const action = new Object();
-		action.title = this.applySentenceCase(binary.name);
+		action.title = this.applySentenceCase(binary.property);
 		action.description = binary.description;
 		action.input = this.binaryPropertyToBooleanProperty(binary);
         action.property = binary.property;
@@ -1134,7 +1134,7 @@ class ExposesDeviceGenerator {
 	*/
 	enumPropertyToStringAction(enumeration) {
 		const action = new Object();
-		action.title = this.applySentenceCase(enumeration.name);
+		action.title = this.applySentenceCase(enumeration.property);
 		action.description = enumeration.description;
 		action.input = this.enumPropertyToStringProperty(enumeration);
         action.property = enumeration.property;
@@ -1147,7 +1147,7 @@ class ExposesDeviceGenerator {
 	*/
 	numericPropertyToIntegerAction(numeric) {
 		const action = new Object();
-		action.title = this.applySentenceCase(numeric.name);
+		action.title = this.applySentenceCase(numeric.property);
 		action.description = numeric.description;
 		action.input = this.numericPropertyToIntegerProperty(numeric);
         action.property = numeric.property;
@@ -1156,7 +1156,7 @@ class ExposesDeviceGenerator {
 	
 	numericPropertyToFloatAction(numeric) { // would this ever be used?? Do actions with floats even exist? Or are these indexes in a list of options?
 		const action = new Object();
-		action.title = this.applySentenceCase(numeric.name);
+		action.title = this.applySentenceCase(numeric.property);
 		action.description = numeric.description;
 		action.input = this.numericPropertyToFloatProperty(numeric);
 		return action;
@@ -1168,7 +1168,7 @@ class ExposesDeviceGenerator {
 	*/
 	textPropertyToStringAction(text) {
 		const action = new Object();
-		action.title = this.applySentenceCase(text.name);
+		action.title = this.applySentenceCase(text.property);
 		action.description = text.description;
 		action.input = this.textPropertyToStringProperty(text);
         action.property = text.property;
