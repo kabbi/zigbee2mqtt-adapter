@@ -154,7 +154,8 @@ class ZigbeeMqttAdapter extends Adapter {
         this.last_really_run_time = 0;
         this.z2m_command = 'node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/index.js';
         this.z2m_installed_succesfully = false;
-		this.z2m_started = false; // true while running
+		this.busy_rebuilding_z2m = false;
+        this.z2m_started = false; // true while running
         this.z2m_should_be_running = false; // true is started at least once
         this.z2m_state = false;
         this.z2m_had_error = false;
@@ -162,6 +163,7 @@ class ZigbeeMqttAdapter extends Adapter {
 		this.updating_firmware = false;
 		this.update_result = {'status':'idle'}; // will contain the message that Z2M returns after the update process succeeds or fails.
         //this.updating_firmware_progress = 0;
+        
         
         this.config.virtual_brightness_alternative = true;
         
@@ -3260,59 +3262,67 @@ class ZigbeeMqttAdapter extends Adapter {
 			console.log('in rebuild_z2m');
 		}
         this.z2m_installed_succesfully = false;
-        console.log("STARTING REBUILD COMMAND");
-		exec(`cd ${this.zigbee2mqtt_dir_path}; if ps aux | grep -q 'npm ci --production'; then npm i --save-dev @types/node; npm ci --production; fi`, (err, stdout, stderr) => {
-			if (err) {
-				console.error(err);
-				return;
-			}
-            else{
-                console.log("nice, fix attempt did not create an error?");
-            }
-			if (this.DEBUG) {
-				console.log(stdout);
-			}
-			console.log("-----REBUILD ATTEMPT COMPLETE-----");
-		    this.z2m_installed_succesfully = true;
-			//parent_scope.run_zigbee2mqtt();
-            //this.run_zigbee2mqtt();
-		});
+        
+        if(this.busy_rebuilding_z2m == false){
+            this.busy_rebuilding_z2m = true;
+            console.log("STARTING REBUILD COMMAND");
+    		exec(`cd ${this.zigbee2mqtt_dir_path}; if ps aux | grep -q 'npm ci --production'; then npm install typescript -g; npm i --save-dev @types/node; npm ci --production; fi`, (err, stdout, stderr) => {
+    			if (err) {
+    				console.error(err);
+                    this.busy_rebuilding_z2m = true;
+    				return;
+    			}
+                else{
+                    console.log("nice, fix attempt did not create an error?");
+                }
+    			if (this.DEBUG) {
+    				console.log(stdout);
+    			}
+                
+    			console.log("-----REBUILD ATTEMPT COMPLETE-----");
+                this.busy_rebuilding_z2m = false;
+    		    this.z2m_installed_succesfully = true;
+    			//parent_scope.run_zigbee2mqtt();
+                //this.run_zigbee2mqtt();
+    		});
         
         
-        /*
-        exec("ps aux | grep zigbee2mqtt", (error, stdout, stderr) => {
-            if (error) {
-                console.log(`rebuild error: ${error.message}`);
-                return;
-            }
-            if (stderr) {
-                console.log(`rebuild stderr: ${stderr}`);
-                return;
-            }
-            console.log(`check_response to see if already rebuilding: ${stdout}`);
+            /*
+            exec("ps aux | grep zigbee2mqtt", (error, stdout, stderr) => {
+                if (error) {
+                    console.log(`rebuild error: ${error.message}`);
+                    return;
+                }
+                if (stderr) {
+                    console.log(`rebuild stderr: ${stderr}`);
+                    return;
+                }
+                console.log(`check_response to see if already rebuilding: ${stdout}`);
             
             
-            if(stdout.indexOf('npm ci --production') != -1){
-                console.log("Z2M seems to already be rebuilding, so done.");
-                return;
-            }
+                if(stdout.indexOf('npm ci --production') != -1){
+                    console.log("Z2M seems to already be rebuilding, so done.");
+                    return;
+                }
             
             
             
-        });
-        */
+            });
+            */
         
-        /*
-        const z2m_check_response = execute("ps aux | grep zigbee2mqtt");
-        if(this.DEBUG){
-            console.log("check_response to see if already rebuilding: ", z2m_check_response);
+            /*
+            const z2m_check_response = execute("ps aux | grep zigbee2mqtt");
+            if(this.DEBUG){
+                console.log("check_response to see if already rebuilding: ", z2m_check_response);
+            }
+        
+            if(z2m_check_response.indexOf('npm ci --production') != -1){
+                console.log("Z2M seems to already berebuilding, so done.");
+                return;
+            }
+            */
         }
         
-        if(z2m_check_response.indexOf('npm ci --production') != -1){
-            console.log("Z2M seems to already berebuilding, so done.");
-            return;
-        }
-        */
         
         
     }
