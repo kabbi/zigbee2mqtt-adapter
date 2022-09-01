@@ -3324,6 +3324,10 @@ class ZigbeeMqttAdapter extends Adapter {
                 */
             }
         }
+        else{
+			this.delete_z2m();
+			this.download_z2m(); // this also then installs and starts zigbee2mqtt
+        }
         
     }
 
