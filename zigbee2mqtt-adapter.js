@@ -1131,8 +1131,8 @@ class ZigbeeMqttAdapter extends Adapter {
 			console.log('Attempting to delete local zigbee2mqtt from data folder');
 		}
 		try {
-			execSync(`rm -rf ${this.zigbee2mqtt_dir_path}`);
-            execSync(`rm ${this.zigbee2mqtt_configuration_file_path}`);
+			execSync(`sudo rm -rf ${this.zigbee2mqtt_dir_path}`);
+            execSync(`sudo rm ${this.zigbee2mqtt_configuration_file_path}`);
 			return true;
 		} catch (error) {
 			console.error('Error deleting:', error);
