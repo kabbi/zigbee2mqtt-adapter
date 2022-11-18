@@ -17,3 +17,5 @@ tar czf ${TARFILE} package
 shasum --algorithm 256 ${TARFILE} > ${TARFILE}.sha256sum
 
 rm -rf SHA256SUMS package
+
+# does this become something like this? zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-v${{ matrix.node-version }}.tgz
