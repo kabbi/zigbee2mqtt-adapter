@@ -30,6 +30,6 @@ echo "renaming files"
 echo "old name: $TARFILE"
 
 mv ${TARFILE} zigbee2mqtt-adapter-${RELEASE_VERSION}-v${NODE_VERSION}.tgz
-mv ${TARFILE}.sha256sum zigbee2mqtt-adapter-${RELEASE_VERSION}-v${NODE_VERSION}.tgz.shasum
+mv ${TARFILE}.sha256sum zigbee2mqtt-adapter-${RELEASE_VERSION}-v${NODE_VERSION}.tgz.sha256sum
 
 exit 0
