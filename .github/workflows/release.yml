@@ -20,7 +20,7 @@ jobs:
       with:
         name: upload_url
         path: upload_url
-        
+
   build:
     needs: get-release
     runs-on: ubuntu-latest
