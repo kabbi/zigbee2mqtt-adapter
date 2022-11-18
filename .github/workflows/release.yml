@@ -5,7 +5,24 @@ on:
     types: [created]
 
 jobs:
+  get-release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get Release
+      id: get_release
+      uses: bruceadams/get-release@v1.3.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Dump upload url to file
+      run: echo '${{ steps.get_release.outputs.upload_url }}' > upload_url
+    - name: Upload upload_url
+      uses: actions/upload-artifact@v3
+      with:
+        name: upload_url
+        path: upload_url
+        
   build:
+    needs: get-release
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -17,18 +34,16 @@ jobs:
         ]
     steps:
       - uses: actions/checkout@v3
-      - name: Get Release
-        id: get_release
-        uses: bruceadams/get-release@v1.2.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup node
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Install dependencies
-        run: |
-          npm install
+
+# pachage.sh does this?:
+#      - name: Install dependencies
+#        run: |
+#          npm install
+
 #      - name: Lint with eslint
 #        run: |
 #          npm run lint
