@@ -1,7 +1,11 @@
 #!/bin/bash -e
 
-RELEASE_VERSION="$1"
-NODE_VERSION="$2"
+
+#NODE_VERSION="$2"
+NODE_VERSION=$(node -v | cut -d. -f1)
+
+#RELEASE_VERSION="$1"
+RELEASE_VERSION=$(grep '"version"' manifest.json | cut -d: -f2 | cut -d\" -f2)
 
 echo "Release version $RELEASE_VERSION"
 echo "Node version: $NODE_VERSION"
