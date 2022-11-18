@@ -31,10 +31,10 @@ rm -rf SHA256SUMS package
 # It needs to become something like this: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-v${{ matrix.node-vers>
 
 echo "renaming files"
-echo "old tar file: $TARFILE"
+echo "- old tar file: $TARFILE"
 
-NEW_TARFILE="zigbee2mqtt-adapter-$RELEASE_VERSION-v$NODE_VERSION.tgz"
-echo "new tar file: $NEW_TARFILE"
+NEW_TARFILE="zigbee2mqtt-adapter-${RELEASE_VERSION}-${NODE_VERSION}.tgz"
+echo "- new tar file: $NEW_TARFILE"
 
 mv $TARFILE $NEW_TARFILE
 mv $TARFILE.sha256sum $NEW_TARFILE.sha256sum
