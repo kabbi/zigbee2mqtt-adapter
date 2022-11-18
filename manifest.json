@@ -28,24 +28,24 @@
   "options": {
     "default": {
       "southern_hemisphere": false,
-	  "measurement_poll_interval": "60",
+      "measurement_poll_interval": "60",
       "local_zigbee2mqtt": true,
-	  "disable_improved_security": false,
+      "disable_improved_security": false,
       "auto_update": false,
       "mqtt": "mqtt://localhost",
       "prefix": "zigbee2mqtt",
       "serial_port": "",
       "channel": "11",
       "ikea_test_server": false,
-	  "home_assistant_support":false,
-	  "virtual_brightness_alternative_speed": "10",
-	  "use_old_devices_description": false,
+      "home_assistant_support":false,
+      "virtual_brightness_alternative_speed": "10",
+      "use_old_devices_description": false,
       "debug": false
     },
     "schema": {
       "type": "object",
       "properties": {
-		"southern_hemisphere": {
+          "southern_hemisphere": {
           "type": "boolean",
           "description": "If you have devices that measure the ambient air pressure, this addon can act as a barometer and generate a local weather prediction for you. This feature will need to know if you're on the northern or southern hemisphere. Enable this option to indicate that you live on the southern hemisphere."
         },
@@ -61,7 +61,7 @@
           ],
           "type": "string"
         },
-		"local_zigbee2mqtt": {
+          "local_zigbee2mqtt": {
           "type": "boolean",
           "description": "Advanced. If enabled, this addon will install and use its own version of Zigbee2MQTT. Disable this if you have already manually installed Zigbee2MQTT on your system."
         },
@@ -145,7 +145,7 @@
           ],
           "type": "string"
         },
-		"use_old_devices_description": {
+          "use_old_devices_description": {
           "type": "boolean",
           "description": "Advanced. If you don't know what this is about, you can leave it disabled."
         },
