@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+RELEASE_VERSION="$1"
+NODE_VERSION="$2"
+
 rm -rf node_modules
 
 npm install --production
@@ -18,4 +21,9 @@ shasum --algorithm 256 ${TARFILE} > ${TARFILE}.sha256sum
 
 rm -rf SHA256SUMS package
 
-# does this become something like this? zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-v${{ matrix.node-version }}.tgz
+# It needs to become something like this: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-v${{ matrix.node-version }}.tgz
+
+mv ${TARFILE} zigbee2mqtt-adapter-${RELEASE_VERSION}-v${NODE_VERSION}.tgz
+mv ${TARFILE}.sha256sum zigbee2mqtt-adapter-${RELEASE_VERSION}-v${NODE_VERSION}.tgz
+
+exit 0
