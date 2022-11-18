@@ -35,7 +35,7 @@ jobs:
 #    - name: Make build script executable
 #      run: chmod +x ./build.sh
     - name: Make packaging script executable
-      run: chmod +x ./package.sh
+      run: chmod +x ./package.sh ${{ env.RELEASE_VERSION }} ${{ matrix.node-version }}
 #    - name: Build addon
 #      run: |
 #        ./build.sh "${{ matrix.node-version }}" 
