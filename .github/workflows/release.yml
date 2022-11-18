@@ -62,21 +62,4 @@ jobs:
 
 
 
-# pachage.sh does this?:
-#      - name: Install dependencies
-#        run: |
-#          npm install
-
-#      - name: Lint with eslint
-#        run: |
-#          npm run lint
-#    - name: Make build script executable
-#      run: chmod +x ./build.sh
-    
-#    - name: Build addon
-#      run: |
-#        ./build.sh "${{ matrix.node-version }}" 
-      # "${{ matrix.language }}" "${{ matrix.version }}"
-#      shell: bash
-    
     
