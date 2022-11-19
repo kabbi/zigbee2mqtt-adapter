@@ -47,7 +47,7 @@ jobs:
       - name: Package project
         run: |
           ./package.sh
-#          ./package.sh  ${{ env.RELEASE_VERSION }} ${{ matrix.node-version }}
+#          ./package.sh  ${{ env.RELEASE_VERSION }} ${{ matrix.node }}
       
       - name: Upload Release Asset tgz
         uses: shogo82148/actions-upload-release-asset@v1
