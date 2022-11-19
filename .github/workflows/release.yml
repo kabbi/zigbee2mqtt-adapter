@@ -26,12 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [
-          10,
-          12,
-          14,
-          16,
-        ]
+        node: [10,12,14,16]
     steps:
       - name: Download upload_url
         uses: actions/download-artifact@v3
@@ -40,6 +35,8 @@ jobs:
           path: upload_url
       - name: Set upload_url
         run: echo "UPLOAD_URL=$(cat upload_url/upload_url)" >> $GITHUB_ENV
+      - name: Set release version
+        run: echo "RELEASE_VERSION=${GITHUB_REF:10}" >> $GITHUB_ENV
       - uses: actions/checkout@v3
       - name: Setup node
         uses: actions/setup-node@v3
@@ -57,14 +54,14 @@ jobs:
         with:
           #upload_url: ${{ github.event.release.upload_url }}
           upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-v${{ matrix.node-version }}.tgz
+          asset_path: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-v${{ matrix.node }}.tgz
 
       - name: Upload Release Asset shasum
         uses: shogo82148/actions-upload-release-asset@v1
         with:
           #upload_url: ${{ github.event.release.upload_url }}
           upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-v${{ matrix.node-version }}.tgz.sha256sum
+          asset_path: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-v${{ matrix.node }}.tgz.sha256sum
 
 
 
