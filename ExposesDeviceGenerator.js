@@ -337,7 +337,7 @@ class ExposesDeviceGenerator {
                 
                 const device_id = device.id.split("/").pop();
                 
-                const wt_id_base =  device_id + "-";
+                const wt_id_base = device_id + "-";
                 const wt_id = wt_id_base + expose.property;
                 if(this.config.debug){
                     console.log("device_id: ", device_id);
@@ -425,6 +425,10 @@ class ExposesDeviceGenerator {
                             device.properties[wt_id]['property'] = expose['property'];
                         }
                         
+                    }
+                
+                    if(device.properties[wt_id]['title'] == "Color temp"){
+                        device.properties[wt_id]['title'] = "Color temperature";
                     }
                 
 
