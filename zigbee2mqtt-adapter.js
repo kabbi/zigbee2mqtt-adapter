@@ -198,6 +198,17 @@ class ZigbeeMqttAdapter extends Adapter {
 		if (this.DEBUG) {
 			console.log("this.zigbee2mqtt_data_dir_path = ", this.zigbee2mqtt_data_dir_path);
 		}
+        this.node16_shortcut_available = false;
+		this.node16_shortcut_path = path.join(homedir, 'webthings', 'gateway', 'node16');
+		if (this.DEBUG) {
+			console.log("this.node16_shortcut_path = ", this.node16_shortcut_path);
+		}
+        if (fs.existsSync(this.node16_shortcut_path)) {
+            this.node16_shortcut_available = true;
+            console.log('node16 shortcut is available');
+        }
+        
+        
         
 		// log files location
 		this.zigbee2mqtt_log_path = path.join(homedir, '.webthings', 'data', 'zigbee2mqtt-adapter','zigbee2mqtt-adapter','log');
@@ -990,12 +1001,20 @@ class ZigbeeMqttAdapter extends Adapter {
         try{
             var parent_scope = this;
             
-            this.zigbee2mqtt_subprocess = spawn('node', [this.zigbee2mqtt_file_path]);
+            if(this.node16_shortcut_available){
+                console.log('starting Zigbee2MQTT addon with node16 shortcut');
+                this.zigbee2mqtt_subprocess = spawn(this.node16_shortcut_path, [this.zigbee2mqtt_file_path]);
+            }
+            else{
+                console.log('starting Zigbee2MQTT addon without node shortcut');
+                this.zigbee2mqtt_subprocess = spawn('node', [this.zigbee2mqtt_file_path]);
+            }
             
+        
             this.zigbee2mqtt_subprocess.on('error', err => {
                 console.error('Yikes, detected subprocess error for Z2M child process: ', err);
             });
-            
+        
             // StdOut
             this.zigbee2mqtt_subprocess.stdout.setEncoding('utf8');
             this.zigbee2mqtt_subprocess.stdout.on('data', (data) => { // 
@@ -1003,11 +1022,11 @@ class ZigbeeMqttAdapter extends Adapter {
                 if (this.DEBUG) {
                     console.log('z2m stdout: ' + data);
                 }
-                
+            
                 //console.log('parent_scope: ', parent_scope);
-                
+            
                 data=data.toString();
-                
+            
                 if( data.includes("Error while opening serialport") ){
                      console.log('ERROR: COULD NOT CONNECT TO THE USB STICK. PLEASE RESTART THE CONTROLLER. MAKE SURE OTHER ZIGBEE ADDONS ARE DISABLED.');
                     this.sendPairingPrompt("Zigbee stick did not respond, please restart the controller");
@@ -1015,11 +1034,12 @@ class ZigbeeMqttAdapter extends Adapter {
                 }
                 else if( data.includes("ailed to start") ){
                     console.log("Yikes, failed to start Zigbee2MQTT. Killing it, just to be sure. Try again later?");
+                    this.z2m_had_error = true;
                     try{
                         execSync("pkill -f 'zigbee2mqtt-adapter/zigbee2mqtt/index.js'");
                         //console.log("delaying killing for now");
                         //setTimeout(() => {
-                            
+                        
                         //}, "30000")
                         //
                     }
@@ -1030,15 +1050,15 @@ class ZigbeeMqttAdapter extends Adapter {
                     //this.run_zigbee2mqtt(61); // wait 61 seconds before retrying
                 }
                 else if( data.includes(", failed") ){
-                
+            
                     // Isnt't this a bit much? Could this create a rebuild loop?
                     //const zigbee2mqtt_dir = path.join(path.resolve('../..'), '.webthings', 'data', 'zigbee2mqtt-adapter','zigbee2mqtt');
                     console.log("Yikes, Zigbee2MQTT may not be installed ok. Will attempt to fix. Dir: " + this.zigbee2mqtt_dir_path);
         			this.rebuild_z2m();
                 }
-                
+            
             });
-        
+    
             // StdErr
             this.zigbee2mqtt_subprocess.stderr.setEncoding('utf8');
             this.zigbee2mqtt_subprocess.stderr.on('data', (data) => {
@@ -1048,7 +1068,7 @@ class ZigbeeMqttAdapter extends Adapter {
                 if (this.DEBUG) {
                     console.log('z2m stderr: ', data);
                 }
-                
+            
                 if( data.includes("was compiled against a different Node.js version") || data.includes("Could not locate the bindings file") || data.includes("Cannot find module") ){
                     console.log('Oh ERROR SNAP, Zigbee2MQTT should be rebuilt');
                     this.rebuild_z2m();
@@ -1073,6 +1093,7 @@ class ZigbeeMqttAdapter extends Adapter {
                 this.z2m_started = false;
                 //console.log('Full output of script: ',scriptOutput);
             });
+            
             
         }
         catch(e){
