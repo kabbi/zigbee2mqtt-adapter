@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [10,12,14,16]
+        node: [10,12,16,18]
     steps:
       - name: Download upload_url
         uses: actions/download-artifact@v3
@@ -41,7 +41,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ matrix.node }}
       - name: Make packaging script executable
         run: chmod +x ./package.sh
       - name: Package project
