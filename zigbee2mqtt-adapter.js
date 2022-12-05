@@ -150,6 +150,7 @@ class ZigbeeMqttAdapter extends Adapter {
         this.security = {pan_id: "", network_key: ""};
         
         this.usb_port_issue = false;
+        this.usb_fix_attempted = false;
         
         this.last_really_run_time = 0;
         this.z2m_command = 'node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/index.js';
@@ -641,6 +642,46 @@ class ZigbeeMqttAdapter extends Adapter {
     }
 
 
+    // This does a brute-force attempt to fix the Zigbee USB stick not responding by turning it off and on again.
+    // It will currently only do this if only one USB stick was detected.
+    fix_usb(){
+        if(this.usb_port_issue && this.usb_fix_attempted == false){
+            
+            this.usb_fix_attempted = true;
+            console.log("in fix_usb");
+            exec("find /sys/bus/usb/devices/usb*/ -name dev | grep ttyUSB", (error, stdout, stderr) => {
+                console.log(error, stdout, stderr);
+            
+                const lines = stdout.split(/\r?\n/);
+                console.log("lines: ", lines.length);
+            
+                if(lines.length == 2){
+                    if(lines[0].length > 20 && lines[1].length == 0){
+                        const parts = lines[0].split(/\//);
+                        console.log("parts: ", parts);
+                        if(parts.length > 7){
+                            console.log("part 7: ", parts[7]);
+                            const usb_id =  parts[7];
+
+                            // echo 1-1.3 | sudo tee /sys/bus/usb/drivers/usb/unbind
+                            
+                            exec("echo " + usb_id + " | sudo tee /sys/bus/usb/drivers/usb/unbind", (error, stdout, stderr) => {
+                                console.log("Turned USB stick off");
+                                setTimeout(() => {
+                                    exec("echo " + usb_id + " | sudo tee /sys/bus/usb/drivers/usb/bind", (error, stdout, stderr) => {
+                                        console.log("Turned USB stick back on again");
+                                        this.look_for_usb_stick();
+                                    }); 
+                                },2000);
+                            });
+                        }
+                    }
+                }
+            
+            });
+        }
+    
+    }
 
 
 
@@ -754,10 +795,14 @@ class ZigbeeMqttAdapter extends Adapter {
 						"  server: 'mqtt://localhost'\n" +
 						"serial:\n" +
 						"  port: " + this.config.serial_port + "\n";
-                        
-                if(this.config.custom_serial != ""){
-                    base_config += "  "  + this.config.custom_serial + "\n";
-                }
+                   
+                   
+                if(typeof this.config.custom_serial != 'undefined'){
+                    if(this.config.custom_serial != ""){
+                        base_config += "  "  + this.config.custom_serial + "\n";
+                    }
+                }        
+                
                 
                 base_config += "availability:\n" +
                         "  active:\n" +
@@ -1032,7 +1077,7 @@ class ZigbeeMqttAdapter extends Adapter {
             this.zigbee2mqtt_subprocess.stdout.on('data', (data) => { // 
                 //Here is where the output goes
                 if (this.DEBUG) {
-                    console.log('z2m stdout: ' + data);
+                    console.log('z2m stdout: ' + data.toString() );
                 }
             
                 //console.log('parent_scope: ', parent_scope);
@@ -1040,9 +1085,10 @@ class ZigbeeMqttAdapter extends Adapter {
                 data=data.toString();
             
                 if( data.includes("Error while opening serialport") ){
-                     console.log('ERROR: COULD NOT CONNECT TO THE USB STICK. PLEASE RESTART THE CONTROLLER. MAKE SURE OTHER ZIGBEE ADDONS ARE DISABLED.');
+                    console.log('ERROR: COULD NOT CONNECT TO THE USB STICK. PLEASE RESTART THE CONTROLLER. MAKE SURE OTHER ZIGBEE ADDONS ARE DISABLED.');
                     this.sendPairingPrompt("Zigbee stick did not respond, please restart the controller");
                     this.usb_port_issue = true;
+                    this.fix_usb();
                 }
                 else if( data.includes("ailed to start") ){
                     console.log("Yikes, failed to start Zigbee2MQTT. Killing it, just to be sure. Try again later?");
@@ -1215,6 +1261,8 @@ class ZigbeeMqttAdapter extends Adapter {
                     }
                     this.z2m_state = true;
                     this.z2m_had_error = false;
+                    this.usb_port_issue = false;
+                    this.usb_fix_attempted = false;
                     //this.ping_things();
                     
                     /*
