@@ -166,7 +166,7 @@
     }
   },
   "short_name": "zigbee2mqtt",
-  "version": "1.1.15",
+  "version": "1.1.16",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
