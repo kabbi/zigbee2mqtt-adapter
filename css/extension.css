@@ -329,7 +329,7 @@
 
 .extension-zigbee2mqtt-adapter-read-about-risks{
 	cursor:pointer;
-	font-decoration:underline;
+	text-decoration:underline;
 }
 .extension-zigbee2mqtt-adapter-read-about-risks:hover{
 	text-decoration:underline;

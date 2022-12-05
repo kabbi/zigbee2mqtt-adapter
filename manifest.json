@@ -1,4 +1,5 @@
 {
+  "type": "object",
   "author": "Kabbi & CandleSmartHome.com",
   "description": "Connect to your Zigbee devices. Builds on the open source Zigbee2MQTT project.",
   "content_scripts": [
@@ -28,24 +29,24 @@
   "options": {
     "default": {
       "southern_hemisphere": false,
-      "measurement_poll_interval": "60",
+	  "measurement_poll_interval": "60",
       "local_zigbee2mqtt": true,
-      "disable_improved_security": false,
+	  "disable_improved_security": false,
       "auto_update": false,
       "mqtt": "mqtt://localhost",
       "prefix": "zigbee2mqtt",
       "serial_port": "",
       "channel": "11",
       "ikea_test_server": false,
-      "home_assistant_support":false,
-      "virtual_brightness_alternative_speed": "10",
-      "use_old_devices_description": false,
+	  "home_assistant_support":false,
+	  "virtual_brightness_alternative_speed": "10",
+	  "use_old_devices_description": false,
       "debug": false
     },
     "schema": {
       "type": "object",
       "properties": {
-          "southern_hemisphere": {
+		"southern_hemisphere": {
           "type": "boolean",
           "description": "If you have devices that measure the ambient air pressure, this addon can act as a barometer and generate a local weather prediction for you. This feature will need to know if you're on the northern or southern hemisphere. Enable this option to indicate that you live on the southern hemisphere."
         },
@@ -61,7 +62,7 @@
           ],
           "type": "string"
         },
-          "local_zigbee2mqtt": {
+		"local_zigbee2mqtt": {
           "type": "boolean",
           "description": "Advanced. If enabled, this addon will install and use its own version of Zigbee2MQTT. Disable this if you have already manually installed Zigbee2MQTT on your system."
         },
@@ -93,6 +94,10 @@
         "serial_port": {
           "type": "string",
           "description": "Advanced. The serial port ID of the zigbee USB stick you are using. If you leave it empty it will try to auto-detect the correct port. An example you could try is '/dev/ttyACM0'."
+        },
+        "custom_serial": {
+          "type": "string",
+          "description": "Advanced. Sometimes it may be necessary to provide Zigbee2MQTT with something like 'adapter: ezsp' before a USB stick will be recognised properly. You can add that string here."
         },
         "channel": {
           "description": "Advanced. The wireless channel you want to the Zigbee network to use. If you change this, you will have to pair all your devices again. Suggested options are 11, 15, 20, or 25. The default and minimum is 11. The maximum is 26, although not all Zigbee devices support that channel.",
@@ -145,9 +150,13 @@
           ],
           "type": "string"
         },
-          "use_old_devices_description": {
+		"use_old_devices_description": {
           "type": "boolean",
           "description": "Advanced. If you don't know what this is about, you can leave it disabled."
+        },
+		"manual_configuration_file": {
+          "type": "boolean",
+          "description": "Advanced. If you enable this, then the addon will no longer override the Zigbee2MQTT configuration when it starts. This allows very advanced users to more easily make special customizations."
         },
         "debug": {
           "type": "boolean",
@@ -157,7 +166,7 @@
     }
   },
   "short_name": "zigbee2mqtt",
-  "version": "1.1.13",
+  "version": "1.1.6",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",

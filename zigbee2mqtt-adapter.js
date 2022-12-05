@@ -722,6 +722,13 @@ class ZigbeeMqttAdapter extends Adapter {
 				console.log('Checking if config file exists');
 			}
             
+            if(this.config.manual_configuration_file){
+    			if (this.DEBUG) {
+    				console.log('Configuration file is set to manual mode, skipping creation of new file.');
+    			}
+                return;
+            }
+            
             
 			fs.access(this.zigbee2mqtt_configuration_file_path, (err) => {
 							
@@ -746,8 +753,13 @@ class ZigbeeMqttAdapter extends Adapter {
 						"  base_topic: zigbee2mqtt\n" +
 						"  server: 'mqtt://localhost'\n" +
 						"serial:\n" +
-						"  port: " + this.config.serial_port + "\n" +
-                        "availability:\n" +
+						"  port: " + this.config.serial_port + "\n";
+                        
+                if(this.config.custom_serial != ""){
+                    base_config += "  "  + this.config.custom_serial + "\n";
+                }
+                
+                base_config += "availability:\n" +
                         "  active:\n" +
                         "    timeout: " + this.availability_interval + "\n" +
                         "  passive:\n" +
@@ -1153,7 +1165,9 @@ class ZigbeeMqttAdapter extends Adapter {
 		}
 		try {
 			execSync(`sudo rm -rf ${this.zigbee2mqtt_dir_path}`);
-            execSync(`sudo rm ${this.zigbee2mqtt_configuration_file_path}`);
+            if(!this.config.manual_configuration_file){
+                execSync(`sudo rm ${this.zigbee2mqtt_configuration_file_path}`);
+            }
 			return true;
 		} catch (error) {
 			console.error('Error deleting:', error);
