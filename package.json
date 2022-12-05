@@ -17,7 +17,7 @@
     "url": "https://github.com/kabbi/zigbee2mqtt-adapter/issues"
   },
   "dependencies": {
-    "mqtt": "^4.2.6",
+    "mqtt": "latest",
     "barometer-trend": "^2.1.2",
     "core-js": "latest",
     "typescript": "latest",
