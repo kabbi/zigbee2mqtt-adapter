@@ -427,10 +427,11 @@ class ExposesDeviceGenerator {
                         
                     }
                 
-                    if(device.properties[wt_id]['title'] == "Color temp"){
-                        device.properties[wt_id]['title'] = "Color temperature";
+                    if(typeof device.properties[wt_id] != 'undefined'){
+                        if(device.properties[wt_id]['title'] == "Color temp"){
+                            device.properties[wt_id]['title'] = "Color temperature";
+                        }
                     }
-                
 
                     // Add unit if available
                     if(typeof expose['unit'] != "undefined" && device.properties[wt_id] != 'undefined'){
