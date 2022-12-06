@@ -21,7 +21,7 @@ You can install this addon from the Candle App Store, although it comes pre-inst
 Alternatively, you can install it manually:
 
 Download the addon
-`git clone https://github.com/kabbi/zigbee2mqtt-adapter ~/.webthings/addons/zigbee2mqtt-adapter`
+`git clone --depth=1 https://github.com/kabbi/zigbee2mqtt-adapter ~/.webthings/addons/zigbee2mqtt-adapter`
 
 Go to the addon folder
 `cd ~/.webthings/addons/zigbee2mqtt-adapter`
