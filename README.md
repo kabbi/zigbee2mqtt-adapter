@@ -9,7 +9,7 @@ https://www.zigbee2mqtt.io/information/supported_devices.html
 
 Note that the latest available version on the Webthings Gateway is very old (0.6.5), while the version of the addon available on the Candle Controller is much newer, with more advanced features.
 
-![WebThings gateway Zigbee2Mqtt screenshot](https://github.com/kabbi/zigbee2mqtt-adapter/blob/master/zigbee2mqtt_screenshot.png?raw=true)
+![Zigbee2Mqtt addon screenshot](https://github.com/kabbi/zigbee2mqtt-adapter/blob/master/zigbee2mqtt_screenshot.png?raw=true)
 
 
 
