@@ -141,6 +141,7 @@ class ExposesDeviceGenerator {
         if(this.config.debug){
             console.log(" ");
             console.log("+ + + + + + + + + + + + + parse_device + + + + + + + + + + + + + + + + + + + + + + + +");
+            console.log("property_names_list: ", property_names_list);
         }
         
 		//console.log(device);
@@ -171,7 +172,6 @@ class ExposesDeviceGenerator {
 
 							}
 
-
 						}
 					}
 					else if(exposes_info['type'] == "light"){
@@ -186,7 +186,7 @@ class ExposesDeviceGenerator {
 						}
                         /*
                         if(device.model_id == 'ZB-SW01'){
-                            console.log("turning ZB-SW01 into a lock instead");
+                            console.log("turning ZB-SW01 into a lock instead"); // not reliable, multiple devices have that id...
                             device['@type'].push('Lock');
                         }
                         else{
@@ -194,12 +194,19 @@ class ExposesDeviceGenerator {
                         }
                         */
 					}
+                    /*
+                    // Locks require a read-only enum for the state which shows one of: ["locked", "unlocked", "unknown", "jammed"]
+                    // And it requires two action buttons to lock and unlock. This is a bit of a pain to implement.
+                    // Also, actions don't work with Voco voice control yet.
 					else if(exposes_info['type'] == "lock"){
 						if(this.config.debug){
 							console.log("it's a lock");
 						}
-						device['@type'].push('Lock');
+                        //if(property_names_list.indexOf('Child lock') == -1){
+                        device['@type'].push('Lock');
+                        //}
 					}
+                    */
 					else if(exposes_info['type'] == "climate"){
 						if(this.config.debug){
 							console.log("it's a thermostat");
@@ -209,13 +216,11 @@ class ExposesDeviceGenerator {
 				
 				}
 			}
-		
         
 		}
 		catch (error){
 			console.log("Error in first part of parse_device: " + error);
 		}
-        
         
         
         try{
@@ -262,7 +267,7 @@ class ExposesDeviceGenerator {
 	}
 	
 	
-    
+    // ?
     flip_value_on_and_off(expose){
         return expose;   
     }
@@ -289,8 +294,6 @@ class ExposesDeviceGenerator {
                 }
                 expose['reversed'] = true;
             }
-            
-            
             
         }
         catch(e){
@@ -351,7 +354,29 @@ class ExposesDeviceGenerator {
             				if (expose.access === this.ACCESS_MASK_ACTION) {
             					device.actions[wt_id] = this.binaryPropertyToBooleanAction(expose);
             				} else {
-            					device.properties[wt_id] = this.binaryPropertyToBooleanProperty(expose);
+                                
+                                /*
+                                var turn_into_lock_property = false;
+                                
+                                
+                                // find binary expose that should be converted to enum lock property
+                                if(typeof expose.value_on != 'undefined' && typeof expose.value_off != 'undefined'){
+                                    if( (expose.value_off.toLowerCase() == 'unlock' && expose.value_on.toLowerCase() == 'lock') || (expose.value_off.toLowerCase() == 'lock' && expose.value_on.toLowerCase() == 'unlock'){
+                                        turn_into_lock_property = true;
+                                        //expose.type: 'enum',
+                                        //expose.values: [ 'lock', 'unlock']
+                                    }
+                                }
+                                
+                                if(turn_into_lock_property == false){
+                                    device.properties[wt_id] = this.binaryPropertyToBooleanProperty(expose);
+                                }
+                                else{
+                                    device.properties[wt_id] = this.binaryPropertyToLockProperty(expose);
+                                }
+                                */
+                                device.properties[wt_id] = this.binaryPropertyToBooleanProperty(expose);
+            					
             				}
             				break;
 			
@@ -383,7 +408,46 @@ class ExposesDeviceGenerator {
                                 if(device.model_id == 'STARKVIND Air purifier'){
                                     device.properties[wt_id] = this.STARKVINDenumPropertyToStringProperty(expose);
                                 }else{
-                                    device.properties[wt_id] = this.enumPropertyToStringProperty(expose);
+                                    
+                                    let found_heat_cool_property = false;
+                                    try{
+                                        // find HeatingCoolingProperty
+                                        if(expose.access == 1){
+                                            if(expose.values.length < 4){
+                                                let thermostat_heat_found = false;
+                                                let thermostat_cool_found = false;
+                                                let thermostat_off_found = false;
+                                        
+                                                for(let v = 0; v < expose.values.length; v++){
+                                                    
+                                                    if(expose.values[v].toLowerCase() == 'heat' || expose.values[v].toLowerCase() == 'heating'){
+                                                        thermostat_heat_found = true;
+                                                    }
+                                                    else if(expose.values[v].toLowerCase() == 'cool' || expose.values[v].toLowerCase() == 'cooling'){
+                                                        thermostat_heat_found = true;
+                                                    }
+                                                    else if(expose.values[v].toLowerCase() == 'off' || expose.values[v].toLowerCase() == 'idle'){
+                                                        thermostat_off_found = true;
+                                                    }
+                                            
+                                                }
+                                                if( thermostat_off_found && (thermostat_heat_found || thermostat_cool_found) ){
+                                                    found_heat_cool_property = true;
+                                                }
+                                            }
+                                        }
+                                    }catch(e){
+                                        console.log("Error finding thermostat cooling-heating property");
+                                    }
+                                    
+                                    if(found_heat_cool_property){
+                                        device.properties[wt_id] = this.enumPropertyToHeatCoolProperty(expose);
+                                        device.properties[wt_id]['@type'] = 'HeatingCoolingProperty';
+                                    }
+                                    else{
+                                        device.properties[wt_id] = this.enumPropertyToStringProperty(expose);
+                                    }
+                                    
                                 }
             					
             				}
@@ -490,12 +554,18 @@ class ExposesDeviceGenerator {
                             //console.log( device['@type'].indexOf('Lock') );
         					if(device['@type'].indexOf("Lock") > -1){
                                 //console.log("IS LOCK");
-                                if(expose.access == 1){
-            						device.properties[wt_id]['@type'] = 'LockedProperty'; // read-only
+                                if(expose.access == 1){ // indicates read-only?
+            						device.properties[wt_id]['@type'] = 'LockedProperty'; // read-only? Not according to the spec.
             					}else{
                                     //console.log("IS ACTIONABLE LOCK");
             						device.properties[wt_id]['@type'] = 'OnOffProperty'; // should be read-only. But it might work?
-                					if(device['@type'].indexOf("OnOffSwitch") == -1){
+                                    if(device['@type'].indexOf("EnergyMonitor") > -1 && device['@type'].indexOf("SmartPlug") == -1){
+                                        device['@type'].unshift('SmartPlug');
+                                    }
+                                    if(device['@type'].indexOf("SmartPlug") > -1 && device['@type'].indexOf("Light") == -1){
+                                        device['@type'].push('Light');
+                                    }
+                                    if(device['@type'].indexOf("OnOffSwitch") == -1){
                 						device['@type'].push('OnOffSwitch');
                 					}
                                     /*
@@ -546,12 +616,21 @@ class ExposesDeviceGenerator {
                             else{
                                 //console.log("IS NOT LOCK");
                                 if(expose.access == 1){
-            						device.properties[wt_id]['@type'] = 'PushedProperty';
-                					if(device['@type'].indexOf("PushButton") == -1){
-                						device['@type'].push('PushButton');
-                					}
+                                    if(expose.type == 'binary'){
+                						device.properties[wt_id]['@type'] = 'PushedProperty';
+                    					if(device['@type'].indexOf("PushButton") == -1){
+                    						device['@type'].push('PushButton');
+                    					}
+                                    }
+            						
             					}else{
             						device.properties[wt_id]['@type'] = 'OnOffProperty';
+                                    if(device['@type'].indexOf("EnergyMonitor") > -1 && device['@type'].indexOf("SmartPlug") == -1){
+                                        device['@type'].unshift('SmartPlug');
+                                    }
+                                    if(device['@type'].indexOf("Light") == -1){ // plugs may pretend to be lights
+                                        device['@type'].push('Light');
+                                    }
                 					if(device['@type'].indexOf("OnOffSwitch") == -1){
                 						device['@type'].push('OnOffSwitch');
                 					}
@@ -657,7 +736,13 @@ class ExposesDeviceGenerator {
         				}
         				else if(expose.name == "power"){
         					device.properties[wt_id]['@type'] = 'InstantaneousPowerProperty';
-        					if(device['@type'].indexOf("EnergyMonitor") == -1){
+                            if(device['@type'].indexOf("OnOffSwitch") > -1 && device['@type'].indexOf("SmartPlug") == -1){
+                                device['@type'].unshift('SmartPlug');
+                            }
+                            if(device['@type'].indexOf("SmartPlug") > -1 && device['@type'].indexOf("Light") == -1){
+                                device['@type'].push('Light');
+                            }
+                            if(device['@type'].indexOf("EnergyMonitor") == -1){
         						device['@type'].push('EnergyMonitor');
         					}
         				}
@@ -693,16 +778,19 @@ class ExposesDeviceGenerator {
 			
 			
     			// Capability upgrade based on the value_on property. // TODO: superfluous? When did this happen?
-    			/*
+    			
+                /*
+                // Should implement a proper lock parser
                 if(typeof expose['value_on'] != "undefined"){
                     if(this.config.debug){
                         console.log("value_on was defined: " + expose['value_on']);
                     }
-    				if( expose['value_on'] == "LOCK" || expose['value_on'] == "UNLOCK"){
+    				if( (expose['value_on'] == "LOCK" && expose['value_off'] == "UNLOCK") || (expose['value_on'] == "UNLOCK" && expose['value_off'] == "LOCK") ){
     					device.properties[wt_id]['@type'] = 'LockedProperty'; 
     				}	
     			}
                 */
+                //if( expose.name == "child lock" ){
 			
                 /*
                 if( expose.name == "contact" ){
@@ -922,6 +1010,8 @@ class ExposesDeviceGenerator {
         property.property = binary.property;
         property.value_off = binary.value_off;
         property.value_on = binary.value_on;
+        //console.log(".> binary.value_off: ", binary.value_off);
+        //console.log("binary.value_off type: ", typeof binary.value_off);
         property.reversed = false;
         if(typeof binary.reversed != 'undefined'){
             property.reversed = binary.reversed;
@@ -956,6 +1046,130 @@ class ExposesDeviceGenerator {
 		return property;
 	}
 	
+    
+    
+    
+    
+    
+	/**
+	* Transforms a Zigbee2MQTT enum property into a WebThings Property object of type string.
+	*/
+    /*
+	binaryPropertyToLockProperty(enumeration) {
+        
+		const property = new Object();
+		property.type = 'string';
+		property.title = this.applySentenceCase(binary.property); // attempt to avoid the `on/off` property title
+		property.description = binary.description;
+		property.readOnly = this.accessToReadOnly(binary.access);
+        property.property = binary.property;
+        property.value_off = binary.value_off;
+        console.log(".> binary.value_off: ", binary.value_off);
+        console.log("binary.value_off type: ", typeof binary.value_off);
+        property.value_on = binary.value_on;
+        property.reversed = false;
+        
+        if(property.value_off.length > property.value_on.length){
+            property.enum = ['locked','unlocked'];
+        }
+        else{
+            property.enum = ['unlocked','locked'];
+        }
+        
+        
+        
+        if(typeof binary.reversed != 'undefined'){
+            property.reversed = binary.reversed;
+        }
+        
+        
+	    property.toMqtt = (v) => {
+            var result_string = v;
+            if(property.reversed == true){
+                if( v == 'locked'){
+                    result_string = property.value_off;
+                }else{
+                    result_string = property.value_on;
+                }
+                return result_string;
+            }
+            else{
+                //return v === property.value_on;
+                if( v == 'locked'){
+                    result_string = property.value_on;
+                }else{
+                    result_string = property.value_off;
+                }
+                return result_string;
+            }
+            
+	    }
+        
+	    property.fromMqtt = (v) => {
+            var result_string = v;
+            if(property.reversed == true){
+                
+                if(value_on)
+                //console.log("TO MQTT REVERSED");
+                return v ? property.value_off : property.value_on;
+            }else{
+                //console.log("TO MQTT NORMAL");
+                return v ? property.value_on : property.value_off
+            }
+	    } 
+        // (v ? binary.value_on : binary.value_off);
+		return property;
+	}
+    */
+    
+    /*
+	enumPropertyToLockProperty(enumeration) {
+		const property = new Object();
+		property.type = 'string';
+		property.title = this.applySentenceCase(enumeration.property);
+		property.description = enumeration.description;
+		property.readOnly = this.accessToReadOnly(enumeration.access);
+		property.enum = enumeration.values;
+        property.property = enumeration.property;
+        property.value_off = enumeration.value_off;
+        property.value_on = enumeration.value_on;
+		//console.log("ENUM typeof enumeration.values = " + typeof enumeration.values);
+		//console.log("ENUM values: ",enumeration.values);
+		
+        
+	    property.fromMqtt = (v) => {
+            var result_string = v;
+            if(property.reversed == true){
+                if( v == property.value_off){
+                    result_string = property.value_on;
+                }else{
+                    result_string = property.value_off;
+                }
+                return result_boolean;
+            }
+            else{
+                return v === property.value_on;
+            }
+            
+	    }
+        
+	    property.toMqtt = (v) => {
+            if(property.reversed == true){
+                //console.log("TO MQTT REVERSED");
+                return v ? property.value_off : property.value_on;
+            }else{
+                //console.log("TO MQTT NORMAL");
+                return v ? property.value_on : property.value_off
+            }
+	    } 
+        
+        
+        return property;
+        
+        
+	}
+    */
+    
 	/**
 	* Transforms a Zigbee2MQTT numeric property into a WebThings Property object of type integer.
 	*/
@@ -1040,6 +1254,41 @@ class ExposesDeviceGenerator {
 		//console.log("ENUM values: ",enumeration.values);
 		return property;
 	}
+    
+	/**
+	* Transforms a Zigbee2MQTT enum property into a WebThings Property object of type HeatingCoolingProperty.
+	*/
+	enumPropertyToHeatCoolProperty(enumeration) {
+		const property = new Object();
+		property.type = 'string';
+		property.title = this.applySentenceCase(enumeration.property);
+		property.description = enumeration.description;
+		property.readOnly = this.accessToReadOnly(enumeration.access); // always true
+		property.enum = ["off", "heating", "cooling"]; //enumeration.values;
+        property.property = enumeration.property;
+        
+        //console.log("ENUM typeof enumeration.values = " + typeof enumeration.values);
+		//console.log("ENUM values: ",enumeration.values);
+        
+	    property.fromMqtt = (v) => {
+            var result_string = v;
+            if( v.toLowerCase() ==  'heat' || v.toLowerCase() ==  'heating'){
+                result_string = 'heating';
+            }
+            else if( v.toLowerCase() ==  'cool' || v.toLowerCase() ==  'cooling'){
+                result_string = 'cooling';
+            //}else if( v.toLowerCase() ==  'off' || v.toLowerCase() ==  'idle'){
+            //    result_string = 'off';
+            }else{
+                result_string = 'off';
+            }
+            return result_string;
+	    }
+        
+		return property;
+	}
+    
+    // The way this device is implemented in Zigbee2MQTT differes from how the buttons on the device itself are numbered. This fixes that.
 	STARKVINDenumPropertyToStringProperty(enumeration) {
 		const property = new Object();
 		property.type = 'string';
@@ -1202,7 +1451,7 @@ class ExposesDeviceGenerator {
         
 		///console.log("CAPitalising");
 		if(title.toLowerCase() == "linkquality"){
-			return "Link quality";
+			return "Connection strength";
 		}
 		if(title.toLowerCase() == "power state"){ // handle the extra state property that is generated from enum.
 			return "Power state";

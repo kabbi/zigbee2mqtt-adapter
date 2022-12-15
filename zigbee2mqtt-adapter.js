@@ -840,7 +840,7 @@ class ZigbeeMqttAdapter extends Adapter {
                 
 				base_config += "  legacy_api: false\n" +
 						"device_options:\n" +
-                        //"  debounce: 1\n" +
+                        "  debounce: .1\n" +
                         //"  debounce_ignore: action\n" +
 					    "  legacy: false\n" +
                         "  measurement_poll_interval: " + this.config.measurement_poll_interval + "\n" +
@@ -2532,8 +2532,6 @@ class ZigbeeMqttAdapter extends Adapter {
                             catch(e){
                                 console.log("Error while trying to save updated appendage values in devices_overview:",e);
                             }
-                        
-                        
                     
     				    } 
                         catch (error) {
@@ -2749,10 +2747,11 @@ class ZigbeeMqttAdapter extends Adapter {
             		} catch (error) {
             			console.log("Later error in adding privacy proerties: " + error);
             		}
-                
+                    //console.log("COMPLETE ZDEVICE: ", device);
                     // handleDeviceAdded
                     if (this.DEBUG) {
                         console.log("calling handleDeviceAdded");
+                        
                     }
                     try{
                         if(typeof device != 'undefined'){
@@ -3682,8 +3681,6 @@ class MqttDevice extends Device {
 class MqttProperty extends Property {
 	constructor(device, name, propertyDescription) {
         
-        
-        
         var wt_id = name;
         if(!wt_id.startsWith('z2m-')){
             wt_id = device.id + "-" + name;
@@ -3709,89 +3706,98 @@ class MqttProperty extends Property {
 
 
 	setValue(value) {
+        
 		if (this.device.adapter.config.debug) {
 			console.log("in setValue of property '" + this.name + "', where value = " + value + " and this.options: ");
 			console.log("- this.options: " + this.options);
 		}
-        this.value = value;
+        if(value != this.value){
+            this.value = value;
         
-        if(this.name == "data_transmission" && this.name == "data_blur"){
-            try{
-                this.device.adapter.persistent_data.devices_overview[this.device.id]['appendages'][this.name]['value'] = value;
+            if(this.name == "data_transmission" && this.name == "data_blur"){
+                try{
+                    this.device.adapter.persistent_data.devices_overview[this.device.id]['appendages'][this.name]['value'] = value;
+                }
+                catch(e){
+                    console.log("Error saving data_transmission or data_blur property value to persistent data: ", e);
+                }
             }
-            catch(e){
-                console.log("Error saving data_transmission or data_blur property value to persistent data: ", e);
-            }
-        }
 
-		return new Promise((resolve, reject) => {
-			super
-				.setValue(value)
-				.then((updatedValue) => {
-					const {
-						toMqtt = identity
-					} = this.options;
+    		return new Promise((resolve, reject) => {
+    			super
+    				.setValue(value)
+    				.then((updatedValue) => {
+    					const {
+    						toMqtt = identity
+    					} = this.options;
 
-					if (typeof this.options["type"] == "string" && this.options["title"] == "Color") { // https://github.com/EirikBirkeland/hex-to-xy
-						if (this.device.adapter.config.debug) {
-                            console.log("color to set: " + updatedValue);
+    					if (typeof this.options["type"] == "string" && this.options["title"] == "Color") { // https://github.com/EirikBirkeland/hex-to-xy
+    						if (this.device.adapter.config.debug) {
+                                console.log("color to set: " + updatedValue);
+                            }
+                            if(!updatedValue.startsWith('#')){
+                                updatedValue = colourNameToHex(updatedValue);
+                                console.log("color name has been changed to: " + updatedValue);
+                            }
+                            //if(this.device.adapter.config.debug){
+    						//	console.log("translating HEX color to XY (cie color space)");
+    						//}
+    						//var cie_colors = HEXtoXY(updatedValue);
+    						//const x = cie_colors[0];
+    						//const y = cie_colors[1];
+    						//updatedValue = {"x":x, "y":y};
+    						updatedValue = {
+    							"hex": updatedValue // turns out that Zigbee2MQTT can handle HEX values as input
+    						};
+    						if (this.device.adapter.config.debug) {
+    							console.log("color value set to: " + updatedValue);
+    						}
+    					}
+
+    					if (typeof this.options["origin"] == "string") {
+    						if (this.options["origin"] == "exposes-scaled-percentage") {
+    							updatedValue = percentage_to_integer(updatedValue, this.options["origin_maximum"]);
+    							if (this.device.adapter.config.debug) {
+    								console.log("- exposes-scaled-percentage -> updatedValue scaled back to: " + updatedValue);
+    							}
+    						}
+    					}
+
+                    
+
+                        // Publish to Zigbee network
+                        if(this.name != "data_transmission" && this.name != "data_blur"){ // all properties except the data_transmission property
+                            if (this.device.adapter.config.debug) {
+                                console.log("sending '" + updatedValue + "' to Z2M via toMqtt:", {[this.options.property]: toMqtt(updatedValue),});
+                            }
+                            //if(this.device.adapter.config.virtual_brightness_alternative && this.name == "brightness"){
+                            //    console.log("not sending manipulated brightness value back to Zigbee device");
+                            //}
+                            //else{
+            					this.device.adapter.publishMessage(`${this.device.id}/set`, {
+            						[this.options.property]: toMqtt(updatedValue),
+            					});
+                            //}
                         }
-                        if(!updatedValue.startsWith('#')){
-                            updatedValue = colourNameToHex(updatedValue);
-                            console.log("color name has been changed to: " + updatedValue);
-                        }
-                        //if(this.device.adapter.config.debug){
-						//	console.log("translating HEX color to XY (cie color space)");
-						//}
-						//var cie_colors = HEXtoXY(updatedValue);
-						//const x = cie_colors[0];
-						//const y = cie_colors[1];
-						//updatedValue = {"x":x, "y":y};
-						updatedValue = {
-							"hex": updatedValue // turns out that Zigbee2MQTT can handle HEX values as input
-						};
-						if (this.device.adapter.config.debug) {
-							console.log("color value set to: " + updatedValue);
-						}
-					}
-
-					if (typeof this.options["origin"] == "string") {
-						if (this.options["origin"] == "exposes-scaled-percentage") {
-							updatedValue = percentage_to_integer(updatedValue, this.options["origin_maximum"]);
-							if (this.device.adapter.config.debug) {
-								console.log("- exposes-scaled-percentage -> updatedValue scaled back to: " + updatedValue);
-							}
-						}
-					}
-
-                    
-
-                    // Publish to Zigbee network
-                    if(this.name != "data_transmission" && this.name != "data_blur"){ // all properties except the data_transmission property
-                        if (this.device.adapter.config.debug) {
-                            console.log("sending '" + updatedValue + "' to Z2M via toMqtt:", {[this.options.property]: toMqtt(updatedValue),});
-                        }
-                        //if(this.device.adapter.config.virtual_brightness_alternative && this.name == "brightness"){
-                        //    console.log("not sending manipulated brightness value back to Zigbee device");
-                        //}
-                        //else{
-        					this.device.adapter.publishMessage(`${this.device.id}/set`, {
-        						[this.options.property]: toMqtt(updatedValue),
-        					});
-                        //}
-                    }
                     
                     
-                    this.device.notifyPropertyChanged(this); // TODO: where is the setCachedValue?
+                        this.device.notifyPropertyChanged(this); // TODO: where is the setCachedValue?
                     
-					resolve(updatedValue);
+    					resolve(updatedValue);
 					
-				})
-				.catch((err) => {
-                    console.log("Error in set_value of property; ", err);
-					reject(err);
-				});
-		});
+    				})
+    				.catch((err) => {
+                        console.log("Error in set_value of property; ", err);
+    					reject(err);
+    				});
+    		});
+        }
+        else{
+    		return new Promise((resolve, reject) => {
+    			resolve(value);
+    		});
+        }
+        
 	}
 
 }

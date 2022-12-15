@@ -41,6 +41,7 @@
 	  "home_assistant_support":false,
 	  "virtual_brightness_alternative_speed": "10",
 	  "use_old_devices_description": false,
+	  "node_version":16,
       "debug": false
     },
     "schema": {
@@ -158,6 +159,14 @@
           "type": "boolean",
           "description": "Advanced. If you enable this, then the addon will no longer override the Zigbee2MQTT configuration when it starts. This allows very advanced users to more easily make special customizations."
         },
+        "prefered_node_version": {
+          "description": "Advanced. Select which Node JS version the addon should run Zigbee2MQTT under (if the choice is available). Newer Candle versions use Node 18.",
+          "enum": [
+            "12",
+            "18"
+          ],
+          "type": "string"
+        },
         "debug": {
           "type": "boolean",
           "description": "Advanced. Used to find issues if this addon isn't working properly. If enabled, you can find more details about its functioning in the internal log."
@@ -166,7 +175,7 @@
     }
   },
   "short_name": "zigbee2mqtt",
-  "version": "1.1.18",
+  "version": "1.1.20",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
