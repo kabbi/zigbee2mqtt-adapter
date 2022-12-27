@@ -249,11 +249,13 @@
 
 
 .extension-zigbee2mqtt-adapter-tab-buttons{
-	margin-top: 4rem;
 	background-color: rgba(255,255,255,.1);
 	border-radius: .7rem;
 	overflow: hidden;
 	font-size:0;
+    width: fit-content;
+    margin: 4rem auto 2rem auto;
+    display: block;
 }
 
 #extension-zigbee2mqtt-adapter-view .extension-zigbee2mqtt-adapter-tab-buttons button{

@@ -399,7 +399,7 @@ class ExposesDeviceGenerator {
             				}
             				break;
 			
-			
+			            
         				// Generic type enum
         				case 'enum':					
             				if (expose.access === this.ACCESS_MASK_ACTION) {
@@ -547,6 +547,12 @@ class ExposesDeviceGenerator {
     			if(typeof expose['name'] != "undefined" && device.properties[wt_id] != 'undefined'){
                     //console.log("expose.name = " + expose.property);
                     
+                    
+                    
+                    
+                    
+                    
+                    
                     try{
         				if( expose.name.endsWith("state") ){
         					//console.log("expose.name ends with state, so adding onOfProperty @type");
@@ -558,16 +564,20 @@ class ExposesDeviceGenerator {
             						device.properties[wt_id]['@type'] = 'LockedProperty'; // read-only? Not according to the spec.
             					}else{
                                     //console.log("IS ACTIONABLE LOCK");
-            						device.properties[wt_id]['@type'] = 'OnOffProperty'; // should be read-only. But it might work?
-                                    if(device['@type'].indexOf("EnergyMonitor") > -1 && device['@type'].indexOf("SmartPlug") == -1){
-                                        device['@type'].unshift('SmartPlug');
+            						if(expose.type == 'binary'){
+                                        device.properties[wt_id]['@type'] = 'OnOffProperty'; // should be read-only. But it might work?
+                                        if(device['@type'].indexOf("EnergyMonitor") > -1 && device['@type'].indexOf("SmartPlug") == -1){
+                                            device['@type'].unshift('SmartPlug');
+                                        }
+                                        /*
+                                        if(device['@type'].indexOf("SmartPlug") > -1 && device['@type'].indexOf("Light") == -1){
+                                            device['@type'].push('Light');
+                                        }
+                                        */
+                                        if(device['@type'].indexOf("OnOffSwitch") == -1){
+                    						device['@type'].push('OnOffSwitch');
+                    					}
                                     }
-                                    if(device['@type'].indexOf("SmartPlug") > -1 && device['@type'].indexOf("Light") == -1){
-                                        device['@type'].push('Light');
-                                    }
-                                    if(device['@type'].indexOf("OnOffSwitch") == -1){
-                						device['@type'].push('OnOffSwitch');
-                					}
                                     /*
                                     // Experiment to add actions to a lock, as the spec prefers. However, actions are (currently) not compatible with Voco voice control, so I abandoned this for now. Also had trouble receiving the action.
                                     try{
@@ -624,16 +634,21 @@ class ExposesDeviceGenerator {
                                     }
             						
             					}else{
-            						device.properties[wt_id]['@type'] = 'OnOffProperty';
-                                    if(device['@type'].indexOf("EnergyMonitor") > -1 && device['@type'].indexOf("SmartPlug") == -1){
-                                        device['@type'].unshift('SmartPlug');
+                                    if(expose.type == 'binary'){
+            						    device.properties[wt_id]['@type'] = 'OnOffProperty';
+                                        if(device['@type'].indexOf("EnergyMonitor") > -1 && device['@type'].indexOf("SmartPlug") == -1){
+                                            device['@type'].unshift('SmartPlug');
+                                        }
+                                        /*
+                                        if(device['@type'].indexOf("Light") == -1){ // plugs may pretend to be lights
+                                            device['@type'].push('Light');
+                                        }
+                                        */
+                    					if(device['@type'].indexOf("OnOffSwitch") == -1){
+                    						device['@type'].push('OnOffSwitch');
+                    					}
                                     }
-                                    if(device['@type'].indexOf("Light") == -1){ // plugs may pretend to be lights
-                                        device['@type'].push('Light');
-                                    }
-                					if(device['@type'].indexOf("OnOffSwitch") == -1){
-                						device['@type'].push('OnOffSwitch');
-                					}
+                                    
             					}
                             }
 
@@ -641,6 +656,14 @@ class ExposesDeviceGenerator {
         				else if(expose.name.endsWith("brightness") ){
         					device.properties[wt_id]['@type'] = 'BrightnessProperty';
         				}
+                        else if(expose.name == "position" && expose.access == 7){
+        					device.properties[wt_id]['@type'] = 'LevelProperty';
+        					if(device['@type'].indexOf("MultiLevelSwitch") == -1){
+        						device['@type'].push('MultiLevelSwitch');
+        					}
+                        }
+                        
+                        
         				else if(expose.name == "cube_side" || expose.name == "angle" || expose.name == "illuminance_lux"){
         					device.properties[wt_id]['@type'] = 'LevelProperty';
         					if(device['@type'].indexOf("MultiLevelSensor") == -1){
@@ -653,12 +676,15 @@ class ExposesDeviceGenerator {
         						device['@type'].push('ColorControl');
         					}
         				}
+                        /*
+                        // Causes the icon to not be shown / addng it does not seem to offer any benefits.
         				else if(expose.name == "color_temp"){
         					device.properties[wt_id]['@type'] = 'ColorTemperatureProperty';
         					if(device['@type'].indexOf("Light") == -1){ // && device['@type'].length == 0
         						device['@type'].push('Light');
         					}
         				}
+                        */
         				else if(expose.name == "color_xy" || expose.name == "color_hs"){
         					device.properties[wt_id]['@type'] = 'ColorProperty';
         					if(device['@type'].indexOf("Light") == -1){
@@ -1443,7 +1469,7 @@ class ExposesDeviceGenerator {
 	}
 	
 	
-	applySentenceCase(title) {
+	applySentenceCase(title, property_names_list=[]) {
         
 		if(typeof title == "undefined"){
 			title = "Unknown";
@@ -1453,14 +1479,27 @@ class ExposesDeviceGenerator {
 		if(title.toLowerCase() == "linkquality"){
 			return "Connection strength";
 		}
-		if(title.toLowerCase() == "power state"){ // handle the extra state property that is generated from enum.
+		if(title.toLowerCase() == "power state"){ // handle the extra state property that is generated from enum. 
+            // does this work? is it missing a _ ?
+            // Is this title even a good idea?
 			return "Power state";
 		}
 		if(title.toLowerCase() == "led_enable"){ // handle the extra state property that is generated from enum.
 			return "Led";
 		}
 		
-		
+        
+        // Simplify some names to aid in voice control
+
+        // Thermostat
+        if(title.toLowerCase() == "current_heating_setpoint" ){ //&& property_names_list.indexOf('setpoint') == -1){
+            return "Setpoint";
+        }
+        if(title.toLowerCase() == "local_temperature"){ //&& property_names_list.indexOf('temperature') == -1){
+            return "Temperature";
+        }
+        
+		// Change dashes into spaces
 		title = title.replace(/_/g, ' '); // replace _ with space
 		
 

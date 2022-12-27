@@ -58,6 +58,7 @@ class ZigbeeMqttAdapter extends Adapter {
 		//this.current_os = os.platform().toLowerCase();
 
         this.DEBUG = false;
+        this.DEBUG2 = false; // debug for incoming messages only
         
         if(typeof this.config == 'undefined'){
             console.log("ERROR, THIS.CONFIG IS UNDEFINED! (sqlite error?)");
@@ -1080,7 +1081,7 @@ class ZigbeeMqttAdapter extends Adapter {
             this.zigbee2mqtt_subprocess.stdout.setEncoding('utf8');
             this.zigbee2mqtt_subprocess.stdout.on('data', (data) => { // 
                 //Here is where the output goes
-                if (this.DEBUG) {
+                if (this.DEBUG2) {
                     console.log('z2m stdout: ' + data.toString() );
                 }
             
@@ -1259,7 +1260,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
 	handleIncomingMessage(topic, data) {
 		try{
-    		if (this.DEBUG){ // && !topic.endsWith('/availability') ) {
+    		if (this.DEBUG2){ // && !topic.endsWith('/availability') ) {
     			console.log('');
     			console.log('_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ * * *');
     			console.log('in incoming message, topic: ' + topic);
@@ -1268,13 +1269,15 @@ class ZigbeeMqttAdapter extends Adapter {
             }
 
     		if (topic.trim() == this.config.prefix + '/bridge/logging') {
-    			console.log("ignoring logging");
+    			if (this.DEBUG2){
+                    console.log("ignoring incoming message to /bridge/logging");
+                }
     			return;
     		}
             
 
     		if (topic.trim() == this.config.prefix + '/bridge/state') {
-    			if (this.DEBUG) {
+    			if (this.DEBUG2) {
     				console.log("/bridge/state detected: ");
                     console.log('msg data: ', data.toString());
     			}
@@ -1540,8 +1543,6 @@ class ZigbeeMqttAdapter extends Adapter {
                 return;
     		}
 
-
-
             //
             //  INCOMING DATA MESSAGE
             //
@@ -1553,12 +1554,12 @@ class ZigbeeMqttAdapter extends Adapter {
                     const device_id = 'z2m-' + zigbee_id;
                     const wt_id_base = device_id + "-";
                     
-    				if (this.DEBUG) {
+    				if (this.DEBUG2) {
     					console.log("- zigbee_id = " + zigbee_id);
     				}
     				const device = this.getDevice(device_id); // try to get the device
     				if (!device) {
-    					if (this.DEBUG) {
+    					if (this.DEBUG2) {
     						console.log("- strange, that device could not be found: " + device_id);
     					}
     					return;
@@ -1568,7 +1569,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     // PRIVACY - Data transmission allowed check
                     const data_transmission_property = device.findProperty(wt_id_base + 'data_transmission');
                     if (!data_transmission_property) {
-                        if (this.DEBUG) {
+                        if (this.DEBUG2) {
                             console.log("- strange, data transmission property not found");
                         }
                     }
@@ -1576,7 +1577,7 @@ class ZigbeeMqttAdapter extends Adapter {
                         //console.log("data_transmission_property value:");
                         //console.log(data_transmission_property.value);
                         if(data_transmission_property.value == false){
-                            if (this.DEBUG) {
+                            if (this.DEBUG2) {
                                 console.log("receiving data has been prevented by data transmission feature");
                             }
                             return;
@@ -1592,13 +1593,13 @@ class ZigbeeMqttAdapter extends Adapter {
                     var use_blur = false;
                     const data_blur_property = device.findProperty(wt_id_base + 'data_blur');
                     if (!data_blur_property) {
-                        if (this.DEBUG) {
+                        if (this.DEBUG2) {
                             console.log("- device has no data blur property");
                         }
                     }
                     else{
                         use_blur = true;
-                        if (this.DEBUG) {
+                        if (this.DEBUG2) {
                             console.log("data_blur_property value: ", data_blur_property.value);
                         }
                         data_blur_property_value = data_blur_property.value;
@@ -1607,56 +1608,56 @@ class ZigbeeMqttAdapter extends Adapter {
                         if(blur_options_index >= 0){
                             data_blur = this.data_blur_option_seconds[blur_options_index];
                         }
-                        if (this.DEBUG) {
+                        if (this.DEBUG2) {
                             console.log("data blur: ", data_blur);
                         }
                         /*
                         if(data_blur_property.value == 'Off'){
                             data_blur = 0
-                            if (this.DEBUG) {
+                            if (this.DEBUG2) {
                                 console.log("data blur is Off");
                             }
                         }
                         
                         else if(data_blur_property.value == '1 minute'){
                             data_blur = 60
-                            if (this.DEBUG) {
+                            if (this.DEBUG2) {
                                 console.log("data blur is 1 minute");
                             }
                         }
                         else if(data_blur_property.value == '2 minutes'){
                             data_blur = 120
-                            if (this.DEBUG) {
+                            if (this.DEBUG2) {
                                 console.log("data blur is 1 minute");
                             }
                         }
                         else if(data_blur_property.value == '5 minutes'){
                             data_blur = 300
-                            if (this.DEBUG) {
+                            if (this.DEBUG2) {
                                 console.log("data blur is 5 minutes");
                             }
                         }
                         else if(data_blur_property.value == '10 minutes'){
                             data_blur = 600
-                            if (this.DEBUG) {
+                            if (this.DEBUG2) {
                                 console.log("data blur is 10 minutes");
                             }
                         }
                         else if(data_blur_property.value == '15 minutes'){
                             data_blur = 900
-                            if (this.DEBUG) {
+                            if (this.DEBUG2) {
                                 console.log("data blur is 15 minute");
                             }
                         }
                         else if(data_blur_property.value == '30 minutes'){
                             data_blur = 1800
-                            if (this.DEBUG) {
+                            if (this.DEBUG2) {
                                 console.log("data blur is 30 minutes");
                             }
                         }
                         else if(data_blur_property.value == '1 hour'){
                             data_blur = 3600
-                            if (this.DEBUG) {
+                            if (this.DEBUG2) {
                                 console.log("data blur is 1 hour");
                             }
                         }
@@ -1667,7 +1668,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
                     // Action
     				if (msg.action && device.events.get(msg.action)) { // if there's an action (event), and the action exists in the device
-                        if (this.DEBUG) {
+                        if (this.DEBUG2) {
                             console.log("creating event from action");
                         }
                         const event = new Event(
@@ -1681,7 +1682,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
                     // Here pressure is taken from the incoming message despite not being run though the "fromMQTT" function first, which transforms it into a WebThings Gateway property. But it should be ok.
                     if(typeof msg.pressure != 'undefined' && typeof msg.temperature != 'undefined'){
-                        if (this.DEBUG) {
+                        if (this.DEBUG2) {
                             console.log("PRESSURE SPOTTED on what is likely some sort of climate sensor");
                         }
                         try{
@@ -1702,17 +1703,17 @@ class ZigbeeMqttAdapter extends Adapter {
                                 if(typeof this.config.southern_hemisphere != 'undefined'){
                                     northern_hemisphere = !this.config.southern_hemisphere;
                                 }
-                                if (this.DEBUG) {
+                                if (this.DEBUG2) {
                                     console.log("on northern hemisphere?: " + northern_hemisphere);
                                 }
                             
                                 let forecast = barometer.getPredictions(northern_hemisphere); //returns JSON
                         
-                                if (this.DEBUG) {
+                                if (this.DEBUG2) {
                                     console.log("forecast: ", forecast);
                                 }
                                 if(forecast == null){
-                                    if (this.DEBUG) {
+                                    if (this.DEBUG2) {
                                         console.log("forecast was still null");
                                     }
                                     msg['barometer_tendency'] = 'unknown';
@@ -1744,14 +1745,12 @@ class ZigbeeMqttAdapter extends Adapter {
                                 }
                             
                                 this.persistent_data['barometer_measurements'] = barometer.getAll();
-                                if (this.DEBUG) {
+                                if (this.DEBUG2) {
                                     console.log("All barometer values from persistent data: ", this.persistent_data['barometer_measurements']);
                                 }
                                 this.save_persistent_data();
                             }
                         
-                        
-                    
                         
                         }
                         catch(e){
@@ -1769,7 +1768,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     const current_timestamp = new Date().getTime();
                         
     				for (const key of Object.keys(msg)) { // loop over properties in the message
-                        if (this.DEBUG) {
+                        if (this.DEBUG2) {
                             //console.log(" #");
                             //console.log(key);
                         }
@@ -1790,16 +1789,28 @@ class ZigbeeMqttAdapter extends Adapter {
                             key == "last_seen"
                         ){ // Action rate isn't very useful for anything, so skip that.
                                 
-    						if (this.DEBUG) {
+    						if (this.DEBUG2) {
     							console.log("- ignoring property: " + key + ", with value: " + msg[key]);
     						}
                             continue;
                         }
                     
-
+                        
+                        
+                        // Slight sanity checking. The MOES thermostat sometimes sends very strange temperatures.
+                        
+                        if(key.indexOf('temperature') > -1){
+                            if(parseFloat(msg[key]) < -276){
+        						if (this.DEBUG2) {
+        							console.log("Intercepted impossible temperature value");
+                                }
+                                continue;
+                            }
+                        }
+                        
                         /*
                         if( key == "last_seen"){
-                            if (this.DEBUG) {
+                            if (this.DEBUG2) {
                                 console.log('last_seen spotted. value: ' + msg[key]);
                             }
                             continue;
@@ -1827,7 +1838,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     
     					// Check if device can be updated. Example update data: "update":{"progress":100,"remaining":6,"state":"updating"}}
     					if (key == 'update') {
-    						if (this.DEBUG) {
+    						if (this.DEBUG2) {
                                 console.log("- spotted update information: ", msg[key]);
                             }
                             //if (!this.updating_firmware) {
@@ -1864,7 +1875,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     
                         // officially deprecated in Z2M
     					if (key == 'update_available') {
-    						if (this.DEBUG) {
+    						if (this.DEBUG2) {
                                 console.log("- found deprecated update_available information, storing in devices_overview.");
                             }
     						//if (!this.updating_firmware) {
@@ -1876,7 +1887,7 @@ class ZigbeeMqttAdapter extends Adapter {
     					// Attempt to make a color compatible with the gateway's HEX color system
     					try {
     						if (key == 'color' && typeof msg[key] == "object") {
-    							if (this.DEBUG) {
+    							if (this.DEBUG2) {
     								console.log("- translating color to hex");
     							}
     							var brightness = 254;
@@ -1907,27 +1918,27 @@ class ZigbeeMqttAdapter extends Adapter {
                         //
 
                         const wt_id = device_id + "-" + key; // webthings id. These are unique for each property that exists.
-                        if (this.DEBUG) {
+                        if (this.DEBUG2) {
                             console.log("property wt_id = ", wt_id);
                         }
     					var property = device.findProperty(wt_id);
     					if (!property) {
-    						if (this.DEBUG) {
+    						if (this.DEBUG2) {
     							console.log("- that property could not be found: " + key);
     						}
 
     						if (key != "update" && typeof msg[key] != "object") { // && key != "update_available"
-    							if (this.DEBUG) {
+    							if (this.DEBUG2) {
     								console.log("- attempting to create missing property");
     							}
     							this.attempt_new_property(device, key, msg[key]); // fromMqtt doesn't exist here, so the value isn't run through that process.
-                                if (this.DEBUG) {
+                                if (this.DEBUG2) {
                                     console.log("calling handleDeviceAdded");
                                 }
                                 this.handleDeviceAdded(device);
     						}
                             else {
-    							if (this.DEBUG) {
+    							if (this.DEBUG2) {
     								console.log("- ignoring update property");
     							}
     							continue;
@@ -1936,7 +1947,7 @@ class ZigbeeMqttAdapter extends Adapter {
     						// Check if the missing property has succesfully been created. If so, then its value may be immediately set
     						property = device.findProperty(wt_id);
     						if (!property) {
-                                if (this.DEBUG) {
+                                if (this.DEBUG2) {
                                     console.log("Error: missing property still has not been created. Skipping.");
                                 }
     							continue;
@@ -1949,7 +1960,7 @@ class ZigbeeMqttAdapter extends Adapter {
     						if (property.options.hasOwnProperty("origin")) {
 
     							if (property.options.origin == "exposes-scaled-percentage") {
-    								if (this.DEBUG) {
+    								if (this.DEBUG2) {
     									console.log("- translating byte to percentage");
     								}
     								msg[key] = integer_to_percentage(msg['brightness'], property.options.origin_maximum);
@@ -2002,7 +2013,7 @@ class ZigbeeMqttAdapter extends Adapter {
                         // This might not be necessary anymore, since ExposesDeviceGenerator now should already create these properties beforehand.
     					try {
     						if (key == 'action') {
-    							if (this.DEBUG) {
+    							if (this.DEBUG2) {
                                     console.log("key == action, action: " + msg[key]);
                                 }
                                 if(msg[key] != null){
@@ -2028,7 +2039,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                                 this.save_persistent_value(zigbee_id, 'toggle', extra_boolean, true, false);
                                                 //this.save_persistent_data();
                                             
-        										if (this.DEBUG) {
+        										if (this.DEBUG2) {
         											console.log("extra_boolean updated to: " + extra_boolean);
         										}
         									}
@@ -2058,14 +2069,14 @@ class ZigbeeMqttAdapter extends Adapter {
                                         // TOGGLE from single action message
                                         // A toggle action is simpler to handle. When it arrives we change the value of the toggle property to its opposite. This state also recorded in the persistent device_overview to that its value will be restored after a restart.
                                         else if(msg[key].toLowerCase() == "toggle"){
-                                            if (this.DEBUG) {
+                                            if (this.DEBUG2) {
                                                 console.log("toggle action spotted");
                                             }
                                             extra_property = device.findProperty(wt_id_base + 'toggle');
                                         
         									if (extra_property) { // this never happen, as actions are pre-defined in the device information, and the addon now uses that to generate these extra properties in the exposes device generator. But it can't hurt to have it in here, just in case.
         										
-                                                if (this.DEBUG) {
+                                                if (this.DEBUG2) {
                                                     console.log("toggle extra_property.value: ", extra_property.value);
                                                 }
                                             
@@ -2076,7 +2087,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                                 this.save_persistent_value(zigbee_id, 'toggle', extra_boolean, true, false);
                                                 //this.save_persistent_data();
                                                 
-        										if (this.DEBUG) {
+        										if (this.DEBUG2) {
         											console.log("extra toggle property switched to its opposite: " + extra_boolean);
         										}
         									}
@@ -2112,31 +2123,31 @@ class ZigbeeMqttAdapter extends Adapter {
                                                 this.save_persistent_value(zigbee_id, 'toggle', extra_boolean, true, false);
                                                 //this.save_persistent_data();
                                             
-        										if (this.DEBUG) {
+        										if (this.DEBUG2) {
         											console.log("extra_boolean updated to: " + extra_boolean);
         										}
         									}
         								}
                                     
                                         else if(msg[key].toLowerCase() == "arrow_left_click" || msg[key].toLowerCase() == "arrow_right_click"){
-                                            if (this.DEBUG) {
+                                            if (this.DEBUG2) {
                                                 console.log("arrow action spotted");
                                             }
                                             extra_property = device.findProperty(wt_id_base + msg[key].toLowerCase());
                                         
         									if (!extra_property) {
-        										if (this.DEBUG) {
+        										if (this.DEBUG2) {
                                                     console.log("no extra arrow click property spotted. Creating it now");
                                                 }
                                                 this.attempt_new_property(zigbee_id, msg[key].toLowerCase(), false, true, false); // value, read-only and percentage-type
-                                                if (this.DEBUG) {
+                                                if (this.DEBUG2) {
                                                     console.log("calling handleDeviceAdded");
                                                 }
                                                 this.handleDeviceAdded(device);
                                                 this.save_persistent_data();
         									}
                                             else {
-                                                if (this.DEBUG) {
+                                                if (this.DEBUG2) {
                                                     console.log("Arrow click extra_property.value: ", extra_property.value);
                                                     console.log("switching push button to on for one second");
                                                 }
@@ -2146,14 +2157,14 @@ class ZigbeeMqttAdapter extends Adapter {
         										device.notifyPropertyChanged(extra_property);
                                                 
                                                 setTimeout(() => {
-                                                    if (this.DEBUG) {
+                                                    if (this.DEBUG2) {
                                                         console.log("switching push button back to off");
                                                     }
             										extra_property.setCachedValue(false);
             										device.notifyPropertyChanged(extra_property);
                                                 }, 1000);
                                                 
-        										if (this.DEBUG) {
+        										if (this.DEBUG2) {
         											console.log("extra_boolean updated to its opposite: " + extra_boolean);
         										}
                                             
@@ -2163,7 +2174,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
     							}
                                 
-                                if (this.DEBUG) {
+                                if (this.DEBUG2) {
                                     console.log("using virtual brightness alternative");
                                 }
                                 //var extra_property = null;
@@ -2175,7 +2186,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                             direction = 'up';
                                         }
                                     
-                                        if (this.DEBUG) {
+                                        if (this.DEBUG2) {
                                             console.log("brightness alternative: spotted brightness up or down direction: " + direction );
                                         }
 								    
@@ -2194,7 +2205,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                                     this.persistent_data.virtual_brightness_alternatives[device_id]['value'] = 0;
                                                 }
                                             }
-                                            if (this.DEBUG) {
+                                            if (this.DEBUG2) {
                                                 console.log("(extra) brightness property existed. Updating it through alternative. this.persistent_data.virtual_brightness_alternatives[device_id] gave: " + JSON.stringify(this.persistent_data.virtual_brightness_alternatives[device_id]));
                                                 console.log("extra_property.value = " + extra_property.value);
                                                 console.log("at the end, this.persistent_data.virtual_brightness_alternatives: " + JSON.stringify(this.persistent_data.virtual_brightness_alternatives));
@@ -2204,7 +2215,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                 
     								}
                                     else if( msg[key].toLowerCase() == "toggle" || msg[key].toLowerCase() == "brightness_stop"){
-                                        if (this.DEBUG) {
+                                        if (this.DEBUG2) {
                                             console.log("Toggle or brightness_stop detected. Setting virtual brightness direction to none");
                                         }
                                         this.persistent_data.virtual_brightness_alternatives[device_id]['direction'] = "none";
@@ -2231,13 +2242,13 @@ class ZigbeeMqttAdapter extends Adapter {
                             // If we're handling the brightness property, swap the intended 0-255 value with our 0 - 100 value.
                             if(this.config.virtual_brightness_alternative && key == "brightness"){
                                 if(typeof this.persistent_data.virtual_brightness_alternatives[device_id] != 'undefined'){
-                                    if (this.DEBUG) {
+                                    if (this.DEBUG2) {
                                         console.log("this device is mentioned in the list of brightness alternatives");
                                         console.log(this.persistent_data.virtual_brightness_alternatives[device_id]);
                                     }
                                 
                                     if( this.persistent_data.virtual_brightness_alternatives[device_id]['direction'] == 'up' && this.persistent_data.virtual_brightness_alternatives[device_id]['value'] <= 99 ){
-    									if (this.DEBUG) {
+    									if (this.DEBUG2) {
                                             console.log("brightness going up...");
                                         }
                                         //extra_property.setCachedValue(extra_fromMqtt(current_value + 20));
@@ -2247,7 +2258,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
                                     }
                                     else if( this.persistent_data.virtual_brightness_alternatives[device_id]['direction'] == 'down' && this.persistent_data.virtual_brightness_alternatives[device_id]['value'] >= 1 ){
-                                        if (this.DEBUG) {
+                                        if (this.DEBUG2) {
                                             console.log("brightness going down...");
                                         }
                                         this.persistent_data.virtual_brightness_alternatives[device_id]['value'] -= this.config.virtual_brightness_alternative_speed;
@@ -2256,7 +2267,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                         this.save_persistent_data();
                                     }
                                     else{
-                                        if (this.DEBUG) {
+                                        if (this.DEBUG2) {
                                             console.log("virtual brightness: probably scrolled brightness to value below or above allowed level (0-100). Or simply no change..");
                                         }
                                     }
@@ -2276,14 +2287,14 @@ class ZigbeeMqttAdapter extends Adapter {
                         try{
                             if( typeof msg[key] == 'string' && property.readOnly == true){
                                 if( msg[key].indexOf("_") != -1 ){
-                					if (this.DEBUG) {
+                					if (this.DEBUG2) {
                 						console.log("replacing lower dashes in string with spaces");
                 					}
                                     msg[key] = msg[key].replace(/_/g, " ");
                                 }
                             }
                         
-        					if (this.DEBUG) {
+        					if (this.DEBUG2) {
         						console.log(key + " -> " + msg[key]);
                             }
                             
@@ -2325,7 +2336,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                     }
                                 }    
                                 else{
-                                    if (this.DEBUG) {
+                                    if (this.DEBUG2) {
                                         console.log("blur is skipping: ", key);
                                     }
                                 }
@@ -2335,43 +2346,43 @@ class ZigbeeMqttAdapter extends Adapter {
                                     //var clear_blur_buffer = false;
                                 
                                     if(typeof this.devices[device_id].blur == 'undefined'){
-                                        if (this.DEBUG) {
+                                        if (this.DEBUG2) {
                                             console.log("device didn't have a blur preference yet. Setting it now to: ", data_blur);
                                         }
                                         this.devices[device_id].blur = data_blur;
                                     }
                                     else{
-                                        if (this.DEBUG) {
+                                        if (this.DEBUG2) {
                                             console.log("device had blur preference: ", data_blur);
                                         }
                                     }
                             
                                     // First, check if the blur factor has changed. If so, then update the blur_start timestamp.
                                     if(this.devices[device_id].blur != data_blur){
-                                        if (this.DEBUG) {
+                                        if (this.DEBUG2) {
                                             console.log("user changed the blur factor! at ", key);
                                             console.log("- from: ", this.devices[device_id].blur);
                                             console.log("- to: ", data_blur);
                                         }
                                 
                                         if(typeof property.blur_buffer == 'undefined'){
-                                            if (this.DEBUG) {
+                                            if (this.DEBUG2) {
                                                 console.log("setting empty blur buffer on property: ", key);
                                             }
                                             property.blur_buffer = [];
                                         }
                                         else{
-                                            if (this.DEBUG) {
+                                            if (this.DEBUG2) {
                                                 console.log("blur buffer existed already: ", property.blur_buffer);
                                             }
                                             // Figure out what to do with the existing values in the blur buffer. Continue appending, or send average?
                                             if(this.devices[device_id].blur < data_blur){
-                                                if (this.DEBUG) {
+                                                if (this.DEBUG2) {
                                                     console.log("User wants to extend the blur period");
                                                 }
                                             }
                                             else{
-                                                if (this.DEBUG) {
+                                                if (this.DEBUG2) {
                                                     console.log("User wants to shorten the blur period");
                                                 }
                                                 //clear_blur_buffer = true;
@@ -2381,7 +2392,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                 
                                         // Set the new threshold.
                                         this.devices[device_id].blur_start = current_timestamp;// - (data_blur * 1000);
-                                        if (this.DEBUG) {
+                                        if (this.DEBUG2) {
                                             console.log(" --> this.devices[device_id].blur_start: ", this.devices[device_id].blur_start);
                                         }
                                 
@@ -2408,12 +2419,12 @@ class ZigbeeMqttAdapter extends Adapter {
                                 
                                         if(typeof this.devices[device_id].blur_start == 'undefined' || this.devices[device_id].blur_start == null ){
                                             this.devices[device_id].blur_start = current_timestamp; // - (data_blur * 1000);
-                                            if (this.DEBUG) {
+                                            if (this.DEBUG2) {
                                                 console.log("Error. fixed missing blur start: ", this.devices[device_id].blur_start);
                                             }
                                         }
                                         if(typeof property.blur_buffer == 'undefined'){
-                                            if (this.DEBUG) {
+                                            if (this.DEBUG2) {
                                                 console.log("Error, somehow still empty blur buffer on property: ", key);
                                             }
                                             property.blur_buffer = [];
@@ -2422,7 +2433,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                         //const threshold = this.devices[device_id].blur_start + (this.devices[device_id].blur * 1000);
                                         const threshold = current_timestamp - (this.devices[device_id].blur * 1000);
                                         
-                                        if (this.DEBUG) {
+                                        if (this.DEBUG2) {
                                             console.log('property.blur_buffer.length: ', property.blur_buffer.length);
                                             console.log("this.devices[device_id].blur_start: ", this.devices[device_id].blur_start);
                                             console.log("- threshold: ", threshold, );
@@ -2434,7 +2445,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                         if( this.devices[device_id].blur_start < threshold){
                                             //this.devices[device_id].blur_start = current_timestamp // this is handled at the device level later
                                             // Average value should be calculated and sent through.
-                                            if (this.DEBUG) {
+                                            if (this.DEBUG2) {
                                                 console.log("flushing blur buffer");
                                                 console.log("property.blur_buffer: ", property.blur_buffer);
                                             }
@@ -2453,7 +2464,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                                 }
                                                 
                                                 value_for_ui = total / property.blur_buffer.length;
-                                                if (this.DEBUG) {
+                                                if (this.DEBUG2) {
                                                     console.log("total: ", total);
                                                     console.log("sending average: ", value_for_ui);
                                                 }
@@ -2466,7 +2477,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                         // Add value to buffer
                                         else{
                                             // blur period not yet complete, will add value to buffer.
-                                            if (this.DEBUG) {
+                                            if (this.DEBUG2) {
                                                 console.log("blur period not yet complete, will add value to buffer: ", key, msg[key]);
                                             }
                                             property.blur_buffer.push(msg[key]);
@@ -2479,7 +2490,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                     }
                             
                                     if(value_for_ui != null){
-                                        if (this.DEBUG) {
+                                        if (this.DEBUG2) {
                                             console.log("value for UI after blur check: ", value_for_ui );
                                         }
                                         //property.setValue(msg[key]);
@@ -2543,7 +2554,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
                     // Recognize that the device is connected (since we just received a message from it)
         			if(this.devices[device_id].connected == false){
-                        if (this.DEBUG) {
+                        if (this.DEBUG2) {
                             console.log("- device was in disconnected state. Changing that to connected");
                         }
                         this.devices[device_id].connected = true;
@@ -2554,7 +2565,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
                     // Finally, if the blur factor changed, we save that //TODO: save to persistence should happen in the property
                     if(this.devices[device_id].blur != data_blur){
-                        if (this.DEBUG) {
+                        if (this.DEBUG2) {
                             console.log("saving new blur factor: ", data_blur);
                         }
                         this.devices[device_id].blur = data_blur;
@@ -2573,6 +2584,8 @@ class ZigbeeMqttAdapter extends Adapter {
     				console.log("Zigbee2MQTT addon: Error parsing incoming message: " + error);
     			}
     		}
+
+
 
 
     		// Handle incoming network map data
