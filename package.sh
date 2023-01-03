@@ -1,49 +1,62 @@
 #!/bin/bash -e
 
+# Setup environment for building inside Dockerized toolchain
+export NVM_DIR="${HOME}/.nvm"
+[ -s "${NVM_DIR}/nvm.sh" ] && source "${NVM_DIR}/nvm.sh"
+[ $(id -u) = 0 ] && umask 0
 
-#NODE_VERSION="$2"
-NODE_VERSION=$(node -v | cut -d. -f1)
+if [ -z "${ADDON_ARCH}" ]; then
+  # This means we're running locally. Fake out ADDON_ARCH.
+  # This happens when you run ./package.sh locally
+  UNAME=$(uname -s)
+  case "${UNAME}" in
 
-#RELEASE_VERSION="$1"
-RELEASE_VERSION=$(grep '"version"' manifest.json | cut -d: -f2 | cut -d\" -f2)
+    Linux)
+      ADDON_ARCH=linux-arm
+      ;;
 
-BIT_TYPE=$(getconf LONG_BIT)
-ARCHITECTURE='linux-armhf'
-if [ $BIT_TYPE -eq 64 ]; then
-ARCHITECTURE='linux-arm64'
+    Darwin)
+      ADDON_ARCH=darwin-x64
+      ;;
+
+    *)
+      echo "Unrecognized uname -s: ${UNAME}"
+      exit 1
+      ;;
+  esac
+  echo "Faking ADDON_ARCH = ${ADDON_ARCH}"
+else
+  echo "ADDON_ARCH = ${ADDON_ARCH}"
 fi
+echo "ADDON_ARCH = ${ADDON_ARCH}"
 
-echo "Release version $RELEASE_VERSION"
-echo "Node version: $NODE_VERSION"
-echo "Architecture: $ARCHITECTURE"
 
 rm -rf node_modules
 
+if [ -z "${ADDON_ARCH}" ]; then
+  TARFILE_SUFFIX=
+else
+  NODE_VERSION="$(node --version)"
+  TARFILE_SUFFIX="-${ADDON_ARCH}-${NODE_VERSION/\.*/}"
+fi
+echo "TARFILE_SUFFIX: $TARFILE_SUFFIX"
 npm install --production
 
 shasum --algorithm 256 manifest.json package.json *.js LICENSE README.md > SHA256SUMS
-
 find css images js node_modules views \( -type f -o -type l \) -exec shasum --algorithm 256 {} \; >> SHA256SUMS
 
 TARFILE=`npm pack`
-
+echo "TARFILE after npm pack: $TARFILE"
 tar xzf ${TARFILE}
+rm ${TARFILE}
+TARFILE_ARCH="${TARFILE/.tgz/${TARFILE_SUFFIX}.tgz}"
 cp -r node_modules ./package
-tar czf ${TARFILE} package
+cp -r "${OZW_DIR}" ./package
+echo "TARFILE_ARCH: $TARFILE_ARCH"
+tar czf ${TARFILE_ARCH} package
 
-shasum --algorithm 256 ${TARFILE} > ${TARFILE}.sha256sum
+shasum --algorithm 256 ${TARFILE_ARCH} > ${TARFILE_ARCH}.sha256sum
 
 rm -rf SHA256SUMS package
-
-# It needs to become something like this: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-v${{ matrix.node-vers>
-
-echo "renaming files"
-echo "- old tar file: $TARFILE"
-
-NEW_TARFILE="zigbee2mqtt-adapter-${RELEASE_VERSION}-${ARCHITECTURE}-${NODE_VERSION}.tgz"
-echo "- new tar file: $NEW_TARFILE"
-
-mv $TARFILE $NEW_TARFILE
-mv $TARFILE.sha256sum $NEW_TARFILE.sha256sum
 
 exit 0
