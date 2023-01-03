@@ -656,7 +656,7 @@ class ExposesDeviceGenerator {
         				else if(expose.name.endsWith("brightness") ){
         					device.properties[wt_id]['@type'] = 'BrightnessProperty';
         				}
-                        else if(expose.name == "position" && expose.access == 7){
+                        else if(expose.name == "position" && expose.access == 7 && expose.value_max != null){
         					device.properties[wt_id]['@type'] = 'LevelProperty';
         					if(device['@type'].indexOf("MultiLevelSwitch") == -1){
         						device['@type'].push('MultiLevelSwitch');
