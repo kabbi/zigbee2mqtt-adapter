@@ -23,10 +23,29 @@ jobs:
 
   build:
     needs: get-release
-    runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [10,12,16,18]
+        platform: [
+          'linux-arm',
+          'linux-arm64'
+        ]
+        pair: [
+          'node:12',
+          'node:18',
+        ]
+        include:
+          - platform: 'linux-arm'
+            host-os: 'ubuntu-latest'
+          - platform: 'linux-arm64'
+            host-os: 'ubuntu-latest'
+          - pair: 'node:12'
+            language: 'node'
+            version: '12'
+          - pair: 'node:18'
+            language: 'node'
+            version: '18'
+    runs-on: ${{ matrix.host-os }}
+        
     steps:
       - name: Download upload_url
         uses: actions/download-artifact@v3
