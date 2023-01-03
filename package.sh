@@ -7,8 +7,15 @@ NODE_VERSION=$(node -v | cut -d. -f1)
 #RELEASE_VERSION="$1"
 RELEASE_VERSION=$(grep '"version"' manifest.json | cut -d: -f2 | cut -d\" -f2)
 
+BIT_TYPE=$(getconf LONG_BIT)
+ARCHITECTURE='linux-armhf'
+if [ $BIT_TYPE -eq 64 ]; then
+ARCHITECTURE='linux-arm64'
+fi
+
 echo "Release version $RELEASE_VERSION"
 echo "Node version: $NODE_VERSION"
+echo "Architecture: $ARCHITECTURE"
 
 rm -rf node_modules
 
@@ -33,7 +40,7 @@ rm -rf SHA256SUMS package
 echo "renaming files"
 echo "- old tar file: $TARFILE"
 
-NEW_TARFILE="zigbee2mqtt-adapter-${RELEASE_VERSION}-${NODE_VERSION}.tgz"
+NEW_TARFILE="zigbee2mqtt-adapter-${RELEASE_VERSION}-${$ARCHITECTURE}-${NODE_VERSION}.tgz"
 echo "- new tar file: $NEW_TARFILE"
 
 mv $TARFILE $NEW_TARFILE
