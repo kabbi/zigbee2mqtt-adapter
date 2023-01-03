@@ -51,7 +51,6 @@ tar xzf ${TARFILE}
 rm ${TARFILE}
 TARFILE_ARCH="${TARFILE/.tgz/${TARFILE_SUFFIX}.tgz}"
 cp -r node_modules ./package
-cp -r "${OZW_DIR}" ./package
 echo "TARFILE_ARCH: $TARFILE_ARCH"
 tar czf ${TARFILE_ARCH} package
 
