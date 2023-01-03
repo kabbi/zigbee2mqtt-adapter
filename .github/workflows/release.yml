@@ -73,14 +73,14 @@ jobs:
         with:
           #upload_url: ${{ github.event.release.upload_url }}
           upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-v${{ matrix.node }}.tgz
+          asset_path: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}-v${{ matrix.version }}.tgz
 
       - name: Upload Release Asset shasum
         uses: shogo82148/actions-upload-release-asset@v1
         with:
           #upload_url: ${{ github.event.release.upload_url }}
           upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-v${{ matrix.node }}.tgz.sha256sum
+          asset_path: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}-v${{ matrix.version }}.tgz.sha256sum
 
 
 
