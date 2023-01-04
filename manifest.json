@@ -25,7 +25,7 @@
   "id": "zigbee2mqtt-adapter",
   "license": "MPL-2.0",
   "manifest_version": 1,
-  "name": "zigbee2mqtt-adapter",
+  "name": "Zigbee2mqtt-adapter",
   "options": {
     "default": {
       "southern_hemisphere": false,
@@ -175,7 +175,7 @@
     }
   },
   "short_name": "zigbee2mqtt",
-  "version": "1.1.24",
+  "version": "1.1.25",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
