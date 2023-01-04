@@ -38,6 +38,7 @@ jobs:
         ]
         pair: [
           'node:12',
+          'node:18',
         ]
         include:
           - platform: 'linux-arm'
@@ -47,6 +48,9 @@ jobs:
           - pair: 'node:12'
             language: 'node'
             version: '12'
+          - pair: 'node:18'
+            language: 'node'
+            version: '18'
     runs-on: ${{ matrix.host-os }}
 
 
