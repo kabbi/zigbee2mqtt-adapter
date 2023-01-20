@@ -18,7 +18,20 @@ const https = require('https');
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
+//const crypto = require('crypto');
+//const crypto = require('node:crypto');
+
+let crypto;
+try {
+  crypto = require('node:crypto');
+} catch (err) {
+  console.error('modern node crypto support is not available!');
+  try{
+    crypto = require('crypto');
+  }catch (err) {
+    console.error('node 12 crypto support is not available!');
+  }
+}
 
 const mqtt = require('mqtt');
 const {
@@ -3546,7 +3559,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                         //console.log("   <------- ", parts_counter);
                                         if(parts_counter == 3){
                                             const processor_usage = parseFloat(parts[ll]);
-                                            if(this.DEBUG){
+                                            if(this.DEBUG2){
                                                 console.log("__________________________________________Z2M processor_usage: ", processor_usage);
                                             }
                                             if(processor_usage > 50){

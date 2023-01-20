@@ -20,8 +20,7 @@
     "mqtt": "latest",
     "barometer-trend": "^2.1.2",
     "core-js": "^3.26.1",
-    "typescript": "latest",
-    "crypto": "latest"
+    "typescript": "latest"
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",
