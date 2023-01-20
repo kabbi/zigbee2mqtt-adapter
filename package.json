@@ -1,6 +1,6 @@
 {
   "name": "zigbee2mqtt-adapter",
-  "version": "1.1.27",
+  "version": "1.1.29",
   "description": "Connect to your Zigbee devices. Builds on the open source Zigbee2MQTT project.",
   "scripts": {
     "lint": "eslint ."
