@@ -41,7 +41,7 @@ else
 fi
 echo "TARFILE_SUFFIX: $TARFILE_SUFFIX"
 npm ci
-shasum --algorithm 256 manifest.json package.json *.js LICENSE README.md > SHA256SUMS
+shasum --algorithm 256 manifest.json package.json package-lock.json *.js LICENSE README.md > SHA256SUMS
 find css images js node_modules views \( -type f -o -type l \) -exec shasum --algorithm 256 {} \; >> SHA256SUMS
 
 TARFILE=`npm pack`
