@@ -17,9 +17,11 @@ const {
 const https = require('https');
 const os = require('os');
 const fs = require('fs');
-
 const path = require('path');
-import { access, constants } from 'node:fs';
+
+//import { promises as fs } from 'fs';
+//import { access } from "fs/promises";
+
 //const crypto = require('crypto');
 //const crypto = require('node:crypto');
 
@@ -219,14 +221,14 @@ class ZigbeeMqttAdapter extends Adapter {
 		if (this.DEBUG) {
 			console.log("this.zigbee2mqtt_data_dir_path = ", this.zigbee2mqtt_data_dir_path);
 		}
-        this.node16_shortcut_available = false;
-		this.node16_shortcut_path = path.join(homedir, 'webthings', 'gateway', 'node16');
+        this.node18_shortcut_available = false;
+		this.node18_shortcut_path = path.join(homedir, 'webthings', 'gateway', 'node18');
 		if (this.DEBUG) {
-			console.log("this.node16_shortcut_path = ", this.node16_shortcut_path);
+			console.log("this.node18_shortcut_path = ", this.node18_shortcut_path);
 		}
-        if (fs.existsSync(this.node16_shortcut_path)) {
-            this.node16_shortcut_available = true;
-            console.log('node16 shortcut is available');
+        if (fs.existsSync(this.node18_shortcut_path)) {
+            this.node18_shortcut_available = true;
+            console.log('node18 shortcut is available');
         }
         
         
@@ -1086,9 +1088,9 @@ class ZigbeeMqttAdapter extends Adapter {
         try{
             var parent_scope = this;
             
-            if(this.node16_shortcut_available){
-                console.log('starting Zigbee2MQTT addon with node16 shortcut');
-                this.zigbee2mqtt_subprocess = spawn(this.node16_shortcut_path, [this.zigbee2mqtt_file_path]);
+            if(this.node18_shortcut_available){
+                console.log('starting Zigbee2MQTT addon with node18 shortcut');
+                this.zigbee2mqtt_subprocess = spawn(this.node18_shortcut_path, [this.zigbee2mqtt_file_path]);
             }
             else{
                 console.log('starting Zigbee2MQTT addon without node shortcut');
