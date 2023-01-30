@@ -249,7 +249,7 @@ class ZigbeeMqttAdapter extends Adapter {
             });
         }
         
-        // Persistent data fle path
+        // Persistent data file path
         this.persistent_data_file_path = path.join(this.zigbee2mqtt_data_dir_path, 'persistent_data.json');
         
 		// actual zigbee2mqt location
@@ -257,6 +257,14 @@ class ZigbeeMqttAdapter extends Adapter {
         if (this.DEBUG) {
             console.log("this.zigbee2mqtt_dir_path = ", this.zigbee2mqtt_dir_path);
         }
+        
+        // download latest Z2M tar file release to this file
+        this.zigbee2mqtt_data_z2m_release_tar_path = path.join(this.zigbee2mqtt_data_dir_path, 'latest_z2m.tar.gz');
+        
+        // Directory that should exist is Z2M was installe succesfully
+        this.zigbee2mqtt_data_z2m_test_path = path.join(this.zigbee2mqtt_dir_path, 'node_modules','zigbee-herdsman'); 
+        
+		
 		// index.js file to be started by node
 		this.zigbee2mqtt_file_path = path.join(this.zigbee2mqtt_dir_path, 'index.js');
 		// console.log("this.zigbee2mqtt_dir_path =", this.zigbee2mqtt_dir_path);
@@ -1208,35 +1216,124 @@ class ZigbeeMqttAdapter extends Adapter {
 	download_z2m() {
         this.z2m_installed_succesfully = false;
         try{
-    		exec(`git clone --depth=1 https://github.com/Koenkk/zigbee2mqtt ${this.zigbee2mqtt_dir_path}`, (err, stdout, stderr) => {
-    			if (err) {
-    				console.error(err);
-    				return;
-    			}
-    			if (this.DEBUG) {
-    				console.log(stdout);
-    			}
-    			console.log("-----DOWNLOAD COMPLETE, STARTING INSTALL-----");                
-                
-                const command_to_run = `cd ${this.zigbee2mqtt_dir_path}; npm install -g typescript; npm i --save-dev @types/node; npm ci`; //npm ci --production
-                if (this.DEBUG) {
-                    console.log("command_to_run: " + command_to_run);
-                }
-    			exec(command_to_run, (err, stdout, stderr) => { // npm ci --production
-    				if (err) {
-    					console.error(err);
-                        this.z2m_installed_succesfully = false;
-    					return;
-    				}
-    				if (this.DEBUG) {
-    					console.log(stdout);
-    				}
-    				console.log("-----INSTALL COMPLETE-----");
-                    this.z2m_installed_succesfully = true;
-    				this.sendPairingPrompt("Zigbee2MQTT installation complete. Starting...");
-    				this.run_zigbee2mqtt();
-    			});
-    		});
+            
+            
+            
+			try {
+				const options = {
+					hostname: 'api.github.com',
+					port: 443,
+					path: '/repos/Koenkk/zigbee2mqtt/releases/latest',
+					method: 'GET',
+                    timeout: 5000,
+					headers: {
+						'X-Forwarded-For': 'xxx',
+						'User-Agent': 'createcandle',
+					},
+				};
+
+				const req = https.request(options, (res) => {
+					if (this.DEBUG) {
+						console.log('statusCode:', res.statusCode);
+					}
+					// console.log('headers:', res.headers);
+
+					let body = '';
+					res.on('data', (chunk) => {
+						body += chunk;
+					});
+
+					res.on('end', () => {
+						try {
+
+							// Parse JSON from api.github
+							const github_json = JSON.parse(body);
+							
+                            if(typeof github_json.tarball_url != 'undefined'){
+                                if (this.DEBUG) {
+    								console.log('latest zigbee2MQTT release tar file URL found on Github =', github_json.tarball_url);
+    							}
+                                
+                        		exec(`wget ${this.zigbee2mqtt_dir_path} -O ${this.zigbee2mqtt_data_z2m_release_tar_path}  --retry-connrefused  --waitretry=5 --read-timeout=20 --timeout=15 -t 3`, (err, stdout, stderr) => {
+                        			if (err) {
+                        				console.error(err);
+                        				return;
+                        			}
+                        			if (this.DEBUG) {
+                        				console.log(stdout);
+                        			}
+                        			
+                                    path.exists(this.zigbee2mqtt_data_dir_path, function(exists) { 
+                                        if (exists) {
+                                            console.log("-----DOWNLOAD COMPLETE, STARTING INSTALL-----");
+                                            this.sendPairingPrompt("Zigbee2MQTT download complete. Starting installation.");
+                                    
+                                            const command_to_run = `cd ${this.zigbee2mqtt_data_dir_path}; mkdir -p zigbee2mqtt; tar xf latest_z2m.tar.gz; rm latest_z2m.tar.gz; mv Koenkk-* zigbee2mqtt; cd zigbee2mqtt; npm ci`; //npm ci --production // npm install -g typescript; npm i --save-dev @types/node
+                                            if (this.DEBUG) {
+                                                console.log("command_to_run: " + command_to_run);
+                                            }
+                                			exec(command_to_run, (err, stdout, stderr) => { // npm ci --production
+                                				if (err) {
+                                					console.error(err);
+                                                    this.z2m_installed_succesfully = false;
+                                					return;
+                                				}
+                                				if (this.DEBUG) {
+                                					console.log(stdout);
+                                				}
+                                                
+                                                path.exists(this.zigbee2mqtt_data_z2m_test_path, function(exists) { 
+                                                    if (exists) {
+                                        				console.log("-----INSTALL COMPLETE-----");
+                                                        this.z2m_installed_succesfully = true;
+                                        				this.sendPairingPrompt("Zigbee2MQTT installation complete. Starting...");
+                                        				this.run_zigbee2mqtt();
+                                                    }
+                                                    else{
+                                                        // installation failed
+                                                        this.sendPairingPrompt("Error, Zigbee2MQTT installation failed");
+                                                        this.run_zigbee2mqtt();
+                                                    }
+                                                }); 
+                                				
+                                			});
+                                        }
+                                    }); 
+                                    
+                                    
+                        		});
+                                
+                                
+                            }
+                            else{
+                                console.error("Error, could not get download link for latest Z2M release");
+                            }
+                            
+
+						} catch (error) {
+							console.error(error.message);
+							this.run_zigbee2mqtt();
+						}
+					});
+				});
+
+				req.on('error', (e) => {
+					console.error(e);
+					this.run_zigbee2mqtt();
+				});
+				req.end();
+			} catch (error) {
+				console.error(error.message);
+				this.run_zigbee2mqtt();
+			}
+            
+            https://api.github.com/repos/Koenkk/zigbee2mqtt/releases/latest
+            
+            
+            
+            
+            
+    		
         }
         catch(e){
             console.log("ERROR DURING INSTALL OF ZIGBEE2MQTT!:" + e);
