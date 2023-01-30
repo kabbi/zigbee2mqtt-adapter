@@ -85,6 +85,13 @@
 	font-style:italic;
 }
 
+.extension-zigbee2mqtt-adapter-developer-only{
+    display:none;
+}
+
+.developer .extension-zigbee2mqtt-adapter-developer-only{
+    display:block;
+}
 
 /*  DELETE  */
 

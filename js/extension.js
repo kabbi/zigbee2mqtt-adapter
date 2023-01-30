@@ -242,8 +242,33 @@
                     }
                     
 		        }).catch((e) => {
-		  			console.log("Error is look_for_usb_stick request: " + e);
+		  			console.log("Error in look_for_usb_stick request: ", e);
                     document.getElementById('extension-zigbee2mqtt-adapter-look-for-usb-stick-button').style.display = 'inline-block';
+		        });
+                
+            });
+            
+
+
+            // Do health check button
+            document.getElementById('extension-zigbee2mqtt-adapter-health-check-button').addEventListener('click', (event) => {
+                //console.log("re-install button clicked");
+                //console.log(new_pan_id,new_network_key);
+                
+                document.getElementById('extension-zigbee2mqtt-adapter-health-check-button').style.display = 'none';
+                
+                
+		        window.API.postJson(
+		         "/extensions/zigbee2mqtt-adapter/api/ajax",
+					{"action":"health_check"}
+
+		        ).then((body) => {
+                    console.log("health check response: ", body);
+                    
+                    
+		        }).catch((e) => {
+		  			console.log("Error doing health check request: ", e);
+                    document.getElementById('extension-zigbee2mqtt-adapter-health-check-button').style.display = 'inline-block';
 		        });
                 
             });

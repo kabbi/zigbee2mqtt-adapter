@@ -32,7 +32,7 @@ class Zigbee2MQTTHandler extends APIHandler {
 
 	async handleRequest(request) {
 		if (this.config.debug) {
-			console.log("* * * * * * * * * * * * API HANDLER REQUEST * * * * * * * * * *");
+			console.log("* * * * * * * * * * * * API HANDLER REQUEST * * * * * * * * * * request.path: ", request.path);
 			//console.log(request);
 			//console.log("request.method = " + request.method);
 			//console.log("request.path = " + request.path);

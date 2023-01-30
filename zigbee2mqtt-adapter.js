@@ -20,7 +20,7 @@ const fs = require('fs');
 const path = require('path');
 
 //import { promises as fs } from 'fs';
-//import { access } from "fs/promises";
+//import { access } from "fs/promises"; // requires node 14
 
 //const crypto = require('crypto');
 //const crypto = require('node:crypto');
@@ -99,10 +99,6 @@ class ZigbeeMqttAdapter extends Adapter {
         this.addon_start_time = Math.floor(+new Date() / 1000);
         
 		this.exposesDeviceGenerator = new ExposesDeviceGenerator(this, this.config);
-
-        
-        
-        
 
         this.reverse_list_contact = ['RH3001']; // All the devices for which the contact property should be reversed. RH3001 is a great usb-rechargeable contact sensor.
         
@@ -185,7 +181,11 @@ class ZigbeeMqttAdapter extends Adapter {
 		this.waiting_for_map = false;
 		this.updating_firmware = false;
 		this.update_result = {'status':'idle'}; // will contain the message that Z2M returns after the update process succeeds or fails.
+        
         //this.updating_firmware_progress = 0;
+        
+        this.busy_installing_z2m = false; // True while Z2M is being downloaded and installed
+        
         
         
         this.config.virtual_brightness_alternative = true;
@@ -226,11 +226,6 @@ class ZigbeeMqttAdapter extends Adapter {
 		if (this.DEBUG) {
 			console.log("this.node18_shortcut_path = ", this.node18_shortcut_path);
 		}
-        if (fs.existsSync(this.node18_shortcut_path)) {
-            this.node18_shortcut_available = true;
-            console.log('node18 shortcut is available');
-        }
-        
         
         
 		// log files location
@@ -238,19 +233,31 @@ class ZigbeeMqttAdapter extends Adapter {
 		if (this.DEBUG) {
 			console.log("this.zigbee2mqtt_log_path = ", this.zigbee2mqtt_log_path);
 		}
-        if (fs.existsSync(this.zigbee2mqtt_log_path)) {
-    		if (this.DEBUG) {
-    			console.log("Deleting any old logs");
-    		}
-            fs.readdir(this.zigbee2mqtt_log_path, (err, files) => {
-              if (err) throw err;
-
-              for (const file of files) {
-                fs.unlink(path.join(this.zigbee2mqtt_log_path, file), err => {
+        
+		fs.access(this.zigbee2mqtt_log_path, (err) => {
+			if (err && err.code === 'ENOENT') {
+        		if (this.DEBUG) {
+        			console.log("z2m logs did not exist, so not necessary to delete them");
+        		}
+			}
+            else {
+        		if (this.DEBUG) {
+        			console.log("Deleting any old logs");
+        		}
+                fs.readdir(this.zigbee2mqtt_log_path, (err, files) => {
                   if (err) throw err;
+
+                  for (const file of files) {
+                    fs.unlink(path.join(this.zigbee2mqtt_log_path, file), err => {
+                      if (err) throw err;
+                    });
+                  }
                 });
-              }
-            });
+            }
+        });
+        
+        if (fs.existsSync(this.zigbee2mqtt_log_path)) {
+    		
         }
         
         // Persistent data file path
@@ -413,6 +420,10 @@ class ZigbeeMqttAdapter extends Adapter {
                                 else {
                                     this.improve_security = true;
                                 }
+                                
+                                // START
+                                this.pre_run_z2m();
+                                
                             }
                             else{
                                 console.log("Error: this.config was not defined")
@@ -448,10 +459,13 @@ class ZigbeeMqttAdapter extends Adapter {
                             else {
                                 this.improve_security = true;
                             }
+                            
+                            // START
+                            this.pre_run_z2m();
+                            
                         }
                     });
                     
-
                 }
             });
 		} 
@@ -473,12 +487,59 @@ class ZigbeeMqttAdapter extends Adapter {
 		}
 
 
+		
+        
+        // Start the periodic availability check, which pings routers every 2 minutes.
+        /*
+        this.pinging_things = false;
+        
+        this.ping_interval = setInterval(() => {
+            
+            // this.config.manual_toggle_response
+            if (!this.DEBUG) { // TODO: remove this again for more ping testing.
+                //this.ping_things();
+            }
+            
+        }, 120000);
+        */
+        
+        
+        // Every 10 seconds check if Zigbee2MQTT hasn't somehow crashed
+        this.check_z2m_running = setInterval(() => {
+            
+            if(this.z2m_should_be_running){
+                // this.config.manual_toggle_response
+                if (!this.DEBUG) { // TODO: remove this again for more ping testing.
+                    //this.ping_things();
+                }
+                
+                this.check_z2m_is_running();
+            }
+            else{
+                if (this.DEBUG) {
+                    console.log("interval: this.z2m_should_be_running is still false, so not checking if z2m is running");
+                }
+            }
+            
+            // node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/index.js
+            
+        }, 30000);
+        
+        
+        this.ready = true;
+
+	}
+
+
+    // Added yet an even earlier phase...
+    pre_run_z2m(){
 		//
 		// CHECK IF ZIGBEE2MQTT SHOULD BE INSTALLED OR UPDATED
 		//
 		if (this.config.local_zigbee2mqtt == true) {
             
-			fs.access(this.zigbee2mqtt_dir_path, (err) => {
+            
+			fs.access(this.zigbee2mqtt_data_z2m_test_path, (err) => {
 				if (err && err.code === 'ENOENT') {
                     console.log("zigbee2mqtt folder was missing, should download and install");
 					this.download_z2m(); // this then also installs and starts zigbee2mqtt
@@ -581,47 +642,7 @@ class ZigbeeMqttAdapter extends Adapter {
 			console.log("Not using built-in zigbee2mqtt");
 			this.z2m_started = true;
 		}
-        
-        // Start the periodic availability check, which pings routers every 2 minutes.
-        /*
-        this.pinging_things = false;
-        
-        this.ping_interval = setInterval(() => {
-            
-            // this.config.manual_toggle_response
-            if (!this.DEBUG) { // TODO: remove this again for more ping testing.
-                //this.ping_things();
-            }
-            
-        }, 120000);
-        */
-        
-        
-        // Every 10 seconds check if Zigbee2MQTT hasn't somehow crashed
-        this.check_z2m_running = setInterval(() => {
-            
-            if(this.z2m_should_be_running){
-                // this.config.manual_toggle_response
-                if (!this.DEBUG) { // TODO: remove this again for more ping testing.
-                    //this.ping_things();
-                }
-                
-                this.check_z2m_is_running();
-            }
-            else{
-                if (this.DEBUG) {
-                    console.log("interval: this.z2m_should_be_running is still false, so not checking if z2m is running");
-                }
-            }
-            
-            // node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/index.js
-            
-        }, 30000);
-        
-        
-        this.ready = true;
-
-	}
+    }
 
 
 
@@ -1088,124 +1109,135 @@ class ZigbeeMqttAdapter extends Adapter {
         try{
             var parent_scope = this;
             
-            if(this.node18_shortcut_available){
-                console.log('starting Zigbee2MQTT addon with node18 shortcut');
-                this.zigbee2mqtt_subprocess = spawn(this.node18_shortcut_path, [this.zigbee2mqtt_file_path]);
-            }
-            else{
-                console.log('starting Zigbee2MQTT addon without node shortcut');
-                this.zigbee2mqtt_subprocess = spawn('node', [this.zigbee2mqtt_file_path]);
-            }
-            
-        
-            this.zigbee2mqtt_subprocess.on('error', err => {
-                console.error('Yikes, detected subprocess error for Z2M child process: ', err);
-            });
-        
-            // StdOut
-            this.zigbee2mqtt_subprocess.stdout.setEncoding('utf8');
-            this.zigbee2mqtt_subprocess.stdout.on('data', (data) => { // 
-                //Here is where the output goes
-                if (this.DEBUG2) {
-                    console.log('z2m stdout: ' + data.toString() );
+            // TODO: isn't this superfluous? If Node 18 is installed, then it will also be set as the default node. So just running 'node etc' should work in either case.
+    		fs.access(his.node18_shortcut_path, (err) => {
+    			if (err && err.code === 'ENOENT') {
+            		if (this.DEBUG) {
+            			console.log("z2m logs did not exist, so not necessary to delete them");
+            		}
+                    this.node18_shortcut_available = false;
+                    console.log('starting Zigbee2MQTT addon without node shortcut');
+                    this.zigbee2mqtt_subprocess = spawn('node', [this.zigbee2mqtt_file_path]);
+    			}
+                else {
+                    this.node18_shortcut_available = true;
+                    console.log('starting Zigbee2MQTT addon with node18 shortcut');
+                    this.zigbee2mqtt_subprocess = spawn(this.node18_shortcut_path, [this.zigbee2mqtt_file_path]);
                 }
+                
+                this.zigbee2mqtt_subprocess.on('error', err => {
+                    console.error('Yikes, detected subprocess error for Z2M child process: ', err);
+                });
+        
+                // StdOut
+                this.zigbee2mqtt_subprocess.stdout.setEncoding('utf8');
+                this.zigbee2mqtt_subprocess.stdout.on('data', (data) => { // 
+                    //Here is where the output goes
+                    if (this.DEBUG2) {
+                        console.log('z2m stdout: ' + data.toString() );
+                    }
             
-                //console.log('parent_scope: ', parent_scope);
+                    //console.log('parent_scope: ', parent_scope);
             
-                data=data.toString();
+                    data=data.toString();
             
-                if( data.includes("Error while opening serialport") ){
-                    console.log('ERROR: COULD NOT CONNECT TO THE USB STICK. PLEASE RESTART THE CONTROLLER. MAKE SURE OTHER ZIGBEE ADDONS ARE DISABLED.');
+                    if( data.includes("Error while opening serialport") ){
+                        console.log('ERROR: COULD NOT CONNECT TO THE USB STICK. PLEASE RESTART THE CONTROLLER. MAKE SURE OTHER ZIGBEE ADDONS ARE DISABLED.');
                     
-                    const now_stamp = Math.floor(+new Date() / 1000);
+                        const now_stamp = Math.floor(+new Date() / 1000);
                     
-                    if(now_stamp - this.addon_start_time > 30){
-                        this.sendPairingPrompt("Zigbee stick did not respond, please restart the controller");
-                        this.usb_port_issue = true;
-                        if(this.DEBUG){
-                            console.log("this.find_missing_stick_attempted: ", this.find_missing_stick_attempted);
-                            console.log("this.fix_usb_stick_attempted: ", this.fix_usb_stick_attempted);
-                        }
+                        if(now_stamp - this.addon_start_time > 30){
+                            this.sendPairingPrompt("Zigbee stick did not respond, please restart the controller");
+                            this.usb_port_issue = true;
+                            if(this.DEBUG){
+                                console.log("this.find_missing_stick_attempted: ", this.find_missing_stick_attempted);
+                                console.log("this.fix_usb_stick_attempted: ", this.fix_usb_stick_attempted);
+                            }
                     
                     
-                        if( data.includes("Resource temporarily unavailable") && this.fix_usb_stick_attempted == false){
-                            this.fix_usb();
-                        }
-                        else if( data.includes("No such file or directory, cannot open /dev") && this.find_missing_stick_attempted == false){
-                            this.find_missing_stick_attempted = true;
-                            this.look_for_usb_stick();
+                            if( data.includes("Resource temporarily unavailable") && this.fix_usb_stick_attempted == false){
+                                this.fix_usb();
+                            }
+                            else if( data.includes("No such file or directory, cannot open /dev") && this.find_missing_stick_attempted == false){
+                                this.find_missing_stick_attempted = true;
+                                this.look_for_usb_stick();
+                            }
+                            else{
+                                this.fix_usb();
+                            }
                         }
                         else{
-                            this.fix_usb();
+                            console.log("USB trouble, but the addon started less than 30 seconds ago.");
                         }
+                    
+                    
+                    }
+                    else if( data.includes("ailed to start") ){
+                        console.log("Yikes, failed to start Zigbee2MQTT. Killing it, just to be sure. Try again later?");
+                        this.z2m_had_error = true;
+                        try{
+                            execSync("pkill -f 'zigbee2mqtt-adapter/zigbee2mqtt/index.js'");
+                            //console.log("delaying killing for now");
+                            //setTimeout(() => {
+                        
+                            //}, "30000")
+                            //
+                        }
+                        catch(e){
+                            console.log("pkill error: " + e);
+                        }
+                        //parent_scope.run_zigbee2mqtt(61); // wait 61 seconds before retrying
+                        //this.run_zigbee2mqtt(61); // wait 61 seconds before retrying
+                    }
+                    else if( data.includes(", failed") ){
+            
+                        // Isnt't this a bit much? Could this create a rebuild loop?
+                        //const zigbee2mqtt_dir = path.join(path.resolve('../..'), '.webthings', 'data', 'zigbee2mqtt-adapter','zigbee2mqtt');
+                        console.log("Yikes, Zigbee2MQTT may not be installed ok. Will attempt to fix. Dir: " + this.zigbee2mqtt_dir_path);
+            			this.rebuild_z2m();
+                    }
+            
+                });
+    
+                // StdErr
+                this.zigbee2mqtt_subprocess.stderr.setEncoding('utf8');
+                this.zigbee2mqtt_subprocess.stderr.on('data', (data) => {
+
+                    data=data.toString();
+
+                    if (this.DEBUG) {
+                        console.log('z2m stderr: ', data);
+                    }
+            
+                    if( data.includes("was compiled against a different Node.js version") || data.includes("Could not locate the bindings file") || data.includes("Cannot find module") ){
+                        console.log('Oh ERROR SNAP, Zigbee2MQTT should be rebuilt');
+                        this.rebuild_z2m();
+                    }
+
+                });
+
+                //this.zigbee2mqtt_subprocess.on('close', function(code) {
+                this.zigbee2mqtt_subprocess.on('close', (code) => {
+                    //Here you can get the exit code of the script
+                    if (this.DEBUG) {
+                        console.log('z2m closing code: ' + code);
+                    }
+                    if(code == 0){
+                        console.log("Z2M closed cleanly.");
                     }
                     else{
-                        console.log("USB trouble, but the addon started less than 30 seconds ago.");
+                        console.log("Warning, Z2M did not close cleanly. Error code: " + code);
+                        this.z2m_state = false;
+                        this.z2m_had_error = true;
                     }
-                    
-                    
-                }
-                else if( data.includes("ailed to start") ){
-                    console.log("Yikes, failed to start Zigbee2MQTT. Killing it, just to be sure. Try again later?");
-                    this.z2m_had_error = true;
-                    try{
-                        execSync("pkill -f 'zigbee2mqtt-adapter/zigbee2mqtt/index.js'");
-                        //console.log("delaying killing for now");
-                        //setTimeout(() => {
-                        
-                        //}, "30000")
-                        //
-                    }
-                    catch(e){
-                        console.log("pkill error: " + e);
-                    }
-                    //parent_scope.run_zigbee2mqtt(61); // wait 61 seconds before retrying
-                    //this.run_zigbee2mqtt(61); // wait 61 seconds before retrying
-                }
-                else if( data.includes(", failed") ){
-            
-                    // Isnt't this a bit much? Could this create a rebuild loop?
-                    //const zigbee2mqtt_dir = path.join(path.resolve('../..'), '.webthings', 'data', 'zigbee2mqtt-adapter','zigbee2mqtt');
-                    console.log("Yikes, Zigbee2MQTT may not be installed ok. Will attempt to fix. Dir: " + this.zigbee2mqtt_dir_path);
-        			this.rebuild_z2m();
-                }
-            
+                    this.z2m_started = false;
+                    //console.log('Full output of script: ',scriptOutput);
+                });
+                
             });
-    
-            // StdErr
-            this.zigbee2mqtt_subprocess.stderr.setEncoding('utf8');
-            this.zigbee2mqtt_subprocess.stderr.on('data', (data) => {
-
-                data=data.toString();
-
-                if (this.DEBUG) {
-                    console.log('z2m stderr: ', data);
-                }
             
-                if( data.includes("was compiled against a different Node.js version") || data.includes("Could not locate the bindings file") || data.includes("Cannot find module") ){
-                    console.log('Oh ERROR SNAP, Zigbee2MQTT should be rebuilt');
-                    this.rebuild_z2m();
-                }
-
-            });
-
-            //this.zigbee2mqtt_subprocess.on('close', function(code) {
-            this.zigbee2mqtt_subprocess.on('close', (code) => {
-                //Here you can get the exit code of the script
-                if (this.DEBUG) {
-                    console.log('z2m closing code: ' + code);
-                }
-                if(code == 0){
-                    console.log("Z2M closed cleanly.");
-                }
-                else{
-                    console.log("Warning, Z2M did not close cleanly. Error code: " + code);
-                    this.z2m_state = false;
-                    this.z2m_had_error = true;
-                }
-                this.z2m_started = false;
-                //console.log('Full output of script: ',scriptOutput);
-            });
+        
+            
             
             
         }
@@ -1219,118 +1251,136 @@ class ZigbeeMqttAdapter extends Adapter {
 
 	download_z2m() {
         this.z2m_installed_succesfully = false;
+        
+        if(this.busy_installing_z2m){
+            console.error("download z2m called while Z2M was already being downloaded/installed (busy_installing_z2m was true). Aborting.");
+            return;
+        }
+        this.busy_installing_z2m = true;
+        
         try{
             
-            
-            
-			try {
-				const options = {
-					hostname: 'api.github.com',
-					port: 443,
-					path: '/repos/Koenkk/zigbee2mqtt/releases/latest',
-					method: 'GET',
-                    timeout: 5000,
-					headers: {
-						'X-Forwarded-For': 'xxx',
-						'User-Agent': 'createcandle',
-					},
-				};
+			const options = {
+				hostname: 'api.github.com',
+				port: 443,
+				path: '/repos/Koenkk/zigbee2mqtt/releases/latest',
+				method: 'GET',
+                timeout: 5000,
+				headers: {
+					'X-Forwarded-For': 'xxx',
+					'User-Agent': 'createcandle',
+				},
+			};
 
-				const req = https.request(options, (res) => {
-					if (this.DEBUG) {
-						console.log('statusCode:', res.statusCode);
-					}
-					// console.log('headers:', res.headers);
+			const req = https.request(options, (res) => {
+				if (this.DEBUG) {
+					console.log('statusCode:', res.statusCode);
+				}
+				// console.log('headers:', res.headers);
 
-					let body = '';
-					res.on('data', (chunk) => {
-						body += chunk;
-					});
+				let body = '';
+				res.on('data', (chunk) => {
+					body += chunk;
+				});
 
-					res.on('end', () => {
-						try {
+				res.on('end', () => {
+                    
+					try {
 
-							// Parse JSON from api.github
-							const github_json = JSON.parse(body);
-							
-                            if(typeof github_json.tarball_url != 'undefined'){
-                                if (this.DEBUG) {
-    								console.log('latest zigbee2MQTT release tar file URL found on Github =', github_json.tarball_url);
-    							}
-                                
-                        		exec(`wget ${github_json.tarball_url} -O ${this.zigbee2mqtt_data_z2m_release_tar_path}  --retry-connrefused  --waitretry=5 --read-timeout=20 --timeout=15 -t 3`, (err, stdout, stderr) => {
-                        			if (err) {
-                        				console.error(err);
-                        				return;
-                        			}
-                        			if (this.DEBUG) {
-                        				console.log(stdout);
-                        			}
-                        			
-                                    if (fs.existsSync(this.zigbee2mqtt_data_dir_path)) {
-                                        
+						// Parse JSON from api.github
+						const github_json = JSON.parse(body);
+						
+                        if(typeof github_json.tarball_url != 'undefined'){
+                            if (this.DEBUG) {
+								console.log('latest zigbee2MQTT release tar file URL found on Github =', github_json.tarball_url);
+							}
+                            
+                    		exec(`wget ${github_json.tarball_url} -O ${this.zigbee2mqtt_data_z2m_release_tar_path}  --retry-connrefused  --waitretry=5 --read-timeout=20 --timeout=15 -t 3`, (err, stdout, stderr) => {
+                    			if (err) {
+                    				console.error("Getting latest Z2M release json failed: ", err);
+                                    this.busy_installing_z2m = false;
+                    				return;
+                    			}
+                    			if (this.DEBUG) {
+                    				console.log("wget z2m download stdout: ", stdout);
+                    			}
+                    			
+                    			fs.access(this.zigbee2mqtt_data_z2m_release_tar_path, (err) => {
+                    				if (err && err.code === 'ENOENT') {
+                                        console.error("Downloading Z2M failed: ", err);
+                                        this.busy_installing_z2m = false;
+                                        this.sendPairingPrompt("Error, Zigbee2MQTT download failed");
+                                        return;
+                    				} 
+                                    else {
+                        				
                                         console.log("-----DOWNLOAD COMPLETE, STARTING INSTALL-----");
                                         this.sendPairingPrompt("Zigbee2MQTT download complete. Starting installation.");
-                                
-                                        const command_to_run = `cd ${this.zigbee2mqtt_data_dir_path}; mkdir -p zigbee2mqtt; tar xf latest_z2m.tar.gz; rm latest_z2m.tar.gz; mv Koenkk-* zigbee2mqtt; cd zigbee2mqtt; npm ci`; //npm ci --production // npm install -g typescript; npm i --save-dev @types/node
+                            
+                                        const command_to_run = `cd ${this.zigbee2mqtt_data_dir_path}; rm -rf zigbee2mqtt; tar xf latest_z2m.tar.gz; rm latest_z2m.tar.gz; mv Koenkk-* zigbee2mqtt; cd zigbee2mqtt; ls; npm ci`; //npm ci --production // npm install -g typescript; npm i --save-dev @types/node
                                         if (this.DEBUG) {
                                             console.log("command_to_run: " + command_to_run);
                                         }
                             			exec(command_to_run, (err, stdout, stderr) => { // npm ci --production
                             				if (err) {
-                            					console.error(err);
-                                                this.z2m_installed_succesfully = false;
+                            					console.error("Error running npm ci in freshly downloaded Z2M: ", err);
+                                                this.busy_installing_z2m = false;
                             					return;
                             				}
                             				if (this.DEBUG) {
                             					console.log(stdout);
                             				}
-                                            
-                                            if (fs.existsSync(this.zigbee2mqtt_data_dir_path)) {
-                                				console.log("-----INSTALL COMPLETE-----");
-                                                this.z2m_installed_succesfully = true;
-                                				this.sendPairingPrompt("Zigbee2MQTT installation complete. Starting...");
-                                				this.run_zigbee2mqtt();
-                                            }
-                                            else{
-                                                this.z2m_installed_succesfully = false;
-                                                this.sendPairingPrompt("Error, Zigbee2MQTT installation failed");
-                                                //this.run_zigbee2mqtt();
-                                            }
-                            				
+                                        
+                                			fs.access(this.zigbee2mqtt_data_z2m_test_path, (err) => {
+                                				if (err && err.code === 'ENOENT') {
+                                                    console.error("Error Z2M installation failed, test dir in Z2M's node_modules does not exist: ", err);
+                                                    this.sendPairingPrompt("Error, Zigbee2MQTT installation failed");
+                                                    this.busy_installing_z2m = false;
+                                                    return;
+                                				}
+                                                else {
+                                    				console.log("-----Z2M INSTALL COMPLETE-----");
+                                                    this.z2m_installed_succesfully = true;
+                                    				this.sendPairingPrompt("Zigbee2MQTT installation complete. Starting...");
+                                    				this.run_zigbee2mqtt();
+                                                }
+                                            });
+                        				
                             			});
+                                        
                                     }
-                                    
-                        		});
+                                });
                                 
-                                
-                            }
-                            else{
-                                console.error("Error, could not get download link for latest Z2M release");
-                            }
+                    		});
                             
+                            
+                        }
+                        else{
+                            console.error("Error, could not get download link for latest Z2M release");
+                        }
+                        
 
-						} catch (error) {
-							console.error(error.message);
-							this.run_zigbee2mqtt();
-						}
-					});
+					} catch (error) {
+						console.error(error.message);
+                        this.busy_installing_z2m = false;
+						//this.run_zigbee2mqtt();
+					}
 				});
+			});
 
-				req.on('error', (e) => {
-					console.error(e);
-					this.run_zigbee2mqtt();
-				});
-				req.end();
-			} catch (error) {
-				console.error(error.message);
-				this.run_zigbee2mqtt();
-			}
-            
-    		
+			req.on('error', (e) => {
+				console.error(e);
+                this.busy_installing_z2m = false;
+				//this.run_zigbee2mqtt();
+			});
+			req.end();
+		    
+			
         }
         catch(e){
-            console.log("ERROR DURING INSTALL OF ZIGBEE2MQTT!:" + e);
+            console.error("GENERAL ERROR DURING INSTALL OF ZIGBEE2MQTT!:", e);
+            this.busy_installing_z2m = false;
+            //this.run_zigbee2mqtt(); // TODO: does this make sense?
         }
 		
 	}
@@ -1430,8 +1480,25 @@ class ZigbeeMqttAdapter extends Adapter {
             //
 
     		if (topic.endsWith('/health_check')) {
-    			if (this.DEBUG) {
-                    console.log("\nReceived health check response message. Data = " + data.toString());
+    			// example response: {"data":{"healthy":true},"status":"ok"}
+                try{
+        			if (this.DEBUG) {
+                        console.log("\nReceived health check response message. Data = " + data.toString());
+                    }
+                    const health_data = JSON.parse(data.toString());
+                    console.log("parsed health_data: ", health_data);
+                    console.log("parsed health_data.data: ", health_data.data);
+                     console.log("parsed health_data.data.healthy: ", health_data.data.healthy);
+                    
+                    if(health_data.data.health == true){
+                        this.sendPairingPrompt("Zigbee network is healthy");
+                    }
+                    else{
+                        this.sendPairingPrompt("Zigbee network is unhealthy");
+                    }
+                }
+                catch(e){
+                    console.error("Error handling health check response: ", e);
                 }
             }
 
@@ -1576,7 +1643,7 @@ class ZigbeeMqttAdapter extends Adapter {
     				if (this.DEBUG) {
     					console.log("/bridge/devices detected");
     				}
-                
+                    
     				try {
     					for (const device of msg) {
                             try {
@@ -1586,7 +1653,15 @@ class ZigbeeMqttAdapter extends Adapter {
                                 }
                                 if(typeof device.type != "undefined"){
                                     if(device.type != "Coordinator"){
-                                
+                                        
+                                        if (this.DEBUG) {
+                                            console.log("device.interview_completed: ", device.interview_completed);
+                                            console.log("device.interviewing: ", device.interviewing);
+                                            console.log("device.interview_completed: ", device.interview_completed);
+                                        }
+                                        //this.sendPairingPrompt("Detected a Zigbee device");
+                                        
+                                        
                                         if(typeof device.interview_completed != "undefined" && typeof device.interviewing != "undefined" && device.supported != 'undefined'){
                                             if (this.DEBUG) {
                                                 console.log("- device.type was not undefined or coordinator, it was: " + device.type);
@@ -1600,7 +1675,10 @@ class ZigbeeMqttAdapter extends Adapter {
                                             }
                                             else{
                                                 if(device.interview_completed == false && device.interviewing == true && device.supported == true){
-                                                    this.sendPairingPrompt("One moment: Detected a new Zigbee device");
+                                                    this.sendPairingPrompt("Detected a known Zigbee device");
+                                                }
+                                                else if(device.interview_completed == false && device.interviewing == true){
+                                                    this.sendPairingPrompt("Detected a new Zigbee device");
                                                 }
                                                 
                                                 if (this.DEBUG) {
@@ -3490,73 +3568,82 @@ class ZigbeeMqttAdapter extends Adapter {
 		if (this.DEBUG) {
 			console.log('in rebuild_z2m');
 		}
+        if(this.busy_installing_z2m){
+            console.log("rebuild_z2m: z2m is not installed yet. Aborting.");
+            return;
+        }
+        
         this.z2m_installed_succesfully = false;
         
-        if (fs.existsSync('/home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/package.json')) {
-            if(this.busy_rebuilding_z2m == false){
-                this.busy_rebuilding_z2m = true;
-                console.log("STARTING REBUILD COMMAND");
-        		exec(`cd ${this.zigbee2mqtt_dir_path}; if ps aux | grep -q 'npm ci --production'; then npm install typescript -g; npm i --save-dev @types/node; npm ci --production; fi`, (err, stdout, stderr) => {
-        			if (err) {
-        				console.error(err);
-                        this.busy_rebuilding_z2m = true;
-        				return;
-        			}
-                    else{
-                        console.log("nice, fix attempt did not create an error?");
-                    }
-        			if (this.DEBUG) {
-        				console.log(stdout);
-        			}
+		fs.access('/home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/package.json', (err) => {
+			if (err && err.code === 'ENOENT') {
+    			this.delete_z2m();
+    			this.download_z2m(); // this also then installs and starts zigbee2mqtt
+			}
+            else {
                 
-        			console.log("-----REBUILD ATTEMPT COMPLETE-----");
-                    this.busy_rebuilding_z2m = false;
-        		    this.z2m_installed_succesfully = true;
-        			//parent_scope.run_zigbee2mqtt();
-                    //this.run_zigbee2mqtt();
-        		});
+                if(this.busy_rebuilding_z2m == false){
+                    this.busy_rebuilding_z2m = true;
+                    console.log("STARTING REBUILD COMMAND");
+            		//exec(`cd ${this.zigbee2mqtt_dir_path}; if ps aux | grep -q 'npm ci --production'; then npm install typescript -g; npm i --save-dev @types/node; npm ci --production; fi`, (err, stdout, stderr) => {
+                    exec(`cd ${this.zigbee2mqtt_dir_path}; if ps aux | grep -q 'npm ci'; then npm ci; fi`, (err, stdout, stderr) => {
+            			if (err) {
+            				console.error("Rebuild command returned error: ", err);
+                            this.busy_rebuilding_z2m = false;
+            				return;
+            			}
+                        else{
+                            console.log("nice, rebuild_z2m attempt did not create an error?");
+                        }
+            			if (this.DEBUG) {
+            				console.log(stdout);
+            			}
+                
+            			console.log("-----REBUILD ATTEMPT COMPLETE-----");
+                        this.busy_rebuilding_z2m = false;
+            		    this.z2m_installed_succesfully = true;
+            			//parent_scope.run_zigbee2mqtt();
+                        //this.run_zigbee2mqtt();
+            		});
         
         
-                /*
-                exec("ps aux | grep zigbee2mqtt", (error, stdout, stderr) => {
-                    if (error) {
-                        console.log(`rebuild error: ${error.message}`);
-                        return;
-                    }
-                    if (stderr) {
-                        console.log(`rebuild stderr: ${stderr}`);
-                        return;
-                    }
-                    console.log(`check_response to see if already rebuilding: ${stdout}`);
+                    /*
+                    exec("ps aux | grep zigbee2mqtt", (error, stdout, stderr) => {
+                        if (error) {
+                            console.log(`rebuild error: ${error.message}`);
+                            return;
+                        }
+                        if (stderr) {
+                            console.log(`rebuild stderr: ${stderr}`);
+                            return;
+                        }
+                        console.log(`check_response to see if already rebuilding: ${stdout}`);
             
             
-                    if(stdout.indexOf('npm ci --production') != -1){
-                        console.log("Z2M seems to already be rebuilding, so done.");
-                        return;
-                    }
+                        if(stdout.indexOf('npm ci --production') != -1){
+                            console.log("Z2M seems to already be rebuilding, so done.");
+                            return;
+                        }
             
             
             
-                });
-                */
+                    });
+                    */
         
-                /*
-                const z2m_check_response = execute("ps aux | grep zigbee2mqtt");
-                if(this.DEBUG){
-                    console.log("check_response to see if already rebuilding: ", z2m_check_response);
+                    /*
+                    const z2m_check_response = execute("ps aux | grep zigbee2mqtt");
+                    if(this.DEBUG){
+                        console.log("check_response to see if already rebuilding: ", z2m_check_response);
+                    }
+        
+                    if(z2m_check_response.indexOf('npm ci --production') != -1){
+                        console.log("Z2M seems to already berebuilding, so done.");
+                        return;
+                    }
+                    */
                 }
-        
-                if(z2m_check_response.indexOf('npm ci --production') != -1){
-                    console.log("Z2M seems to already berebuilding, so done.");
-                    return;
-                }
-                */
             }
-        }
-        else{
-			this.delete_z2m();
-			this.download_z2m(); // this also then installs and starts zigbee2mqtt
-        }
+        });
         
     }
 
@@ -3603,6 +3690,11 @@ class ZigbeeMqttAdapter extends Adapter {
 
     async check_z2m_is_running() {
         try {
+            if(this.busy_installing_z2m){
+                console.log("check_z2m_is_running: z2m is not installed yet. Aborting.");
+                return;
+            }
+            
             if(typeof this.addon_start_time != 'undefined'){
                 
                 const z2m_check_response = await execute("ps aux | grep zigbee2mqtt");
