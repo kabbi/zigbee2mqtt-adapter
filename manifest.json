@@ -33,6 +33,7 @@
       "local_zigbee2mqtt": true,
 	  "disable_improved_security": false,
       "auto_update": false,
+	  "manual_toggle_response": "both",
       "mqtt": "mqtt://localhost",
       "prefix": "zigbee2mqtt",
       "serial_port": "",
