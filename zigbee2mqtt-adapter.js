@@ -1323,13 +1323,13 @@ class ZigbeeMqttAdapter extends Adapter {
                                         console.log("-----DOWNLOAD COMPLETE, STARTING INSTALL-----");
                                         this.sendPairingPrompt("Zigbee2MQTT download complete. Starting installation.");
                             
-                                        const command_to_run = `cd ${this.zigbee2mqtt_data_dir_path}; rm -rf zigbee2mqtt; tar xf latest_z2m.tar.gz; rm latest_z2m.tar.gz; mv Koenkk-* zigbee2mqtt; cd zigbee2mqtt; ls; npm ci`; //npm ci --production // npm install -g typescript; npm i --save-dev @types/node
+                                        const command_to_run = `cd ${this.zigbee2mqtt_data_dir_path}; rm -rf zigbee2mqtt; tar xf latest_z2m.tar.gz; rm latest_z2m.tar.gz; mv Koenkk-* zigbee2mqtt; cd zigbee2mqtt; ls; pnpm i --frozen-lockfile; pnpm run build`; // npm ci //npm ci --production // npm install -g typescript; npm i --save-dev @types/node
                                         if (this.DEBUG) {
                                             console.log("command_to_run: " + command_to_run);
                                         }
-                            			exec(command_to_run, (err, stdout, stderr) => { // npm ci --production
+                            			exec(command_to_run, (err, stdout, stderr) => {
                             				if (err) {
-                            					console.error("Error running npm ci in freshly downloaded Z2M: ", err);
+                            					console.error("Error running npm install in freshly downloaded Z2M: ", err);
                                                 this.busy_installing_z2m = false;
                             					return;
                             				}
@@ -3592,7 +3592,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     this.busy_rebuilding_z2m = true;
                     console.log("STARTING REBUILD COMMAND");
             		//exec(`cd ${this.zigbee2mqtt_dir_path}; if ps aux | grep -q 'npm ci --production'; then npm install typescript -g; npm i --save-dev @types/node; npm ci --production; fi`, (err, stdout, stderr) => {
-                    exec(`cd ${this.zigbee2mqtt_dir_path}; if ps aux | grep -q 'npm ci'; then npm ci; fi`, (err, stdout, stderr) => {
+                    exec(`cd ${this.zigbee2mqtt_dir_path}; if ps aux | grep -q 'pnpm run build'; then pnpm i --frozen-lockfile; pnpm run build; fi`, (err, stdout, stderr) => {
             			if (err) {
             				console.error("Rebuild command returned error: ", err);
                             this.busy_rebuilding_z2m = false;
@@ -3708,7 +3708,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     //console.log("z2m_check_response: ", z2m_check_response);
                 }
                 
-                if(z2m_check_response.indexOf('npm ci --production') != -1){
+                if(z2m_check_response.indexOf('pnpm run build') != -1){
                     console.log("Z2M seems to be (re-)installing, so skipping restarting Z2M");
                     return;
                 }
