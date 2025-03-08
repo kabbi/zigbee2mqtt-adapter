@@ -853,7 +853,9 @@ class ZigbeeMqttAdapter extends Adapter {
                         base_config += "  "  + this.config.custom_serial + "\n";
                     }
                 }        
-                
+
+		base_config += "frontend:\n" +
+                        "  enabled: false\n";
                 
                 base_config += "availability:\n" +
                         "  active:\n" +
