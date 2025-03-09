@@ -194,15 +194,22 @@ class ZigbeeMqttAdapter extends Adapter {
         
 		this.pnpm_available = false;
 		
-        const pnpm_check_response = execute("which pnpm");
-        if(this.DEBUG){
-            console.log("pnpm_check_response to see if pnpm is installed: ", pnpm_check_response);
-        }
+        execute("which pnpm")
+		.then((pnpm_check_response) => {
+	        if(this.DEBUG){
+	            console.log("pnpm_check_response to see if pnpm is installed: ", pnpm_check_response);
+	        }
+	        if(pnpm_check_response.indexOf('/node/') != -1){
+	            console.log("PNPM seems to be available");
+	            this.pnpm_available = true;
+	        }
+		})
+		.catch((err) => {
+			console.error("caught error checking if PNPM is installed: ", err);
+		})
+        
 
-        if(pnpm_check_response.indexOf('/node/') != -1){
-            console.log("PNPM seems to be available");
-            this.pnpm_available = true;
-        }
+        
 		
 		
         
