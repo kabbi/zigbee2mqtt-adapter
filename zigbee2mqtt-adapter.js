@@ -70,6 +70,11 @@ class ZigbeeMqttAdapter extends Adapter {
 		//
         
 		super(addonManager, 'ZigbeeMqttAdapter', manifest.name);
+		console.log("--");
+		console.log("manifest: ");
+		console.log(manifest);
+		console.log("--");
+		
 		this.config = manifest.moziot.config;
         this.ready = false;
 		//this.current_os = os.platform().toLowerCase();
@@ -169,6 +174,7 @@ class ZigbeeMqttAdapter extends Adapter {
         this.usb_port_issue = false;
         this.find_missing_stick_attempted = false;
         this.fix_usb_stick_attempted = false;
+        this.use_ezsp_stick = false; // Set to true if HomeAssistant SkyConnect USB stick detected
         
         this.last_really_run_time = 0;
         this.z2m_command = 'node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/index.js';
@@ -186,6 +192,19 @@ class ZigbeeMqttAdapter extends Adapter {
         
         this.busy_installing_z2m = false; // True while Z2M is being downloaded and installed
         
+		this.pnpm_available = false;
+		
+        const pnpm_check_response = execute("which pnpm");
+        if(this.DEBUG){
+            console.log("pnpm_check_response to see if pnpm is installed: ", pnpm_check_response);
+        }
+
+        if(pnpm_check_response.indexOf('/node/') != -1){
+            console.log("PNPM seems to be available");
+            this.pnpm_available = true;
+        }
+		
+		
         
         
         this.config.virtual_brightness_alternative = true;
@@ -511,6 +530,7 @@ class ZigbeeMqttAdapter extends Adapter {
                 // this.config.manual_toggle_response
                 if (!this.DEBUG) { // TODO: remove this again for more ping testing.
                     //this.ping_things();
+					console.log("interval (ever 30 seconds): this.z2m_should_be_running is true, so calling check_z2m_is_running()");
                 }
                 
                 this.check_z2m_is_running();
@@ -672,6 +692,14 @@ class ZigbeeMqttAdapter extends Adapter {
     					serial_port = "/dev/" + result[i].split("/").pop();
     					console.log("- USB stick spotted at: " + serial_port);
     				}
+                    
+    				// See if the SkyConnect usb stick is being used, which supports both zigbee and matter simultaneously
+    				if (result[i].toLowerCase().includes("skyconnect") ){
+                        this.use_ezsp_stick = true;
+    					console.log("- USB stick is SkyConnect variety: " + serial_port);
+    				}
+                    
+                    
     			}
             }
             else{
@@ -847,14 +875,19 @@ class ZigbeeMqttAdapter extends Adapter {
 						"serial:\n" +
 						"  port: " + this.config.serial_port + "\n";
                    
+                // Support for EZSP SkyConnect Matter stick
+                if(this.use_ezsp_stick == true){
+                    base_config += "  adapter: ezsp\n";
+                }
                    
                 if(typeof this.config.custom_serial != 'undefined'){
                     if(this.config.custom_serial != ""){
                         base_config += "  "  + this.config.custom_serial + "\n";
                     }
-                }        
-
-		base_config += "frontend:\n" +
+                }
+                
+                
+				base_config += "frontend:\n" +
                         "  enabled: false\n";
                 
                 base_config += "availability:\n" +
@@ -1222,6 +1255,15 @@ class ZigbeeMqttAdapter extends Adapter {
                     console.log('Oh ERROR SNAP, Zigbee2MQTT should be rebuilt');
                     this.rebuild_z2m();
                 }
+				
+                if( data.includes("write after end")){
+                    console.log('Did the USB stick suddenly get unplugged?');
+                    //this.rebuild_z2m();
+					this.sendPairingPrompt("Zigbee USB stick unplugged?");
+					this.config.serial_port = null;
+                }
+				
+				
 
             });
 
@@ -1323,11 +1365,15 @@ class ZigbeeMqttAdapter extends Adapter {
                                         console.log("-----DOWNLOAD COMPLETE, STARTING INSTALL-----");
                                         this.sendPairingPrompt("Zigbee2MQTT download complete. Starting installation.");
                             
-                                        const command_to_run = `cd ${this.zigbee2mqtt_data_dir_path}; rm -rf zigbee2mqtt; tar xf latest_z2m.tar.gz; rm latest_z2m.tar.gz; mv Koenkk-* zigbee2mqtt; cd zigbee2mqtt; ls; pnpm i --frozen-lockfile; pnpm run build`; // npm ci //npm ci --production // npm install -g typescript; npm i --save-dev @types/node
-                                        if (this.DEBUG) {
+                                        let command_to_run = `cd ${this.zigbee2mqtt_data_dir_path}; rm -rf zigbee2mqtt; tar xf latest_z2m.tar.gz; rm latest_z2m.tar.gz; mv Koenkk-* zigbee2mqtt; cd zigbee2mqtt; ls; npm ci`; //npm ci --production // npm install -g typescript; npm i --save-dev @types/node
+                                        if(this.pnpm_available){
+                                        	command_to_run = `cd ${this.zigbee2mqtt_data_dir_path}; rm -rf zigbee2mqtt; tar xf latest_z2m.tar.gz; rm latest_z2m.tar.gz; mv Koenkk-* zigbee2mqtt; cd zigbee2mqtt; ls; pnpm i --frozen-lockfile; pnpm run build`; 
+                                        }
+										
+										if (this.DEBUG) {
                                             console.log("command_to_run: " + command_to_run);
                                         }
-                            			exec(command_to_run, (err, stdout, stderr) => {
+                            			exec(command_to_run, (err, stdout, stderr) => { // npm ci --production
                             				if (err) {
                             					console.error("Error running npm install in freshly downloaded Z2M: ", err);
                                                 this.busy_installing_z2m = false;
@@ -3590,9 +3636,16 @@ class ZigbeeMqttAdapter extends Adapter {
                 
                 if(this.busy_rebuilding_z2m == false){
                     this.busy_rebuilding_z2m = true;
-                    console.log("STARTING REBUILD COMMAND");
+					
+					let rebuild_command = `cd ${this.zigbee2mqtt_dir_path}; if ps aux | grep -q 'npm ci'; then npm ci; fi`;
+					
+                    if(this.pnpm_available){
+                    	rebuild_command = `cd ${this.zigbee2mqtt_data_dir_path}; if ps aux | grep -q 'npm ci'; then pnpm i --frozen-lockfile; pnpm run build; fi`; 
+                    }
+					
+                    console.log("STARTING REBUILD COMMAND: ", rebuild_command);
             		//exec(`cd ${this.zigbee2mqtt_dir_path}; if ps aux | grep -q 'npm ci --production'; then npm install typescript -g; npm i --save-dev @types/node; npm ci --production; fi`, (err, stdout, stderr) => {
-                    exec(`cd ${this.zigbee2mqtt_dir_path}; if ps aux | grep -q 'pnpm run build'; then pnpm i --frozen-lockfile; pnpm run build; fi`, (err, stdout, stderr) => {
+                    exec(rebuild_command, (err, stdout, stderr) => {
             			if (err) {
             				console.error("Rebuild command returned error: ", err);
                             this.busy_rebuilding_z2m = false;
@@ -3643,7 +3696,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     }
         
                     if(z2m_check_response.indexOf('npm ci --production') != -1){
-                        console.log("Z2M seems to already berebuilding, so done.");
+                        console.log("Z2M seems to already be rebuilding, so done.");
                         return;
                     }
                     */
@@ -3708,10 +3761,16 @@ class ZigbeeMqttAdapter extends Adapter {
                     //console.log("z2m_check_response: ", z2m_check_response);
                 }
                 
-                if(z2m_check_response.indexOf('pnpm run build') != -1){
-                    console.log("Z2M seems to be (re-)installing, so skipping restarting Z2M");
+                if(this.pnpm_available && z2m_check_response.indexOf('pnpm ') != -1){
+                    console.log("Z2M seems to be (re-)installing via PNPM, so skipping restarting Z2M");
                     return;
                 }
+				else if(z2m_check_response.indexOf('npm ci --production') != -1){
+                    console.log("Z2M seems to be (re-)installing via NPM, so skipping restarting Z2M");
+                    return;
+                }
+				
+                
                 
                 
                 if(z2m_check_response.indexOf(this.z2m_command) == -1){
