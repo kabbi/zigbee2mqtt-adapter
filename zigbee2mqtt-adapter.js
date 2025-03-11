@@ -893,10 +893,16 @@ class ZigbeeMqttAdapter extends Adapter {
                     }
                 }
                 
-                
-				base_config += "frontend:\n" +
-                        "  enabled: false\n";
-                
+                if(this.DEBUG){
+					base_config += "frontend:\n" +
+                    "  enabled: true\n" +
+					"  port: 8098";
+                }
+				else{
+					base_config += "frontend:\n" +
+                    "  enabled: false\n";
+				}
+				
                 base_config += "availability:\n" +
                         "  active:\n" +
                         "    timeout: " + this.availability_interval + "\n" +
