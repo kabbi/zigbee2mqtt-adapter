@@ -164,7 +164,8 @@
           "description": "Advanced. Select which Node JS version the addon should run Zigbee2MQTT under (if the choice is available). Newer Candle versions use Node 18.",
           "enum": [
             "12",
-            "18"
+            "18",
+            "24"
           ],
           "type": "string"
         },
