@@ -535,9 +535,9 @@ class ZigbeeMqttAdapter extends Adapter {
             
             if(this.z2m_should_be_running){
                 // this.config.manual_toggle_response
-                if (!this.DEBUG) { // TODO: remove this again for more ping testing.
+                if (this.DEBUG) { // TODO: remove this again for more ping testing.
                     //this.ping_things();
-					console.log("interval (ever 30 seconds): this.z2m_should_be_running is true, so calling check_z2m_is_running()");
+					console.log("interval (every 30 seconds): this.z2m_should_be_running is true, so calling check_z2m_is_running()");
                 }
                 
                 this.check_z2m_is_running();
@@ -3802,7 +3802,9 @@ class ZigbeeMqttAdapter extends Adapter {
             
                         for (let l = 0; l < lines.length; l++) {
                             //console.log("line: ", lines[l]);
-                            if(lines[l].indexOf('node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/index.js') > -1){
+                            //if(lines[l].indexOf('node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/index.js') > -1){
+							if(lines[l].indexOf(this.z2m_command) > -1){
+								
                                 const parts = lines[l].split(" ");
                                 var parts_counter = 0;
                                 for (let ll = 0; ll < parts.length; ll++) {
