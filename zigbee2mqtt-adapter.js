@@ -3538,7 +3538,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                 console.log("Telling Z2M to remove: " + zigbee_id);
                             }
                             //this.client.publish(`${this.config.prefix}/bridge/request/device/remove`, zigbee_id);
-                            this.client.publish(`${this.config.prefix}/bridge/request/device/remove`, '{"id": "' + zigbee_id + '","force":true}');
+                            this.client.publish(`${this.config.prefix}/bridge/request/device/remove`, JSON.stringify({"id": "' + zigbee_id + '","force":true}));
                         }
     				
                         // Delete it from persistent data
@@ -3586,7 +3586,7 @@ class ZigbeeMqttAdapter extends Adapter {
 			console.log('in startPairing');
 		}
         if(typeof this.client != 'undefined' && this.client != null){
-    		this.client.publish(`${this.config.prefix}/bridge/request/permit_join`, '{"value": true}');
+    		this.client.publish(`${this.config.prefix}/bridge/request/permit_join`, JSON.stringify({"value": true, "time":130}));
 
     		this.client.publish(`${this.config.prefix}/bridge/config/devices/get`);
 
@@ -3607,7 +3607,7 @@ class ZigbeeMqttAdapter extends Adapter {
     				console.log("setting permitJoin back to off");
     			}
                 if(this.client != null){
-    			    this.client.publish(`${this.config.prefix}/bridge/request/permit_join`, '{"value": false}'); // set permitJoin back to off
+    			    this.client.publish(`${this.config.prefix}/bridge/request/permit_join`, JSON.stringify({"value": false, "time":130})); // set permitJoin back to off
                 }
     		}
             else {
