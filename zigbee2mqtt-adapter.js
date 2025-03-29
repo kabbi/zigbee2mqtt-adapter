@@ -537,7 +537,7 @@ class ZigbeeMqttAdapter extends Adapter {
                 // this.config.manual_toggle_response
                 if (this.DEBUG) { // TODO: remove this again for more ping testing.
                     //this.ping_things();
-					console.log("interval (every 30 seconds): this.z2m_should_be_running is true, so calling check_z2m_is_running()");
+	            //console.log("interval (every 30 seconds): this.z2m_should_be_running is true, so calling check_z2m_is_running()");
                 }
                 
                 this.check_z2m_is_running();
