@@ -247,10 +247,10 @@ class ZigbeeMqttAdapter extends Adapter {
 		if (this.DEBUG) {
 			console.log("this.zigbee2mqtt_data_dir_path = ", this.zigbee2mqtt_data_dir_path);
 		}
-        this.node18_shortcut_available = false;
-		this.node18_shortcut_path = path.join(homedir, 'webthings', 'gateway', 'node18');
+        this.node20_shortcut_available = false;
+		this.node20_shortcut_path = path.join(homedir, 'webthings', 'gateway', 'node20');
 		if (this.DEBUG) {
-			console.log("this.node18_shortcut_path = ", this.node18_shortcut_path);
+			console.log("this.node20_shortcut_path = ", this.node20_shortcut_path);
 		}
         
         
@@ -1192,19 +1192,19 @@ class ZigbeeMqttAdapter extends Adapter {
             
             // TODO: isn't this superfluous? If Node 18 is installed, then it will also be set as the default node. So just running 'node etc' should work in either case.
     		/*
-            fs.access(this.node18_shortcut_path, (err) => {
+            fs.access(this.node20_shortcut_path, (err) => {
     			if (err && err.code === 'ENOENT') {
             		if (this.DEBUG) {
             			console.log("z2m logs did not exist, so not necessary to delete them");
             		}
-                    this.node18_shortcut_available = false;
+                    this.node20_shortcut_available = false;
                     console.log('starting Zigbee2MQTT addon without node shortcut');
                     this.zigbee2mqtt_subprocess = spawn('node', [this.zigbee2mqtt_file_path]);
     			}
                 else {
-                    this.node18_shortcut_available = true;
-                    console.log('starting Zigbee2MQTT addon with node18 shortcut');
-                    this.zigbee2mqtt_subprocess = spawn(this.node18_shortcut_path, [this.zigbee2mqtt_file_path]);
+                    this.node20_shortcut_available = true;
+                    console.log('starting Zigbee2MQTT addon with node20 shortcut');
+                    this.zigbee2mqtt_subprocess = spawn(this.node20_shortcut_path, [this.zigbee2mqtt_file_path]);
                 }
             });
             */
