@@ -248,7 +248,7 @@ class ZigbeeMqttAdapter extends Adapter {
 			console.log("this.zigbee2mqtt_data_dir_path = ", this.zigbee2mqtt_data_dir_path);
 		}
         this.node20_shortcut_available = false;
-		this.node20_shortcut_path = path.join(homedir, 'webthings', 'gateway', 'node20');
+		this.node20_shortcut_path = path.join(homedir, 'node20');
 		if (this.DEBUG) {
 			console.log("this.node20_shortcut_path = ", this.node20_shortcut_path);
 		}
