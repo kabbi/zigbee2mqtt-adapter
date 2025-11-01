@@ -282,9 +282,9 @@ class ZigbeeMqttAdapter extends Adapter {
             }
         });
         
-        if (fs.existsSync(this.zigbee2mqtt_log_path)) {
+        //if (fs.existsSync(this.zigbee2mqtt_log_path)) {
     		
-        }
+        //}
         
         // Persistent data file path
         this.persistent_data_file_path = path.join(this.zigbee2mqtt_data_dir_path, 'persistent_data.json');
@@ -703,6 +703,7 @@ class ZigbeeMqttAdapter extends Adapter {
     				// See if the SkyConnect usb stick is being used, which supports both zigbee and matter simultaneously
     				if (result[i].toLowerCase().includes("skyconnect") ){
                         this.use_ezsp_stick = true;
+						serial_port = "/dev/" + result[i].split("/").pop();
     					console.log("- USB stick is SkyConnect variety: " + serial_port);
     				}
                     
