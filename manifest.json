@@ -42,7 +42,7 @@
 	  "home_assistant_support":false,
 	  "virtual_brightness_alternative_speed": "10",
 	  "use_old_devices_description": false,
-	  "prefered_node_version":18,
+	  "prefered_node_version":20,
       "debug": false
     },
     "schema": {
@@ -164,7 +164,7 @@
           "description": "Advanced. Select which Node JS version the addon should run Zigbee2MQTT under (if the choice is available). The default is Node 18.",
           "enum": [
             "12",
-            "18",
+			"20",
             "24"
           ],
           "type": "string"
@@ -177,7 +177,7 @@
     }
   },
   "short_name": "zigbee2mqtt",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
