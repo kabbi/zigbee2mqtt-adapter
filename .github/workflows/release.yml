@@ -38,7 +38,7 @@ jobs:
         ]
         pair: [
           'node:12',
-          'node:18',
+          'node:20',
         ]
         include:
           - platform: 'linux-arm'
@@ -48,9 +48,6 @@ jobs:
           - pair: 'node:12'
             language: 'node'
             version: '12'
-          - pair: 'node:18'
-            language: 'node'
-            version: '18'
           - pair: 'node:20'
             language: 'node'
             version: '20'
