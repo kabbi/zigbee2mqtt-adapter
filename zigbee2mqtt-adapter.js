@@ -250,12 +250,20 @@ class ZigbeeMqttAdapter extends Adapter {
 		if (this.DEBUG) {
 			console.log("this.zigbee2mqtt_data_dir_path = ", this.zigbee2mqtt_data_dir_path);
 		}
-        this.node20_shortcut_available = false;
+        
 		this.node20_shortcut_path = path.join(homedir, 'node20');
+		this.node20_shortcut_available = fs.existsSync(this.node20_shortcut_path);
 		if (this.DEBUG) {
 			console.log("this.node20_shortcut_path = ", this.node20_shortcut_path);
+			console.log("this.node20_shortcut_available = ", this.node20_shortcut_available);
 		}
-        
+
+		this.node24_shortcut_path = path.join(homedir, 'node24');
+		this.node24_shortcut_available = fs.existsSync(this.node24_shortcut_path);
+		if (this.DEBUG) {
+			console.log("this.node24_shortcut_path = ", this.node24_shortcut_path);
+			console.log("this.node24_shortcut_available = ", this.node24_shortcut_available);
+		}
         
 		// log files location
 		this.zigbee2mqtt_log_path = path.join(homedir, '.webthings', 'data', 'zigbee2mqtt-adapter','zigbee2mqtt-adapter','log');
@@ -1226,25 +1234,12 @@ class ZigbeeMqttAdapter extends Adapter {
             
             this.zigbee2mqtt_subprocess = spawn('node', [this.zigbee2mqtt_file_path]);
             
-            
-            // TODO: isn't this superfluous? If Node 18 is installed, then it will also be set as the default node. So just running 'node etc' should work in either case.
-    		/*
-            fs.access(this.node20_shortcut_path, (err) => {
-    			if (err && err.code === 'ENOENT') {
-            		if (this.DEBUG) {
-            			console.log("z2m logs did not exist, so not necessary to delete them");
-            		}
-                    this.node20_shortcut_available = false;
-                    console.log('starting Zigbee2MQTT addon without node shortcut');
-                    this.zigbee2mqtt_subprocess = spawn('node', [this.zigbee2mqtt_file_path]);
-    			}
-                else {
-                    this.node20_shortcut_available = true;
-                    console.log('starting Zigbee2MQTT addon with node20 shortcut');
-                    this.zigbee2mqtt_subprocess = spawn(this.node20_shortcut_path, [this.zigbee2mqtt_file_path]);
-                }
-            });
-            */
+            if(this.node24_shortcut_available){
+				this.zigbee2mqtt_subprocess = spawn(this.node24_shortcut_path, [this.zigbee2mqtt_file_path]);
+			}
+			else{
+				this.zigbee2mqtt_subprocess = spawn('node', [this.zigbee2mqtt_file_path]);
+			}
             
             this.zigbee2mqtt_subprocess.on('error', err => {
                 console.error('Yikes, detected subprocess error for Z2M child process: ', err);
