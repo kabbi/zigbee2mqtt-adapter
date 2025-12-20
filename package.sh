@@ -41,6 +41,12 @@ else
 fi
 echo "TARFILE_SUFFIX: $TARFILE_SUFFIX"
 npm ci
+
+# small hack to allow metadata to be send with internal gateway messages
+if [ -f ./node_modules/gateway-addon/lib/property.js ]; then
+  sed -i 's/setValue(value) {/setValue(value, meta) {/g' ./node_modules/gateway-addon/lib/property.js
+fi
+
 shasum --algorithm 256 manifest.json package.json package-lock.json *.js LICENSE README.md > SHA256SUMS
 find css images js node_modules views \( -type f -o -type l \) -exec shasum --algorithm 256 {} \; >> SHA256SUMS
 
