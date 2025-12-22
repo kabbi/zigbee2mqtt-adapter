@@ -43,8 +43,8 @@ echo "TARFILE_SUFFIX: $TARFILE_SUFFIX"
 
 #npm install -g pnpm
 #pnpm install --frozen-lockfile
-
-npm ci
+npm rebuild
+npm i
 
 # small hack to allow metadata to be send with internal gateway messages
 if [ -f ./node_modules/gateway-addon/lib/property.js ]; then
