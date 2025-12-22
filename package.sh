@@ -40,7 +40,11 @@ else
   TARFILE_SUFFIX="-${ADDON_ARCH}-${NODE_VERSION/\.*/}"
 fi
 echo "TARFILE_SUFFIX: $TARFILE_SUFFIX"
-npm ci
+
+npm install -g pnpm
+pnpm install --frozen-lockfile
+
+#npm ci
 
 # small hack to allow metadata to be send with internal gateway messages
 if [ -f ./node_modules/gateway-addon/lib/property.js ]; then
