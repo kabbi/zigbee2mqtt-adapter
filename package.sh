@@ -65,7 +65,9 @@ mkdir -p node_modules
 	CPPFLAGS="-DPNG_ARM_NEON_OPT=0" npm --yes i --save
 	node generate-version.js && node generate-types.js && npx tsc -p .
 	ls
-
+	cd ..
+	cd ..
+	
 # small hack to allow metadata to be send with internal gateway messages
 if [ -f ./node_modules/gateway-addon/lib/property.js ]; then
   sed -i 's/setValue(value) {/setValue(value, meta) {/g' ./node_modules/gateway-addon/lib/property.js
