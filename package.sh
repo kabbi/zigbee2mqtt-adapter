@@ -46,6 +46,26 @@ echo "TARFILE_SUFFIX: $TARFILE_SUFFIX"
 npm rebuild
 npm i
 
+# install the modified version of gateway-addon-node that supports transmitting meta data
+mkdir -p node_modules
+	cd node_modules
+	if [ -d gateway-addon-node ]; then
+		rm -rf gateway-addon-node
+	fi
+	if [ -d gateway-addon ]; then
+		rm -rf gateway-addon
+	fi
+	git clone https://github.com/createcandle/gateway-addon-node
+	mv gateway-addon-node gateway-addon
+	#cp gateway-addon /home/pi/.nvm/versions/node/v20.19.6/lib/node_modules/
+	cd gateway-addon
+	pwd
+	git submodule init
+	git submodule update
+	CPPFLAGS="-DPNG_ARM_NEON_OPT=0" npm --yes i --save
+	node generate-version.js && node generate-types.js && npx tsc -p .
+	ls
+
 # small hack to allow metadata to be send with internal gateway messages
 if [ -f ./node_modules/gateway-addon/lib/property.js ]; then
   sed -i 's/setValue(value) {/setValue(value, meta) {/g' ./node_modules/gateway-addon/lib/property.js
