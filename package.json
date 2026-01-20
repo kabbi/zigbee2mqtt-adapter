@@ -19,7 +19,6 @@
   "dependencies": {
     "barometer-trend": "^2.2.6",
     "core-js": "^3.9.1",
-    "gateway-addon": "^2.0.0",
     "mqtt": "^4.3.7",
     "sqlite3": "^5.1.7"
   },
