@@ -44,7 +44,7 @@ echo "TARFILE_SUFFIX: $TARFILE_SUFFIX"
 #npm install -g pnpm
 #pnpm install --frozen-lockfile
 npm rebuild
-npm i
+npm install
 
 # install the modified version of gateway-addon-node that supports transmitting meta data
 mkdir -p node_modules
