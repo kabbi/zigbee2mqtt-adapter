@@ -52,11 +52,8 @@ function build_native() {
 function build_cross_compiled() {
   docker run --rm -t -v $PWD:/build webthingsio/toolchain-${ADDON_ARCH}-${LANGUAGE_NAME}-${LANGUAGE_VERSION} bash -c "cd /build; ADDON_ARCH=${ADDON_ARCH} ./package.sh"
 }
-if [ "$MY_VAR" = "specific_string" ]; then
-  echo "It's a match!"
-fi
 
-if [[ "$ADDON_ARCH" == "linux-arm64" ]]
+if [ "$ADDON_ARCH" == "linux-arm64" ]
 then
   echo "The architecture is arm64, so assuming it's using the github arm64 runner"
   build_native
