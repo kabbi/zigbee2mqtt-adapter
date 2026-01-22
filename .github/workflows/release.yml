@@ -33,6 +33,70 @@ jobs:
     strategy:
       matrix:
         platform: [
+          'linux-arm64'
+        ]
+        pair: [
+          'node:20',
+          'node:24',
+        ]
+        include:
+          - platform: 'linux-arm64'
+            host-os: 'ubuntu-24.04-arm'
+          - pair: 'node:20'
+            language: 'node'
+            version: '20'
+          - pair: 'node:24'
+            language: 'node'
+            version: '24'
+    runs-on: ${{ matrix.host-os }}
+
+
+    steps:
+    - name: Download upload_url
+      uses: actions/download-artifact@v4
+      with:
+        name: upload_url
+        path: upload_url
+    - name: Set upload_url
+      run: echo "UPLOAD_URL=$(cat upload_url/upload_url)" >> $GITHUB_ENV
+    - name: Set release version
+      run: echo "RELEASE_VERSION=${GITHUB_REF:10}" >> $GITHUB_ENV
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.version }}
+    - name: Make build script executable
+      run: chmod +x ./build2.sh
+    - name: Make packaging script executable
+      run: chmod +x ./package.sh
+    - name: Build adapter
+      run: |
+        ./build2.sh "${{ matrix.platform }}" "${{ matrix.language }}" "${{ matrix.version }}"
+      shell: bash
+      
+    - name: Upload Release Asset tgz
+      uses: shogo82148/actions-upload-release-asset@v1
+      with:
+        #upload_url: ${{ github.event.release.upload_url }}
+        upload_url: ${{ env.UPLOAD_URL }}
+        asset_path: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}-v${{ matrix.version }}.tgz
+        overwrite: true
+      
+    - name: Upload Release Asset shasum
+      uses: shogo82148/actions-upload-release-asset@v1
+      with:
+        #upload_url: ${{ github.event.release.upload_url }}
+        upload_url: ${{ env.UPLOAD_URL }}
+        asset_path: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}-v${{ matrix.version }}.tgz.sha256sum
+        overwrite: true
+
+
+  build_old:
+    needs: get-release
+    strategy:
+      matrix:
+        platform: [
           'linux-arm',
           'linux-arm64'
         ]
@@ -92,65 +156,3 @@ jobs:
         asset_path: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}-v${{ matrix.version }}.tgz.sha256sum
         overwrite: true
 
-  build2:
-    needs: get-release
-    strategy:
-      matrix:
-        platform: [
-          'linux-arm64'
-        ]
-        pair: [
-          'node:20',
-          'node:24',
-        ]
-        include:
-          - platform: 'linux-arm64'
-            host-os: 'ubuntu-24.04-arm'
-          - pair: 'node:20'
-            language: 'node'
-            version: '20'
-          - pair: 'node:24'
-            language: 'node'
-            version: '24'
-    runs-on: ${{ matrix.host-os }}
-
-
-    steps:
-    - name: Download upload_url
-      uses: actions/download-artifact@v4
-      with:
-        name: upload_url
-        path: upload_url
-    - name: Set upload_url
-      run: echo "UPLOAD_URL=$(cat upload_url/upload_url)" >> $GITHUB_ENV
-    - name: Set release version
-      run: echo "RELEASE_VERSION=${GITHUB_REF:10}" >> $GITHUB_ENV
-    - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.version }}
-    - name: Make build script executable
-      run: chmod +x ./build.sh
-    - name: Make packaging script executable
-      run: chmod +x ./package.sh
-    - name: Build adapter
-      run: |
-        ./build2.sh "${{ matrix.platform }}" "${{ matrix.language }}" "${{ matrix.version }}"
-      shell: bash
-      
-    - name: Upload Release Asset tgz
-      uses: shogo82148/actions-upload-release-asset@v1
-      with:
-        #upload_url: ${{ github.event.release.upload_url }}
-        upload_url: ${{ env.UPLOAD_URL }}
-        asset_path: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}-v${{ matrix.version }}.tgz
-        overwrite: true
-      
-    - name: Upload Release Asset shasum
-      uses: shogo82148/actions-upload-release-asset@v1
-      with:
-        #upload_url: ${{ github.event.release.upload_url }}
-        upload_url: ${{ env.UPLOAD_URL }}
-        asset_path: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}-v${{ matrix.version }}.tgz.sha256sum
-        overwrite: true
