@@ -98,7 +98,6 @@ jobs:
       matrix:
         platform: [
           'linux-arm',
-          'linux-arm64'
         ]
         pair: [
           'node:20',
