@@ -43,38 +43,19 @@ echo "TARFILE_SUFFIX: $TARFILE_SUFFIX"
 
 #npm install -g pnpm
 #pnpm install --frozen-lockfile
-npm rebuild
-npm install
-
-# install the modified version of gateway-addon-node that supports transmitting meta data
-mkdir -p node_modules
-	cd node_modules
-	if [ -d gateway-addon-node ]; then
-		rm -rf gateway-addon-node
-	fi
-	if [ -d gateway-addon ]; then
-		rm -rf gateway-addon
-	fi
-	git clone https://github.com/createcandle/gateway-addon-node
-	mv gateway-addon-node gateway-addon
-	#cp gateway-addon /home/pi/.nvm/versions/node/v20.19.6/lib/node_modules/
-	cd gateway-addon
-	pwd
-	git submodule init
-	git submodule update
-	CPPFLAGS="-DPNG_ARM_NEON_OPT=0" npm --yes i --save
-	node generate-version.js && node generate-types.js && npx tsc -p .
-	ls
-	cd ..
-	cd ..
+npm --yes rebuild
+CPPFLAGS="-DPNG_ARM_NEON_OPT=0" npm --yes install
 	
-# small hack to allow metadata to be send with internal gateway messages
+# small hack to allow metadata to be sent with internal gateway messages
 if [ -f ./node_modules/gateway-addon/lib/property.js ]; then
   sed -i 's/setValue(value) {/setValue(value, meta) {/g' ./node_modules/gateway-addon/lib/property.js
+else
+  echo "ERROR, could not modify property.js"
+  exit 1
 fi
 
-shasum --algorithm 256 manifest.json package.json package-lock.json *.js LICENSE README.md > SHA256SUMS
-find css images js node_modules views \( -type f -o -type l \) -exec shasum --algorithm 256 {} \; >> SHA256SUMS
+shasum --algorithm 256 manifest.json package.json package-lock.json *.js LICENSE README.md z2m.tar.gz > SHA256SUMS
+find css images js node_modules views z2m.tar.gz \( -type f -o -type l \) -exec shasum --algorithm 256 {} \; >> SHA256SUMS
 
 TARFILE=`npm pack`
 echo "TARFILE after npm pack: $TARFILE"
