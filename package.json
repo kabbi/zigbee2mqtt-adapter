@@ -20,7 +20,7 @@
     "barometer-trend": "^2.2.6",
     "core-js": "^3.9.1",
     "mqtt": "^4.3.7",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "5.0.2"
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",
