@@ -64,6 +64,7 @@ echo "TARFILE after npm pack: $TARFILE"
 tar xzf ${TARFILE}
 rm ${TARFILE}
 TARFILE_ARCH="${TARFILE/.tgz/${TARFILE_SUFFIX}.tgz}"
+cp z2m.tar.gz ./package
 cp package-lock.json ./package
 cp -r node_modules ./package
 echo "TARFILE_ARCH: $TARFILE_ARCH"
