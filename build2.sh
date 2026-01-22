@@ -56,7 +56,7 @@ if [ "$MY_VAR" = "specific_string" ]; then
   echo "It's a match!"
 fi
 
-if [[ "$ADDON_ARC" == "linux-arm64" ]]
+if [[ "$ADDON_ARCH" == "linux-arm64" ]]
 then
   echo "The architecture is arm64, so assuming it's using the github arm64 runner"
   build_native
