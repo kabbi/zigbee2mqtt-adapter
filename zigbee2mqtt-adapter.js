@@ -87,15 +87,14 @@ class ZigbeeMqttAdapter extends Adapter {
             this.config = {};
             this.config.manual_toggle_response = "both";
         }
-        else{
-            this.DEBUG = this.config.debug;
-        }
-        
-		if (typeof this.config.debug == "undefined") {
-            console.log("Debugging is disabled");
-			this.DEBUG = false;
-		} else if (this.config.debug) {
-			console.log("Debugging is enabled");
+		if(typeof this.config.debug == 'boolean'){
+			this.DEBUG = this.config.debug;
+		}
+		if(typeof this.config.more_debug_details == 'boolean'){
+			this.DEBUG2 = this.config.more_debug_details;
+		}
+		if (this.DEBUG) {
+			console.log("Debugging is enabled. This.config:");
 			console.log(this.config);
 			//console.log("OS: " + this.current_os);
 		}
@@ -1608,7 +1607,7 @@ class ZigbeeMqttAdapter extends Adapter {
             // Actually.. why not.
             if(this.z2m_state == false){    
     			if (this.DEBUG) {
-    				console.log("early message, but Z2M is still offline");
+    				console.log("early message, but in theory Z2M is still offline? topic: ", topic);
     			}
     			//return;
     		}

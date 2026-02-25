@@ -43,7 +43,8 @@
 	  "virtual_brightness_alternative_speed": "10",
 	  "use_old_devices_description": false,
 	  "prefered_node_version":24,
-      "debug": false
+      "debug": false,
+	  "more_debug_details": false
     },
     "schema": {
       "type": "object",
@@ -171,12 +172,16 @@
         "debug": {
           "type": "boolean",
           "description": "Advanced. Used to find issues if this addon isn't working properly. If enabled, you can find more details about its functioning in the internal log."
+        },
+        "more_debug_details": {
+          "type": "boolean",
+          "description": "Advanced. Shows debug output for incoming MQTT messages."
         }
       }
     }
   },
   "short_name": "zigbee2mqtt",
-  "version": "1.2.20",
+  "version": "1.2.21",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
