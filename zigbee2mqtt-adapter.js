@@ -3858,7 +3858,7 @@ class ZigbeeMqttAdapter extends Adapter {
                 
                 
                 
-                if(z2m_check_response.indexOf(this.z2m_command) == -1){
+                if(z2m_check_response.indexOf('/data/zigbee2mqtt-adapter/zigbee2mqtt') == -1){
                     
                     console.log("check_z2m_is_running: Error, z2m does NOT seem to be running. calling really_run_zigbee2mqtt again.");
                     //console.log("(was looking for: ", this.z2m_command);
@@ -3905,7 +3905,7 @@ class ZigbeeMqttAdapter extends Adapter {
                                                   }
                                                 });
                                         
-                                                await execute("pkill -f 'node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/cli.js'");
+                                                await execute("pkill -f '/data/zigbee2mqtt-adapter/zigbee2mqtt/'");
                                                 this.really_run_zigbee2mqtt();
                                             }
                                             else{
