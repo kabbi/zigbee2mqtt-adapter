@@ -177,7 +177,7 @@ class ZigbeeMqttAdapter extends Adapter {
         this.use_ezsp_stick = false; // Set to true if HomeAssistant SkyConnect USB stick detected
         
         this.last_really_run_time = 0;
-        this.z2m_command = 'node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/cli.js';
+        this.z2m_command = '/home/pi/node24 /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/index.js';
         this.z2m_installed_succesfully = false;
 		this.busy_rebuilding_z2m = false;
         this.z2m_started = false; // true while running
@@ -1016,10 +1016,10 @@ class ZigbeeMqttAdapter extends Adapter {
     			// Make sure previous instances of Zigbee2mqtt are gone
     			try {
     				//execSync("pgrep -f 'zigbee2mqtt-adapter/zigbee2mqtt/cli.js' | xargs kill -9");
-    				execSync("pkill 'zigbee2mqtt-adapter/zigbee2mqtt/cli.js'");
+    				execSync("pkill -f '/data/zigbee2mqtt-adapter/zigbee2mqtt/'");
     				console.log("pkill done");
     			} catch (error) {
-    				console.log("exec pkill error: " + error);
+    				console.log("exec pkill error: ", error);
     			}
     		}
 		}
@@ -1293,7 +1293,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     console.error("Failed to start Zigbee2MQTT. Outdated firmware on Zigbee stick?");
                     this.z2m_had_error = true;
                     try{
-                        execSync("pkill -f 'zigbee2mqtt-adapter/zigbee2mqtt/cli.js'");
+                        execSync("pkill -f '/data/zigbee2mqtt-adapter/zigbee2mqtt/'");
                     }
                     catch(e){
                         console.log("pkill error: " + e);
@@ -1305,7 +1305,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     console.log("Yikes, failed to start Zigbee2MQTT. Killing it, just to be sure. Try again later?");
                     this.z2m_had_error = true;
                     try{
-                        execSync("pkill -f 'zigbee2mqtt-adapter/zigbee2mqtt/cli.js'");
+                        execSync("pkill -f '/data/zigbee2mqtt-adapter/zigbee2mqtt/'");
                         //console.log("delaying killing for now");
                         //setTimeout(() => {
                     
@@ -3881,39 +3881,44 @@ class ZigbeeMqttAdapter extends Adapter {
                         for (let l = 0; l < lines.length; l++) {
                             //console.log("line: ", lines[l]);
                             //if(lines[l].indexOf('node /home/pi/.webthings/data/zigbee2mqtt-adapter/zigbee2mqtt/cli.js') > -1){
-							if(lines[l].indexOf(this.z2m_command) > -1){
-								
-                                const parts = lines[l].split(" ");
-                                var parts_counter = 0;
-                                for (let ll = 0; ll < parts.length; ll++) {
-                                    //console.log(ll + ". " + parts[ll]);
-                                    //console.log("type: " + typeof parts[ll]);
-                                    //console.log("length: " + parts[ll].length);
-                                    if(parts[ll].length != 0){
-                                        parts_counter++;
-                                        //console.log("   <------- ", parts_counter);
-                                        if(parts_counter == 3){
-                                            const processor_usage = parseFloat(parts[ll]);
-                                            if(this.DEBUG2){
-                                                console.log("__________________________________________Z2M processor_usage: ", processor_usage);
-                                            }
-                                            if(processor_usage > 50){
-                                                console.log("Error, processor_usage above 50. Restarting zigbee2mqtt.");
-                                                fs.writeFile('/home/pi/.webthings/data/zigbee2mqtt-adapter/error_above_50.txt', z2m_check_response, err => {
-                                                  if (err) {
-                                                    console.error("error, zigbee2mqtt z2m_check_response error_above_50 write error:", err);
-                                                  }
-                                                });
+							if(lines[l].indexOf('/data/zigbee2mqtt-adapter/zigbee2mqtt/') != -1){
+								try{
+	                                const parts = lines[l].split(" ");
+	                                var parts_counter = 0;
+	                                for (let ll = 0; ll < parts.length; ll++) {
+	                                    //console.log(ll + ". " + parts[ll]);
+	                                    //console.log("type: " + typeof parts[ll]);
+	                                    //console.log("length: " + parts[ll].length);
+	                                    if(parts[ll].length != 0){
+	                                        parts_counter++;
+	                                        //console.log("   <------- ", parts_counter);
+	                                        if(parts_counter == 3){
+	                                            const processor_usage = parseFloat(parts[ll]);
+	                                            if(this.DEBUG2){
+	                                                console.log("__________________________________________Z2M processor_usage: ", processor_usage);
+	                                            }
+	                                            if(processor_usage > 50){
+	                                                console.log("Error, processor_usage above 50. Restarting zigbee2mqtt.");
+	                                                fs.writeFile('/home/pi/.webthings/data/zigbee2mqtt-adapter/error_above_50.txt', z2m_check_response, err => {
+	                                                  if (err) {
+	                                                    console.error("error, zigbee2mqtt z2m_check_response error_above_50 write error:", err);
+	                                                  }
+	                                                });
                                         
-                                                await execute("pkill -f '/data/zigbee2mqtt-adapter/zigbee2mqtt/'");
-                                                this.really_run_zigbee2mqtt();
-                                            }
-                                            else{
-                                                //console.log("processor_usage below 50");
-                                            }
-                                        }
-                                    }
-                                }
+	                                                await execute("pkill -f '/data/zigbee2mqtt-adapter/zigbee2mqtt/'");
+	                                                this.really_run_zigbee2mqtt();
+	                                            }
+	                                            else{
+	                                                //console.log("processor_usage below 50");
+	                                            }
+	                                        }
+	                                    }
+	                                }
+								}
+								catch(err){
+									console.error("caught error while checking for excessive processor use by Z2M: ", err);
+								}
+                                
                             }
                             else{
                                 //console.log("zigbee2mqtt/cli.js not in line");
