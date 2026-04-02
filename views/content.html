@@ -3,7 +3,6 @@
     <div id="extension-zigbee2mqtt-adapter-content-container">
         <h3 id="extension-zigbee2mqtt-adapter-title"><img id="extension-zigbee2mqtt-adapter-main-page-icon" src="/extensions/zigbee2mqtt-adapter/images/menu-icon.svg">Zigbee2MQTT</h3>
 		
-		
 		<div class="extension-zigbee2mqtt-adapter-tab-buttons">
             <button id="extension-zigbee2mqtt-adapter-tab-button-things" class="extension-zigbee2mqtt-adapter-main-tab-button">Things</button>
 			<button id="extension-zigbee2mqtt-adapter-tab-button-map" class="extension-zigbee2mqtt-adapter-main-tab-button">Map</button>
@@ -15,6 +14,60 @@
 			
 			<div id="extension-zigbee2mqtt-adapter-tab-things" class="extension-zigbee2mqtt-adapter-tab">
                 
+				<div id="extension-zigbee2mqtt-adapter-zigbee-radio-serial-port-container" class="extension-zigbee2mqtt-adapter-flex-center extension-zigbee2mqtt-adapter-show-if-developer">
+					<span id="extension-zigbee2mqtt-adapter-zigbee-radio-serial-port"></span>
+				</div>
+				
+                <div id="extension-zigbee2mqtt-adapter-zigbee-radio-container" class="extension-zigbee2mqtt-adapter-flex-column extension-zigbee2mqtt-adapter-area extension-zigbee2mqtt-adapter-hidden">
+                    <!--
+					<div class="extension-zigbee2mqtt-adapter-flex-center">
+						<div id="extension-zigbee2mqtt-adapter-zigbee-logo-wrapper"><img src="/extensions/zigbee2mqtt-adapter/images/candle_zigbee_logo.svg" alt="Candle Zigbee logo"></div>
+						<div id="extension-zigbee2mqtt-adapter-zigbee-radio-details"><span>One moment...</span></div>
+					</div>
+					// -->
+					<div class="extension-zigbee2mqtt-adapter-flex-center">
+						<div>
+							<img id="extension-zigbee2mqtt-adapter-zigbee-radio-serial-port-image" src="/extensions/zigbee2mqtt-adapter/images/USB_radio.svg" alt="USB zigbee stick">
+						</div>
+						<div>
+							
+							<div id="extension-zigbee2mqtt-adapter-find-zigbee-radio-button-container">
+								<p>To connect with Zigbee devices you'll need a Zigbee USB stick.</p>
+								<button id="extension-zigbee2mqtt-adapter-find-zigbee-radio-button" class="text-button">Add a Zigbee radio</button>
+							</div>
+						</div>
+					</div>
+	                <div id="extension-zigbee2mqtt-adapter-find-zigbee-radio-container" class="extension-zigbee2mqtt-adapter-hidden">
+						<div id="extension-zigbee2mqtt-adapter-find-zigbee-radio-step1" class="extension-zigbee2mqtt-adapter-area">
+							<h3>1. Make sure it's unplugged first</h3>
+							<p>Before we begin, make sure your Zigbee radio is <span class="extension-zigbee2mqtt-adapter-bold">unplugged</span>.</p>
+							<div class="extension-zigbee2mqtt-adapter-align-right">
+								<button id="extension-zigbee2mqtt-adapter-find-zigbee-radio-unplugged-button" class="text-button">It's unplugged</button>
+							</div>
+						</div>
+						<div id="extension-zigbee2mqtt-adapter-find-zigbee-radio-step2" class="extension-zigbee2mqtt-adapter-hidden extension-zigbee2mqtt-adapter-area">
+							<h3>2. Plug in your Thread radio</h3>
+							<p>Plug your thread radio into your Candle controller.</p>
+							<div class="extension-zigbee2mqtt-adapter-align-right">
+								<button id="extension-zigbee2mqtt-adapter-find-zigbee-radio-plugged-in-button" class="text-button">It's plugged in</button>
+							</div>
+						</div>
+						<div id="extension-zigbee2mqtt-adapter-find-zigbee-radio-success" class="extension-zigbee2mqtt-adapter-hidden extension-zigbee2mqtt-adapter-area">
+							<h3>Found it!</h3>
+							<p>Attempting to start Zigbee2MQTT...</p>
+						</div>
+						<div id="extension-zigbee2mqtt-adapter-find-zigbee-radio-failed" class="extension-zigbee2mqtt-adapter-hidden extension-zigbee2mqtt-adapter-area">
+							<h3>No new Thread radio found?</h3>
+							<p>You can try the steps again. Unplug it and click on the "It's unplugged" button. Wait a few seconds, then plug it in, wait a few more seconds, and click on the "It's plugged in" button.</p>
+							<p>How it works: the controller checks the list of devices that were plugged in before and after, and assumes that any new device that shows up in the second list must be the radio.</p>
+							<p>You can verify this yourself on the System Information page under Settings, where you can see a list of plugged in USB devices. Do you see some kind of 'serial' or 'UART' device there when it's plugged in?</p>
+						</div>
+	                </div>
+                </div>
+				
+                
+				
+				
                 <div id="extension-zigbee2mqtt-adapter-serial-hint" style="display:none">
                     <p>Are you sure the USB Zigbee stick was plugged in? If it's not, then plug it in and look for it again.</p>
                     <button id="extension-zigbee2mqtt-adapter-look-for-usb-stick-button" class="text-button">Scan for USB stick</button>
@@ -25,11 +78,13 @@
                     <p>If that does not work, fully power down the controller and unplug it for 10 seconds (so that the USB stick loses power and also resets).</p>
                 </div>
                 
-				<div id="extension-zigbee2mqtt-adapter-list">   
-                     <div class="extension-zigbee2mqtt-adapter-spinner">
-                         <div></div><div></div><div></div><div></div>
-                     </div>
-				</div>
+				<div id="extension-zigbee2mqtt-adapter-list"></div>
+
+				<!--
+                 <div class="extension-zigbee2mqtt-adapter-spinner">
+                     <div></div><div></div><div></div><div></div>
+                 </div> 
+				//-->
                 
 
 
@@ -135,7 +190,7 @@
                     <div class="extension-zigbee2mqtt-adapter-vlak extension-zigbee2mqtt-adapter-developer-only">
                         <h3>Health check</h3>
                         <p>Developer only function. Requests a health check.</p>
-                        <button id="extension-zigbee2mqtt-adapter-health-check-button">Health check</button>
+                        <button id="extension-zigbee2mqtt-adapter-health-check-button" class="text-button">Health check</button>
                     
 
 				</div>
@@ -177,7 +232,7 @@
         <div id="extension-zigbee2mqtt-adapter-debug-warning" style="display:none">
             <h2>Debugging is enabled</h2>
             <p>This addon is currently set to save detailed information about its operation in the internal logs. This may impact your privacy, as this also means that insights into your behaviour might be stored in those logs.</p>
-            <p>You can disable debugging mode by going to <span style="font-style:italic">Settings</span>, then <span style="font-style:italic">Addons</span>, and then clicking on the <span style="font-style:italic">Settings</span> button for the <span style="font-style:italic">Zigbee2MQTT</span> addon. There you can uncheck the debugging option and click <span style="font-style:italic">Apply</span>.
+            <p>You can disable debugging mode by going to <span style="font-style:italic">Settings</span>, and then clicking on the <span style="font-style:italic">Settings</span> button for the <span style="font-style:italic">Zigbee2MQTT</span> addon. There you can uncheck the debugging option and click <span style="font-style:italic">Apply</span>.
         </div>
         
         <div id="extension-zigbee2mqtt-adapter-response">

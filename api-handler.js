@@ -32,7 +32,7 @@ class Zigbee2MQTTHandler extends APIHandler {
 
 	async handleRequest(request) {
 		if (this.config.debug) {
-			console.log("* * * * * * * * * * * * API HANDLER REQUEST * * * * * * * * * * request.path: ", request.path);
+			//console.log("* * * * * * * * * * * * API HANDLER REQUEST * * * * * * * * * * request.path: ", request.path);
 			//console.log(request);
 			//console.log("request.method = " + request.method);
 			//console.log("request.path = " + request.path);
@@ -45,7 +45,7 @@ class Zigbee2MQTTHandler extends APIHandler {
 			if (request.path === '/ajax') {
 				const action = request.body.action; //jsonParsed['action'];
 				if (this.config.debug) {
-					console.log("action = " + action);
+					console.log("z2m: action = " + action);
 				}
 
 				if (action == "init") {
@@ -68,7 +68,7 @@ class Zigbee2MQTTHandler extends APIHandler {
 							}
 						}
 					} catch (error) {
-						console.log(error);
+						console.log("z2m: caught error handling API init action: ", error);
 					}
                     
                     // If the missing USB stick is not an issue, then pretend it was found to avoid a warning in the UI
@@ -84,14 +84,28 @@ class Zigbee2MQTTHandler extends APIHandler {
 						content: JSON.stringify({
 							'status': 'ok',
 							'devices': this.adapter.persistent_data.devices_overview,
-                            'security': this.adapter.security,
+                            //'security': this.adapter.security,
                             'installed': this.adapter.z2m_installed_succesfully,
                             'started': this.adapter.z2m_state,
                             'updating_firmware': this.adapter.updating_firmware,
                             'update_result': this.adapter.update_result,
                             'debug': this.adapter.config.debug,
                             'serial': serial_port_value,
-                            'usb_port_issue': this.adapter.usb_port_issue
+                            'usb_port_issue': this.adapter.usb_port_issue,
+							'serial_port_id': this.adapter.serial_port_id
+						}),
+					});
+
+				} 
+				
+				
+				
+				else if (action == "get_security") {
+					return new APIResponse({
+						status: 200,
+						contentType: 'application/json',
+						content: JSON.stringify({
+                            'security': this.adapter.security
 						}),
 					});
 
@@ -102,7 +116,7 @@ class Zigbee2MQTTHandler extends APIHandler {
 
 					if (!this.adapter.waiting_for_map || this.last_map_request_time + this.time_delay < Date.now()) {
 						if (this.config.debug) {
-							console.log("map update allowed");
+							console.log("z2m: map update allowed");
 						}
 						this.last_map_request_time = Date.now();
 						this.adapter.waiting_for_map = true;
@@ -172,10 +186,79 @@ class Zigbee2MQTTHandler extends APIHandler {
 							'update_result': this.adapter.update_result,
                             'installed': this.adapter.z2m_installed_succesfully,
                             'started': this.adapter.z2m_state,
+							'serial_port_path': this.adapter.serial_port_path,
+							'radio_serial_port': this.adapter.persistent_data['radio_serial_port'],
+							'missing_usb_stick': this.adapter.missing_usb_stick,
 						}),
 					});
 				}
                 
+
+
+				else if (action == "find_usb_stick_before") {
+					let state = false;
+					try {
+						if (fs.existsSync('/dev/serial/by-id')) {
+							const usb_devices_before = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
+							if (typeof usb_devices_before == 'string'){
+								this.adapter.usb_devices_before = usb_devices_before;
+								state = true;
+							}
+						}
+					} 
+					catch (err) {
+						console.log("caught error in find_usb_stick_before API handling: ", err);
+					}
+
+					return new APIResponse({
+						status: 200,
+						contentType: 'application/json',
+						content: JSON.stringify({
+							'state':state
+						}),
+					});
+				}
+
+
+				else if (action == "find_usb_stick_after") {
+					let state = false;
+					try {
+
+						if (fs.existsSync('/dev/serial/by-id')) {
+							const usb_devices_after = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
+							if (typeof usb_devices_after == 'string' && usb_devices_after.length > this.usb_devices_before.length && usb_devices_after != this.usb_devices_before){
+
+								let usb_devices_after_lines = usb_devices_after.split(/\r?\n/);
+								for (const i in usb_devices_after_lines) {
+									let line = usb_devices_after_lines[i].replace(/[\r\n]/g, '');
+									line = line.trim();
+									if (this.DEBUG) {
+										console.log("line: ", line);
+									}
+									if (line.length > 5 && this.usb_devices_before.indexOf(line) == -1){
+										this.adapter.persistent_data['radio_serial_port'] = line;
+										this.look_for_usb_stick();
+										state = true;
+										break
+									}
+								}
+
+							}
+						}
+					} 
+					catch (error) {
+						console.log("Error in find_usb_stick_after API handling: ", error);
+					}
+
+					return new APIResponse({
+						status: 200,
+						contentType: 'application/json',
+						content: JSON.stringify({
+							'state': state
+						}),
+					});
+				}
+
                 
                 else if (action == "health_check") {
                     

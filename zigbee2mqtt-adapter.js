@@ -105,6 +105,11 @@ class ZigbeeMqttAdapter extends Adapter {
         
 		this.exposesDeviceGenerator = new ExposesDeviceGenerator(this, this.config);
 
+        this.usb_devices_before = '';
+        this.serial_port_path = null; // the serial port path that will be used
+        this.serial_port_id = null; // the 'real' /dev/tty* id of the USB stick
+        this.missing_usb_stick = false;
+
         this.reverse_list_contact = ['RH3001']; // All the devices for which the contact property should be reversed. RH3001 is a great usb-rechargeable contact sensor.
         
         this.data_blur_options =       ['Off','1 minute','2 minutes','5 minutes','10 minutes','15 minutes','30 minutes','1 hour'];
@@ -144,27 +149,36 @@ class ZigbeeMqttAdapter extends Adapter {
 		}
         if (this.DEBUG) {
             console.log('this.config.mqtt: ', this.config.mqtt);
-            console.log('this.config.serial_port: ', this.config.serial_port);
+            //console.log('this.config.serial_port: ', this.config.serial_port);
         }
 
 		if (this.config.local_zigbee2mqtt) {
 			try {
 				if (typeof this.config.serial_port == "undefined" || this.config.serial_port == "" || this.config.serial_port == null) {
-					console.log("Serial port is not defined in settings. Will attempt auto-detect.");
-					this.config.serial_port = null; //"/dev/ttyAMA0";
-                    this.config.serial_port = this.look_for_usb_stick();
+					if (this.DEBUG) {
+						console.log("Serial port is not defined in settings.");
+					}
+					//this.config.serial_port = null; //"/dev/ttyAMA0";
+                    //this.config.serial_port = this.look_for_usb_stick();
 				}
-                else{
-                    console.log("this.config.serial_port seems to be pre-defined: ", this.config.serial_port);
+                else if (typeof this.config.serial_port == 'string' && this.config.serial_port.startsWith('/dev/')){
+                    if (this.DEBUG) {
+						console.log("this.config.serial_port seems to be set: ", this.config.serial_port);
+					}
+                    this.serial_port_path = this.config.serial_port;
                 }
-			} catch (e) {
-				console.error("Error while trying to read serial port: ", e);
-                this.config.serial_port == null
+			} catch (err) {
+				if (this.DEBUG) {
+					console.error("Error while trying to read serial port from this.config: ", err);
+				}
+                //this.config.serial_port == null
                 this.sendPairingPrompt("Error. Looking for Zigbee USB stick failed.");
 			}
 		}
         else{
-            console.log("not using local Z2M instance");
+            if (this.DEBUG) {
+				console.log("not using local Z2M instance");
+			}
         }
 
         this.client = null; // will hold MQTT client
@@ -173,7 +187,7 @@ class ZigbeeMqttAdapter extends Adapter {
         
         this.usb_port_issue = false;
         this.find_missing_stick_attempted = false;
-        this.fix_usb_stick_attempted = false;
+        this.fix_usb_stick_attempted_timestamp = false;
         this.use_ezsp_stick = false; // Set to true if HomeAssistant SkyConnect USB stick detected
         
         this.last_really_run_time = 0;
@@ -207,7 +221,9 @@ class ZigbeeMqttAdapter extends Adapter {
 	        }
 		})
 		.catch((err) => {
-			console.error("caught error checking if PNPM is installed: ", err);
+			if (this.DEBUG) {
+				console.error("caught error checking if PNPM is installed: ", err);
+			}
 		})
         
 
@@ -347,7 +363,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
 		//this.persistent_data.devices_overview = {}; //new Map(); // stores all the connected devices, and if they can be updated. Could potentially also be used to force-remove devices from the network.
 
-        this.persistent_data = {'devices_overview':{},'virtual_brightness_alternatives': {}}
+        this.persistent_data = {'devices_overview':{},'virtual_brightness_alternatives': {},'radio_serial_port':null}
         
         
         //
@@ -357,7 +373,9 @@ class ZigbeeMqttAdapter extends Adapter {
         try {
 			fs.access(this.persistent_data_file_path, (err) => {
 				if (err && err.code === 'ENOENT') {
-					console.log('persistent data file did not exist yet. Creating it now.');
+					if (this.DEBUG) {
+						console.log('persistent data file did not exist yet. Creating it now.');
+					}
 
                     this.save_persistent_data();
             
@@ -369,15 +387,19 @@ class ZigbeeMqttAdapter extends Adapter {
                     
                     fs.readFile(this.persistent_data_file_path, 'utf8', (error, data) => {
                         if (error){
-                            console.log("Error reading persistent data file: " + error);
+                            if (this.DEBUG) {
+								console.log("Error reading persistent data file: ", error);
+							}
                         }
                         //console.log("READING PERSISTENT DATA NOW from data: ", data);
                         try {
                             const parsed = JSON.parse(data);
                             this.persistent_data = parsed;
                         }
-                        catch (e) {
-                			console.error("Error while parsing loaded persistent data: ", e, data);
+                        catch (err) {
+                			if (this.DEBUG) {
+								console.error("Error while parsing loaded persistent data: ", err, data);
+							}
                 		}
                         //console.log(this.persistent_data);
                     }); 
@@ -387,9 +409,22 @@ class ZigbeeMqttAdapter extends Adapter {
                 
             });
 		} 
-        catch (e) {
-			console.error("Error while reading persistent data file: ",e);
+        catch (err) {
+            if (this.DEBUG) {
+                console.error("Error while reading persistent data file: ",err);
+            }
 		}
+
+        if (typeof this.persistent_data['radio_serial_port'] == 'undefined') {
+            this.persistent_data['radio_serial_port'] = null;
+        }
+        else if (typeof this.persistent_data['radio_serial_port'] == 'string' && this.persistent_data['radio_serial_port'].length > 4){
+            this.serial_port_path = this.persistent_data['radio_serial_port'];
+        }
+        
+        if(this.serial_port_path == null){
+            this.missing_usb_stick = true;
+        }
 
 
         //
@@ -397,8 +432,9 @@ class ZigbeeMqttAdapter extends Adapter {
         // 
         
         if( typeof this.persistent_data['barometer_measurements'] != 'undefined'){
-            console.log("barometer values were present in persistent data: ", this.persistent_data['barometer_measurements']);
-            
+            if (this.DEBUG) {
+				console.log("barometer values were present in persistent data: ", this.persistent_data['barometer_measurements']);
+            }
             for (let q = 0; q < this.persistent_data['barometer_measurements'].length; q++){
                 //this.persistent_data['barometer_measurements'][q].datetime
                 //this.persistent_data['barometer_measurements'][q].value
@@ -406,12 +442,16 @@ class ZigbeeMqttAdapter extends Adapter {
                 var timestamp = Date.parse( this.persistent_data['barometer_measurements'][q].datetime );
                 var dateObject = new Date(timestamp);
                 
-                console.log("re-adding value to barometer: " + this.persistent_data['barometer_measurements'][q].value);        
+                if (this.DEBUG) {
+					console.log("re-adding value to barometer: " + this.persistent_data['barometer_measurements'][q].value);  
+				}      
                 barometer.addPressure(dateObject, this.persistent_data['barometer_measurements'][q].value);
             }
             
             this.persistent_data['barometer_measurements'].forEach(function(measurement) {
-                console.log("measurement for-each: ", measurement);
+                if (this.DEBUG) {
+                    console.log("measurement for-each: ", measurement);
+                }
             });            
         }
 
@@ -443,14 +483,18 @@ class ZigbeeMqttAdapter extends Adapter {
 		
                     fs.writeFile( this.zigbee2mqtt_configuration_security_file_path, JSON.stringify( this.security ), "utf8", (err, result) => {
                         if(err){
-                            console.log('security file write error:', err);
+                            if (this.DEBUG) {
+								console.log('security file write error:', err);
+							}
                             this.improve_security = false;
                         } 
                         else{
                             if(typeof this.config != 'undefined'){
                                 // Security file now exists. But do we use it?
                                 if(this.config.disable_improved_security == true){
-                                    console.log('WARNING: (extra) security has been manually disabled.');
+                                    if (this.DEBUG) {
+										console.log('WARNING: (extra) security has been manually disabled.');
+									}
                                     this.improve_security = false;
                                 }
                                 else {
@@ -462,7 +506,9 @@ class ZigbeeMqttAdapter extends Adapter {
                                 
                             }
                             else{
-                                console.log("Error: this.config was not defined")
+                                if (this.DEBUG) {
+									console.log("Error: this.config was not defined");
+								}
                             }
                         }
                         
@@ -478,7 +524,9 @@ class ZigbeeMqttAdapter extends Adapter {
                     
                     fs.readFile(this.zigbee2mqtt_configuration_security_file_path, 'utf8', (error, data) => {
                         if (error){
-                            console.log("Error reading security file: " + error);
+                            if (this.DEBUG) {
+                                console.log("Error reading security file: ", error);
+                            }
                         }
                         else{
                             this.security = JSON.parse(data);
@@ -489,7 +537,9 @@ class ZigbeeMqttAdapter extends Adapter {
                             
                             // adding extra security
                             if(this.config.disable_improved_security == true){
-                                console.log('WARNING: (extra) security has been manually disabled.');
+                                if (this.DEBUG) {
+                                    console.log('WARNING: (extra) security has been manually disabled.');
+                                }
                                 this.improve_security = false;
                             }
                             else {
@@ -506,7 +556,9 @@ class ZigbeeMqttAdapter extends Adapter {
             });
 		} 
         catch (error) {
-			console.error("Error while checking/opening security file: " + error.message);
+            if (this.DEBUG) {
+                console.error("Error while checking/opening security file: " + error.message);
+            }
 		}
         
 
@@ -518,8 +570,10 @@ class ZigbeeMqttAdapter extends Adapter {
 				this,
 				this.config
 			);
-		} catch (error) {
-			console.log("Error loading api handler: " + error)
+		} catch (err) {
+			if (this.DEBUG) {
+				console.error("caught error loading api handler: ", err)
+			}
 		}
 
 
@@ -588,7 +642,9 @@ class ZigbeeMqttAdapter extends Adapter {
             
 			fs.access(this.zigbee2mqtt_data_z2m_test_path, (err) => {
 				if (err && err.code === 'ENOENT') {
-                    console.log("zigbee2mqtt folder was missing, should download and install");
+                    if (this.DEBUG) {
+						console.log("zigbee2mqtt folder was missing, should download and install");
+					}
 					this.download_z2m(); // this then also installs and starts zigbee2mqtt
 				} else {
 					if (this.DEBUG) {
@@ -596,7 +652,9 @@ class ZigbeeMqttAdapter extends Adapter {
 					}
 
 					if (this.config.auto_update) {
-						console.log('Auto-update is enabled. Checking if Zigbee2MQTT should be updated...');
+						if (this.DEBUG) {
+							console.log('Auto-update is enabled. Checking if Zigbee2MQTT should be updated...');
+						}
 						// downloads json from https://api.github.com/repos/Koenkk/zigbee2mqtt/releases/latest;
 
 						try {
@@ -634,9 +692,11 @@ class ZigbeeMqttAdapter extends Adapter {
 
 										fs.readFile(this.zigbee2mqtt_package_file_path, 'utf8', (err, data) => {
 											if (err) {
-												console.log(`Error reading file from disk: ${err}`);
-
-											} else {
+												if (this.DEBUG) {
+													console.log(`Error reading file from disk: ${err}`);
+												}
+											}
+											else {
 												const z2m_package_json = JSON.parse(data);
 												if (this.DEBUG) {
 													console.log(`local zigbee2MQTT version = ${z2m_package_json.version}`);
@@ -649,10 +709,11 @@ class ZigbeeMqttAdapter extends Adapter {
 													this.run_zigbee2mqtt();
 
 												} else {
-													console.log('a new official release of zigbee2mqtt is available.',
-														'Will attempt to upgrade.');
+													if (this.DEBUG) {
+														console.log('a new official release of zigbee2mqtt is available. Will attempt to upgrade.');
+													}
 
-													this.sendPairingPrompt("Updating Zigbee2MQTT to " + github_json.tag_name);
+													this.sendPairingPrompt("Updating Zigbee2MQTT to ", github_json.tag_name);
 
 													this.delete_z2m();
 													this.download_z2m(); // this also then installs and starts zigbee2mqtt
@@ -661,20 +722,26 @@ class ZigbeeMqttAdapter extends Adapter {
 											}
 										});
 
-									} catch (error) {
-										console.error(error.message);
+									} catch (err) {
+										if (this.DEBUG) {
+											console.error("caught error from request: ", err.message);
+										}
 										this.run_zigbee2mqtt();
 									}
 								});
 							});
 
-							req.on('error', (e) => {
-								console.error(e);
+							req.on('error', (err) => {
+								if (this.DEBUG) {
+									console.error("got error from request.on.error: ", err);
+								}
 								this.run_zigbee2mqtt();
 							});
 							req.end();
 						} catch (error) {
-							console.error(error.message);
+							if (this.DEBUG) {
+								console.error("caught error from request.on.error: ",error.message);
+							}
 							this.run_zigbee2mqtt();
 						}
 					} else {
@@ -686,7 +753,9 @@ class ZigbeeMqttAdapter extends Adapter {
 			}); // end of fs.access check
 
 		} else {
-			console.log("Not using built-in zigbee2mqtt");
+            if (this.DEBUG) {
+                console.log("Not using built-in zigbee2mqtt");
+            }
 			this.z2m_started = true;
 		}
     }
@@ -703,49 +772,116 @@ class ZigbeeMqttAdapter extends Adapter {
         var serial_port = null;
         
         try{
-            if (fs.existsSync('/dev/serial/by-id')) {
-    			let result = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
-    			console.log("output from ls -l/dev/serial/by-id was: ", result);
-                result = result.split(/\r?\n/);
-    			for (const i in result) {
-    				if (this.DEBUG) {
-    					console.log("line: " + result[i]);
-    				}
-    				if (result[i].length == 3 && result[i].includes("->")) { // If there is only one USB device, grab what you can.
-    					serial_port = "/dev/" + result[i].split("/").pop();
-    				}
-    				// In general, be picky, and look for hints that we found a viable Zigbee stick
-    				if (result[i].toLowerCase().includes("cc253") || result[i].toLowerCase().includes("conbee") || result[i].toLowerCase().includes('cc26x') || result[i].toLowerCase().includes('cc265') || result[i].toLowerCase().includes('igbee') ){ // CC26X2R1, CC253, CC2652
-    					serial_port = "/dev/" + result[i].split("/").pop();
-    					console.log("- USB stick spotted at: " + serial_port);
-    				}
+			if(fs.existsSync('/dev/serial/by-id')){
+	            if (typeof this.persistent_data['radio_serial_port'] == 'string' && this.persistent_data['radio_serial_port'].length > 3) {
+	                let result = require('child_process').execSync('ls -l /dev/serial/by-id | grep ' + this.persistent_data['radio_serial_port']).toString();
+	                if (this.DEBUG) {
+	                    console.log("look_for_usb_stick: output from ls -l/dev/serial/by-id was: ", result);
+	                }
+	                result = result.split(/\r?\n/);
+	    			for (const i in result) {
+	    				if (this.DEBUG) {
+	    					console.log("look_for_usb_stick: line: " + result[i]);
+	    				}
+
+	                    if (result[i].indexOf(this.persistent_data['radio_serial_port']) != -1 && result[i].indexOf('/') != -1 ){
+	                        this.sendPairingPrompt("Found Zigbee radio");
+	                        serial_port = "/dev/" + result[i].split("/").pop();
+	                        this.serial_port_path = serial_port;
+	                        if (result[i].toLowerCase().includes("skyconnect")) {
+	                            this.use_ezsp_stick = true;
+	                            if (this.DEBUG) {
+									console.log("- USB stick is SkyConnect variety: " + serial_port);
+								}
+	                        }
+	                    }
+	                    /*
+	    				if (result[i].length == 3 && result[i].includes("->")) { // If there is only one USB device, grab what you can.
+	    					serial_port = "/dev/" + result[i].split("/").pop();
+	    				}
+	    				// In general, be picky, and look for hints that we found a viable Zigbee stick
+	    				if (result[i].toLowerCase().includes("cc253") || result[i].toLowerCase().includes("conbee") || result[i].toLowerCase().includes('cc26x') || result[i].toLowerCase().includes('cc265') || result[i].toLowerCase().includes('igbee') ){ // CC26X2R1, CC253, CC2652
+	    					serial_port = "/dev/" + result[i].split("/").pop();
+	    					console.log("- USB stick spotted at: " + serial_port);
+	    				}
                     
-    				// See if the SkyConnect usb stick is being used, which supports both zigbee and matter simultaneously
-    				if (result[i].toLowerCase().includes("skyconnect") ){
-                        this.use_ezsp_stick = true;
-						serial_port = "/dev/" + result[i].split("/").pop();
-    					console.log("- USB stick is SkyConnect variety: " + serial_port);
-    				}
+	    				// See if the SkyConnect usb stick is being used, which supports both zigbee and matter simultaneously
+	    				if (result[i].toLowerCase().includes("skyconnect") ){
+	                        this.use_ezsp_stick = true;
+							serial_port = "/dev/" + result[i].split("/").pop();
+	    					console.log("- USB stick is SkyConnect variety: " + serial_port);
+	    				}
+	                    */
                     
                     
-    			}
+	    			}
+				}
+				else{
+					let result = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
+	                if (this.DEBUG) {
+	                    console.log("look_for_usb_stick: auto-detect: output from ls -l/dev/serial/by-id was: ", result);
+	                }
+	                result = result.split(/\r?\n/);
+	    			for (const i in result) {
+	    				if (this.DEBUG) {
+	    					console.log("look_for_usb_stick: auto-detect: line: " + result[i]);
+	    				}
+
+	                    if ( (result[i].toLowerCase().includes("conbee") || result[i].toLowerCase().includes('zigbee')) && result[i].toLowerCase().indexOf('thread') == -1 && result[i].indexOf('/') != -1 ){
+	                        this.sendPairingPrompt("Auto-detected a Zigbee radio");
+	                        serial_port = "/dev/" + result[i].split("/").pop();
+							this.persistent_data['radio_serial_port'] = result[i].trim();
+	                        this.save_persistent_data();
+							this.serial_port_path = serial_port;
+							
+	                       	/*
+						    if (result[i].toLowerCase().includes("skyconnect")) {
+	                            this.use_ezsp_stick = true;
+	                            if (this.DEBUG) {
+									console.log("- USB stick is SkyConnect variety: " + serial_port);
+								}
+	                        }
+							*/
+	                    }
+	                    /*
+	    				if (result[i].length == 3 && result[i].includes("->")) { // If there is only one USB device, grab what you can.
+	    					serial_port = "/dev/" + result[i].split("/").pop();
+	    				}
+	    				// In general, be picky, and look for hints that we found a viable Zigbee stick
+	    				if (result[i].toLowerCase().includes("cc253") || result[i].toLowerCase().includes("conbee") || result[i].toLowerCase().includes('cc26x') || result[i].toLowerCase().includes('cc265') || result[i].toLowerCase().includes('igbee') ){ // CC26X2R1, CC253, CC2652
+	    					serial_port = "/dev/" + result[i].split("/").pop();
+	    					console.log("- USB stick spotted at: " + serial_port);
+	    				}
+                    
+	    				// See if the SkyConnect usb stick is being used, which supports both zigbee and matter simultaneously
+	    				if (result[i].toLowerCase().includes("skyconnect") ){
+	                        this.use_ezsp_stick = true;
+							serial_port = "/dev/" + result[i].split("/").pop();
+	    					console.log("- USB stick is SkyConnect variety: " + serial_port);
+	    				}
+	                    */
+                    
+                    
+	    			}
+				}
+            
             }
             else{
                 if (this.DEBUG) {
-                    console.log('/dev/serial/by-id directory did not exist - no serial devices connected');
+                    console.log('look_for_usb_stick: /dev/serial/by-id directory did not exist - no serial devices connected');
+                }
+                if (typeof this.persistent_data['radio_serial_port'] == 'string' && this.persistent_data['radio_serial_port'].length > 4) {
+                    this.sendPairingPrompt("Could not detect the Zigbee radio");
                 }
             }
         
-            if(serial_port == null){
-                this.sendPairingPrompt("No Zigbee USB stick detected");
-            }
         }
-        catch(e){
-            console.log("Error while looking for USB stick: ", e);
+        catch(err){
+            console.log("look_for_usb_stick: caught error: ", err);
         }
         
         if (this.DEBUG) {
-			console.log("found serial_port? ", serial_port);
+            console.log("look_for_usb_stick: found serial_port?  this.serial_port_path:", this.serial_port_path);
 		}
 		
         return serial_port;
@@ -753,42 +889,98 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
     // This does a brute-force attempt to fix the Zigbee USB stick not responding by turning it off and on again.
-    // It will currently only do this if only one USB stick was detected.
+    // This can be done at most once every 10 minutes
     fix_usb(){
-        if(this.usb_port_issue && this.fix_usb_stick_attempted == false){
-            
-            this.fix_usb_stick_attempted = true;
-            console.log("in fix_usb");
-            exec("find /sys/bus/usb/devices/usb*/ -name dev | grep ttyUSB", (error, stdout, stderr) => {
-                console.log(error, stdout, stderr);
-            
-                const lines = stdout.split(/\r?\n/);
-                console.log("lines: ", lines.length);
-            
-                if(lines.length == 2){
-                    if(lines[0].length > 20 && lines[1].length == 0){
-                        const parts = lines[0].split(/\//);
-                        console.log("parts: ", parts);
-                        if(parts.length > 7){
-                            console.log("part 7: ", parts[7]);
-                            const usb_id =  parts[7];
+        const now_stamp = Date.now();
+        if (this.usb_port_issue && this.fix_usb_stick_attempted_timestamp < (now_stamp - 600000) && typeof this.persistent_data['radio_serial_port'] == 'string' && this.persistent_data['radio_serial_port'].length > 3){
+    
+            this.fix_usb_stick_attempted_timestamp = now_stamp;
+            if (this.DEBUG) {
+                console.log("attempting fix_usb");
+            }
 
-                            // echo 1-1.3 | sudo tee /sys/bus/usb/drivers/usb/unbind
-                            
-                            exec("echo " + usb_id + " | sudo tee /sys/bus/usb/drivers/usb/unbind", (error, stdout, stderr) => {
-                                console.log("Turned USB stick off");
-                                setTimeout(() => {
-                                    exec("echo " + usb_id + " | sudo tee /sys/bus/usb/drivers/usb/bind", (error, stdout, stderr) => {
-                                        console.log("Turned USB stick back on again");
-                                        this.look_for_usb_stick();
-                                    }); 
-                                },2000);
-                            });
-                        }
+            let serial_port_id = null;
+
+            let result = require('child_process').execSync('ls -l /dev/serial/by-id | grep ' + this.persistent_data['radio_serial_port']).toString();
+            if (this.DEBUG) {
+                console.log("fix_usb: output from ls -l/dev/serial/by-id was: ", result);
+            }
+            result = result.split(/\r?\n/);
+            for (const i in result) {
+                if (result[i].indexOf(this.persistent_data['radio_serial_port']) != -1 && result[i].indexOf('/tty') != -1){
+                    let usb_port_serial_id = result[i].split('/tty')[1];
+                    if (usb_port_serial_id.length > 0 && usb_port_serial_id.length < 5){
+                        serial_port_id = 'tty' + usb_port_serial_id;
                     }
+                    break
                 }
+            }
+
+            if (typeof serial_port_id == 'string'){
+                if (this.DEBUG) {
+                    console.log("fix_usb: serial_port_id: ", serial_port_id);
+                }
+                if (fs.existsSync('/dev/' + serial_port_id)) {
+                    this.serial_port_id = serial_port_id;
+                    if (this.serial_port_path != '/dev/' + serial_port_id){
+                        if (this.DEBUG) {
+							console.warn("fix_usb:  the path of the serial port device seems to have changed. That was probably why it wasn't responding?");
+                        }
+						this.serial_port_path = '/dev/' + serial_port_id;
+                    }
+                    
+                    exec("find /sys/bus/usb/devices/usb*/ -name dev | grep " + serial_port_id, (error, stdout, stderr) => {
+                        if (this.DEBUG) {
+                            console.log("fix_usb: exec find results: ", error, stdout, stderr);
+                        }
+
+                        const lines = stdout.split(/\r?\n/);
+                        if (this.DEBUG) {
+                            console.log("fix_usb: lines.length: ", lines.length);
+                        }
+
+                        if (lines.length) {
+                            if (lines[0].length > 20 && lines[1].length == 0) {
+                                const parts = lines[0].split(/\//);
+                                if (this.DEBUG) {
+                                    console.log("fix_usb: parts: ", parts);
+                                }
+                                if (parts.length > 7) {
+                                    if (this.DEBUG) {
+                                        console.log("fix_usb: part 7: ", parts[7]);
+                                    }
+                                    const usb_id = parts[7];
+
+                                    // echo 1-1.3 | sudo tee /sys/bus/usb/drivers/usb/unbind
+                                    if (usb_id.indexOf('-' != -1)){
+                                        exec("echo " + usb_id + " | sudo tee /sys/bus/usb/drivers/usb/unbind", (error, stdout, stderr) => {
+                                            if (this.DEBUG) {
+                                                console.warn("fix_usb: Turned USB stick off");
+                                            }
+                                            setTimeout(() => {
+                                                exec("echo " + usb_id + " | sudo tee /sys/bus/usb/drivers/usb/bind", (error, stdout, stderr) => {
+                                                    if (this.DEBUG) {
+                                                        console.warn("fix_usb: Turned USB stick back on again");
+                                                    }
+                                                    //this.look_for_usb_stick();
+                                                });
+                                            }, 2000);
+                                        });
+                                    }
+                                    
+                                }
+                            }
+                        }
+
+                    });
+                }
+            }
+            else{
+                if(this.DEBUG){
+                    console.log('fix_usb: could not find the USB stick, so cannot reset it');
+                }
+            }
             
-            });
         }
     
     }
@@ -858,8 +1050,10 @@ class ZigbeeMqttAdapter extends Adapter {
             
             }
         }
-        catch(e){
-            console.log("error in ping_things: ", e);
+        catch(err){
+            if (this.DEBUG) {
+				console.log("caught error in ping_things: ", err);
+			}
         }
     }
 
@@ -955,7 +1149,9 @@ class ZigbeeMqttAdapter extends Adapter {
                         "  network_key: [" + this.security.network_key + "]\n";
                     }
                     else{
-                        console.log('Warning: security pan_id was empty! Security was not upgraded, and is using default values.');
+                        if (this.DEBUG) {
+							console.log('Warning: security pan_id was empty! Security was not upgraded, and is using default values.');
+						}
                     }
                 }
                 
@@ -988,7 +1184,9 @@ class ZigbeeMqttAdapter extends Adapter {
                 
 				fs.writeFile(this.zigbee2mqtt_configuration_file_path, base_config, (err) => {
 					if (err) {
-						console.log("Error writing base configuration.yaml file");
+						if (this.DEBUG) {
+							console.log("Error writing base configuration.yaml file");
+						}
 					} else {
 						if (this.DEBUG) {
 							console.log('basic configuration.yaml file was succesfully created at: ' + this.zigbee2mqtt_configuration_file_path);
@@ -997,8 +1195,11 @@ class ZigbeeMqttAdapter extends Adapter {
 				});
 
 			});
-		} catch (error) {
-			console.error(`Error checking if zigbee2mqtt config file exists: ${error.message}`);
+            
+		} catch (err) {
+			if (this.DEBUG) {
+				console.error(`Error checking if zigbee2mqtt config file exists: ${err.message}`);
+			}
 		}
 	}
 
@@ -1009,17 +1210,27 @@ class ZigbeeMqttAdapter extends Adapter {
 		    console.log("in stop-zigbee2mqtt");
 		}
 		try {
-			this.zigbee2mqtt_subprocess.kill();
-		} catch (error) {
-			console.error(`Error stopping zigbee2mqtt: ${error.message}`);
+			if(this.zigbee2mqtt_subprocess){
+				this.zigbee2mqtt_subprocess.kill();
+			}
+		}
+		catch (error) {
+			if (this.DEBUG) {
+				console.error(`caught error stopping zigbee2mqtt: ${err.message}`);
+			}
     		if (this.config.local_zigbee2mqtt == true) {
     			// Make sure previous instances of Zigbee2mqtt are gone
     			try {
     				//execSync("pgrep -f 'zigbee2mqtt-adapter/zigbee2mqtt/cli.js' | xargs kill -9");
     				execSync("pkill -f '/data/zigbee2mqtt-adapter/zigbee2mqtt/'");
-    				console.log("pkill done");
-    			} catch (error) {
-    				console.log("exec pkill error: ", error);
+    				if (this.DEBUG) {
+						console.log("pkill done");
+					}
+    			}
+				catch (err) {
+    				if (this.DEBUG) {
+						console.log("caught another error attempting to pkill zigbee2mqtt: ", err);
+					}
     			}
     		}
 		}
@@ -1029,8 +1240,9 @@ class ZigbeeMqttAdapter extends Adapter {
 
 	run_zigbee2mqtt(delay = 10) {
         if (this.DEBUG) {
-            console.log("in run_zigbee2mqtt. Will really start in: " + delay + " seconds. this.config.serial_port: ", this.config.serial_port);
+            console.log("in run_zigbee2mqtt. Will really start in: " + delay + " seconds.  this.serial_port_path: ", this.serial_port_path);
         }
+        /*
         if(typeof this.config.serial_port == "undefined" || this.config.serial_port == null || this.config.serial_port == ""){
 			
 			if (this.config.local_zigbee2mqtt) {
@@ -1044,7 +1256,7 @@ class ZigbeeMqttAdapter extends Adapter {
 					
 				} catch (e) {
 					console.log("Error while trying to last-minute find serial port: ", e);
-	                this.config.serial_port == null
+	                //this.config.serial_port == null
 					return;
 				}
 			}
@@ -1053,9 +1265,26 @@ class ZigbeeMqttAdapter extends Adapter {
 	        }
 			
         }
+        */
+        if (typeof this.serial_port_path != 'string'){
+            if (this.DEBUG) {
+                console.log("run_zigbee2mqtt: need to look for USB stick first, as this.serial_port_path was null");
+            }
+            this.look_for_usb_stick();
+        }
+        else if (!fs.existsSync(this.serial_port_path)) {
+            if (this.DEBUG) {
+                console.log("run_zigbee2mqtt: there was a serial port path set, but the path doesn't seem to actually exist: ", this.serial_port_path);
+            }
+            this.serial_port_path = null;
+            this.look_for_usb_stick();
+        }
+
+        if ( typeof this.serial_port_path == 'string' && this.serial_port_path.startsWith('/dev/') && fs.existsSync(this.serial_port_path) ){
+            setTimeout(this.check_if_config_file_exists.bind(this), 4000);
+            setTimeout(this.connect_to_mqtt.bind(this), delay * 1000); // wait 10 seconds before really starting Zigbee2MQTT, to make sure serial port has been released.
+        }
         
-        setTimeout(this.check_if_config_file_exists.bind(this), 4000);
-		setTimeout(this.connect_to_mqtt.bind(this), delay * 1000); // wait 10 seconds before really starting Zigbee2MQTT, to make sure serial port has been released.
     }
 
 
@@ -1115,8 +1344,10 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
     on_mqtt_connection_lost(){
-        console.log("ERROR: client lost connection to MQTT! This means the addon will no longer receive messages from Zigbee2MQTT. It should automatically reconnect soon.");
-        this.mqtt_connected = false;
+        if (this.DEBUG) {
+			console.log("ERROR: client lost connection to MQTT! This means the addon will no longer receive messages from Zigbee2MQTT. It should automatically reconnect soon.");
+        }
+		this.mqtt_connected = false;
     }
 
 
@@ -1130,27 +1361,42 @@ class ZigbeeMqttAdapter extends Adapter {
         }
 		
 		if(this.mqtt_connected == false){
-			console.error("really_run_zigbee2mqtt: this.mqtt_connected is false! Aborting..")
+			if (this.DEBUG) {
+				console.error("really_run_zigbee2mqtt: this.mqtt_connected is false! Aborting..");
+			}
 			return;
 		}
+
+        if (typeof this.serial_port_path != 'string') {
+            if (this.DEBUG) {
+                console.log("really_run_zigbee2mqtt: need to look for USB stick first, as this.serial_port_path was null");
+            }
+            this.look_for_usb_stick();
+        }
+        else if (!fs.existsSync(this.serial_port_path)) {
+            if (this.DEBUG) {
+                console.log("really_run_zigbee2mqtt: there was a serial port path set, but the path doesn't seem to actually exist: ", this.serial_port_path);
+            }
+            this.serial_port_path = null;
+            this.look_for_usb_stick();
+        }
+
         
-        if(this.config.serial_port == null || this.config.serial_port == ""){
-			
-			if(this.find_missing_stick_attempted == false){
-				this.find_missing_stick_attempted = true;
-				this.look_for_usb_stick();
-			}
+        if (this.serial_port_path == null){
+            this.missing_usb_stick = true;
+            if (this.DEBUG) {
+                console.error("really_run_zigbee2mqtt: this.serial_port_path was still null. Aborting launch.");
+            }
+            return
         }
 		
-		if(this.config.serial_port == null || this.config.serial_port == ""){
-            console.log("ZIGBEE2MQTT will really not start: no USB stick detected");
-            return;
-		}
 		
         
         const current_time = Date.now();
         if( current_time < this.last_really_run_time + this.last_really_run_time_delay ){
-            console.log("avoiding restarting zigbee2mqtt too quickly. Aborting really_run_zigbee2MQTT.  this.last_really_run_time_delay seconds: ", this.last_really_run_time_delay/1000);
+            if (this.DEBUG) {
+				console.log("avoiding restarting zigbee2mqtt too quickly. Aborting really_run_zigbee2MQTT.  this.last_really_run_time_delay seconds: ", this.last_really_run_time_delay/1000);
+			}
             return;
         }
         else{
@@ -1241,7 +1487,9 @@ class ZigbeeMqttAdapter extends Adapter {
 			}
             
             this.zigbee2mqtt_subprocess.on('error', err => {
-                console.error('Yikes, detected subprocess error for Z2M child process: ', err);
+                if (this.DEBUG) {
+					console.error('Yikes, detected subprocess error for Z2M child process: ', err);
+				}
             });
     
             // StdOut
@@ -1257,8 +1505,9 @@ class ZigbeeMqttAdapter extends Adapter {
                 data=data.toString();
         
                 if( data.includes("Error while opening serialport") ){
-                    console.log('ERROR: COULD NOT CONNECT TO THE USB STICK. PLEASE RESTART THE CONTROLLER. MAKE SURE OTHER ZIGBEE ADDONS ARE DISABLED.');
-                
+                    if (this.DEBUG) {
+						console.log('ERROR: COULD NOT CONNECT TO THE USB STICK. PLEASE RESTART THE CONTROLLER. MAKE SURE OTHER ZIGBEE ADDONS ARE DISABLED.');
+					}
                     const now_stamp = Math.floor(+new Date() / 1000);
                 
                     if(now_stamp - this.addon_start_time > 30){
@@ -1266,11 +1515,11 @@ class ZigbeeMqttAdapter extends Adapter {
                         this.usb_port_issue = true;
                         if(this.DEBUG){
                             console.log("this.find_missing_stick_attempted: ", this.find_missing_stick_attempted);
-                            console.log("this.fix_usb_stick_attempted: ", this.fix_usb_stick_attempted);
+                            console.log("this.fix_usb_stick_attempted_timestamp: ", this.fix_usb_stick_attempted_timestamp);
                         }
                 
                 
-                        if( data.includes("Resource temporarily unavailable") && this.fix_usb_stick_attempted == false){
+                        if( data.includes("Resource temporarily unavailable") && this.fix_usb_stick_attempted_timestamp == false){
                             this.fix_usb();
                         }
                         else if( data.includes("No such file or directory, cannot open /dev") && this.find_missing_stick_attempted == false){
@@ -1282,7 +1531,9 @@ class ZigbeeMqttAdapter extends Adapter {
                         }
                     }
                     else{
-                        console.log("USB trouble, but the addon started less than 30 seconds ago.");
+                        if (this.DEBUG) {
+							console.log("USB trouble, but the addon started less than 30 seconds ago.");
+						}
                     }
                 
                 
@@ -1290,19 +1541,25 @@ class ZigbeeMqttAdapter extends Adapter {
 				
 				// Adapter EZSP protocol version (9) is not supported by Host
 				else if( data.includes("Adapter EZSP protocol version (") && data.includes(") is not supported by Host") ){
-                    console.error("Failed to start Zigbee2MQTT. Outdated firmware on Zigbee stick?");
+                    if (this.DEBUG) {
+						console.error("Failed to start Zigbee2MQTT. Outdated firmware on Zigbee stick?");
+					}
                     this.z2m_had_error = true;
                     try{
                         execSync("pkill -f '/data/zigbee2mqtt-adapter/zigbee2mqtt/'");
                     }
                     catch(e){
-                        console.log("pkill error: " + e);
+                        if (this.DEBUG) {
+							console.log("caught pkill error: ", e);
+						}
                     }
 				}
 				
 				
                 else if( data.includes("ailed to start") ){
-                    console.log("Yikes, failed to start Zigbee2MQTT. Killing it, just to be sure. Try again later?");
+                    if (this.DEBUG) {
+						console.log("Yikes, failed to start Zigbee2MQTT. Killing it, just to be sure. Try again later?");
+					}
                     this.z2m_had_error = true;
                     try{
                         execSync("pkill -f '/data/zigbee2mqtt-adapter/zigbee2mqtt/'");
@@ -1313,17 +1570,22 @@ class ZigbeeMqttAdapter extends Adapter {
                         //
                     }
                     catch(e){
-                        console.log("pkill error: " + e);
+                        if (this.DEBUG) {
+							console.log("caught pkill error: ", e);
+						}
                     }
                     //parent_scope.run_zigbee2mqtt(61); // wait 61 seconds before retrying
                     //this.run_zigbee2mqtt(61); // wait 61 seconds before retrying
                 }
                 else if( data.includes(", failed") ){
-        
+                    
                     // Isnt't this a bit much? Could this create a rebuild loop?
                     //const zigbee2mqtt_dir = path.join(path.resolve('../..'), '.webthings', 'data', 'zigbee2mqtt-adapter','zigbee2mqtt');
-                    console.log("Yikes, Zigbee2MQTT may not be installed ok. Will attempt to fix. Dir: " + this.zigbee2mqtt_dir_path);
-        			this.rebuild_z2m();
+                    if (this.DEBUG) {
+						console.log("Yikes, Zigbee2MQTT may not be installed ok.");
+					}
+                    //console.log("Yikes, Zigbee2MQTT may not be installed ok. Will attempt to fix. Dir: " + this.zigbee2mqtt_dir_path);
+        			//this.rebuild_z2m();
                 }
         
             });
@@ -1339,12 +1601,16 @@ class ZigbeeMqttAdapter extends Adapter {
                 }
         
                 if( data.includes("was compiled against a different Node.js version") || data.includes("Could not locate the bindings file") || data.includes("Cannot find module") ){
-                    console.log('Oh ERROR SNAP, Zigbee2MQTT should be rebuilt');
+                    if (this.DEBUG) {
+						console.log('Oh ERROR SNAP, Zigbee2MQTT should be rebuilt');
+					}
                     this.rebuild_z2m();
                 }
 				
                 if( data.includes("write after end")){
-                    console.log('Did the USB stick suddenly get unplugged?');
+                    if (this.DEBUG) {
+						console.log('Did the USB stick suddenly get unplugged?');
+					}
                     //this.rebuild_z2m();
 					this.sendPairingPrompt("Zigbee USB stick unplugged?");
 					this.config.serial_port = null;
@@ -1359,10 +1625,14 @@ class ZigbeeMqttAdapter extends Adapter {
                     console.log('z2m closing code: ' + code);
                 }
                 if(code == 0){
-                    console.log("Z2M closed cleanly.");
+                    if (this.DEBUG) {
+						console.log("Z2M closed cleanly.");
+					}
                 }
                 else{
-                    console.log("Warning, Z2M did not close cleanly. Error code: " + code);
+                    if (this.DEBUG) {
+						console.log("Warning, Z2M did not close cleanly. Error code: ", code);
+					}
                     this.z2m_state = false;
                     this.z2m_had_error = true;
                 }
@@ -1371,8 +1641,10 @@ class ZigbeeMqttAdapter extends Adapter {
             });
             
         }
-        catch(e){
-            console.log("Caught error in really_run: ",e);
+        catch(err){
+            if (this.DEBUG) {
+				console.log("Caught error in really_run: ", err);
+			}
         }
 
 	}
@@ -1383,7 +1655,9 @@ class ZigbeeMqttAdapter extends Adapter {
         this.z2m_installed_succesfully = false;
         
         if(this.busy_installing_z2m){
-            console.error("download z2m called while Z2M was already being downloaded/installed (busy_installing_z2m was true). Aborting.");
+            if (this.DEBUG) {
+				console.error("download z2m called while Z2M was already being downloaded/installed (busy_installing_z2m was true). Aborting.");
+			}
             return;
         }
         this.busy_installing_z2m = true;
@@ -1427,7 +1701,9 @@ class ZigbeeMqttAdapter extends Adapter {
                             
                     		exec(`wget ${github_json.tarball_url} -O ${this.zigbee2mqtt_data_z2m_release_tar_path}  --retry-connrefused  --waitretry=5 --read-timeout=20 --timeout=15 -t 3`, (err, stdout, stderr) => {
                     			if (err) {
-                    				console.error("Getting latest Z2M release json failed: ", err);
+                    				if (this.DEBUG) {
+										console.error("Getting latest Z2M release json failed: ", err);
+									}
                                     this.busy_installing_z2m = false;
                     				return;
                     			}
@@ -1437,14 +1713,18 @@ class ZigbeeMqttAdapter extends Adapter {
                     			
                     			fs.access(this.zigbee2mqtt_data_z2m_release_tar_path, (err) => {
                     				if (err && err.code === 'ENOENT') {
-                                        console.error("Downloading Z2M failed: ", err);
+                                        if (this.DEBUG) {
+											console.error("Downloading Z2M failed: ", err);
+										}
                                         this.busy_installing_z2m = false;
                                         this.sendPairingPrompt("Error, Zigbee2MQTT download failed");
                                         return;
                     				} 
                                     else {
                         				
-                                        console.log("-----DOWNLOAD COMPLETE, STARTING INSTALL-----");
+                                        if (this.DEBUG) {
+											console.log("-----DOWNLOAD COMPLETE, STARTING INSTALL-----");
+										}
                                         this.sendPairingPrompt("Zigbee2MQTT download complete. Starting installation.");
                             
                                         let command_to_run = `cd ${this.zigbee2mqtt_data_dir_path}; rm -rf zigbee2mqtt; tar xf latest_z2m.tar.gz; rm latest_z2m.tar.gz; mv Koenkk-* zigbee2mqtt; cd zigbee2mqtt; ls; npm ci`; //npm ci --production // npm install -g typescript; npm i --save-dev @types/node
@@ -1457,23 +1737,29 @@ class ZigbeeMqttAdapter extends Adapter {
                                         }
                             			exec(command_to_run, (err, stdout, stderr) => { // npm ci --production
                             				if (err) {
-                            					console.error("Error running npm install in freshly downloaded Z2M: ", err);
+                            					if (this.DEBUG) {
+													console.error("Error running npm install in freshly downloaded Z2M: ", err);
+												}
                                                 this.busy_installing_z2m = false;
                             					return;
                             				}
                             				if (this.DEBUG) {
-                            					console.log(stdout);
+                            					console.log("stdout error from downloading fresh z2m: ", stdout);
                             				}
                                         
                                 			fs.access(this.zigbee2mqtt_data_z2m_test_path, (err) => {
                                 				if (err && err.code === 'ENOENT') {
-                                                    console.error("Error Z2M installation failed, test dir in Z2M's node_modules does not exist: ", err);
+                                                    if (this.DEBUG) {
+														console.error("Error Z2M installation failed, test dir in Z2M's node_modules does not exist: ", err);
+													}
                                                     this.sendPairingPrompt("Error, Zigbee2MQTT installation failed");
                                                     this.busy_installing_z2m = false;
                                                     return;
                                 				}
                                                 else {
-                                    				console.log("-----Z2M INSTALL COMPLETE-----");
+                                    				if (this.DEBUG) {
+														console.log("-----Z2M INSTALL COMPLETE-----");
+													}
                                                     this.z2m_installed_succesfully = true;
                                     				this.sendPairingPrompt("Zigbee2MQTT installation complete. Starting...");
                                     				this.run_zigbee2mqtt();
@@ -1490,20 +1776,26 @@ class ZigbeeMqttAdapter extends Adapter {
                             
                         }
                         else{
-                            console.error("Error, could not get download link for latest Z2M release");
+                            if (this.DEBUG) {
+								console.error("Error, could not get download link for latest Z2M release");
+							}
                         }
                         
 
 					} catch (error) {
-						console.error(error.message);
+						if (this.DEBUG) {
+							console.error("Error from downloading z2m: ", error.message);
+						}
                         this.busy_installing_z2m = false;
 						//this.run_zigbee2mqtt();
 					}
 				});
 			});
 
-			req.on('error', (e) => {
-				console.error(e);
+			req.on('error', (err) => {
+				if (this.DEBUG) {
+					console.error("request error", err);
+				}
                 this.busy_installing_z2m = false;
 				//this.run_zigbee2mqtt();
 			});
@@ -1511,8 +1803,10 @@ class ZigbeeMqttAdapter extends Adapter {
 		    
 			
         }
-        catch(e){
-            console.error("GENERAL ERROR DURING INSTALL OF ZIGBEE2MQTT!:", e);
+        catch(err){
+            if (this.DEBUG) {
+				console.error("GENERAL ERROR DURING INSTALL OF ZIGBEE2MQTT!:", err);
+			}
             this.busy_installing_z2m = false;
             //this.run_zigbee2mqtt(); // TODO: does this make sense?
         }
@@ -1533,8 +1827,10 @@ class ZigbeeMqttAdapter extends Adapter {
                 execSync(`sudo rm ${this.zigbee2mqtt_configuration_file_path}`);
             }
 			return true;
-		} catch (error) {
-			console.error('Error deleting:', error);
+		} catch (err) {
+			if (this.DEBUG) {
+				console.error('caught error deleting:', err);
+			}
 			return false;
 		}
 		return false;
@@ -1585,7 +1881,7 @@ class ZigbeeMqttAdapter extends Adapter {
                     this.z2m_had_error = false;
                     this.usb_port_issue = false;
                     this.find_missing_stick_attempted = false;
-                    this.fix_usb_stick_attempted = false;
+                    this.fix_usb_stick_attempted_timestamp = false;
 					this.find_missing_stick_attempted = false;
                     //this.ping_things();
                     
@@ -1623,10 +1919,11 @@ class ZigbeeMqttAdapter extends Adapter {
                         console.log("\nReceived health check response message. Data = " + data.toString());
                     }
                     const health_data = JSON.parse(data.toString());
-                    console.log("parsed health_data: ", health_data);
-                    console.log("parsed health_data.data: ", health_data.data);
-                     console.log("parsed health_data.data.healthy: ", health_data.data.healthy);
-                    
+                    if (this.DEBUG) {
+						console.log("parsed health_data: ", health_data);
+                    	console.log("parsed health_data.data: ", health_data.data);
+                    	console.log("parsed health_data.data.healthy: ", health_data.data.healthy);
+                    }
                     if(health_data.data.health == true){
                         this.sendPairingPrompt("Zigbee network is healthy");
                     }
@@ -1634,8 +1931,10 @@ class ZigbeeMqttAdapter extends Adapter {
                         this.sendPairingPrompt("Zigbee network is unhealthy");
                     }
                 }
-                catch(e){
-                    console.error("Error handling health check response: ", e);
+                catch(err){
+                    if (this.DEBUG) {
+						console.error("Error handling health check response: ", err);
+					}
                 }
             }
 
@@ -1660,14 +1959,18 @@ class ZigbeeMqttAdapter extends Adapter {
                         try{
                             //console.log("this.persistent_data.devices_overview[device_id].type: " + this.persistent_data.devices_overview[device_id].type);
                             if(this.persistent_data.devices_overview[device_id].type == 'Router' && this.DEBUG){
-                                console.log(">> router <<");
+                                if (this.DEBUG) {
+									console.log(">> router <<");
+								}
                             }
                             //if(typeof this.persistent_data.devices_overview[device_id].type != 'undefined'){
                             //    console.log("availability: type data in devices_overview: " + this.persistent_data.devices_overview[device_id].type);
                             //}
                         }
-                        catch(e){
-                            console.log("availability error: that device had no type data in devices_overview");
+                        catch(err){
+                            if (this.DEBUG) {
+								console.log("caught availability error: that device had no type data in devices_overview: err: ", err);
+							}
                         }
 
     					if (data == "offline") { // && device.connected == true ){
@@ -1741,7 +2044,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
     					} else if (data == "online") { //  && device.connected == false ){
     						if (this.DEBUG) {
-    							console.log("O N L I N E. device_id: " + device_id);
+    							console.log("O N L I N E. device_id: ", device_id);
     						}
     						this.devices[device_id].connected = true;
     						device.connectedNotify(true);
@@ -1847,18 +2150,24 @@ class ZigbeeMqttAdapter extends Adapter {
                                     //this.addDevice(device);
                                 }
                             }
-                            catch(e){
-                                console.log("Error while parsing device information: ", e);
+                            catch(err){
+                                if (this.DEBUG) {
+									console.log("caught error while parsing device information: ", err);
+								}
                             }
 						
     					}
-    				} catch (error) {
-    					console.log("Error parsing /bridge/devices: " + error);
+    				} catch (err) {
+    					if (this.DEBUG) {
+							console.log("caught error parsing /bridge/devices: ", err);
+						}
                         return;
     				}
     			}
-    		} catch (error) {
-    			console.log("msg parsing error (not valid json?): ", error);
+    		} catch (err) {
+    			if (this.DEBUG) {
+					console.log("msg parsing error (not valid json?): ", err);
+				}
                 return;
     		}
 
@@ -2070,7 +2379,6 @@ class ZigbeeMqttAdapter extends Adapter {
                                 this.save_persistent_data();
                             }
                         
-                        
                         }
                         catch(e){
                             console.log("Error appending weather prediction based on barometric pressure: ", e);
@@ -2092,7 +2400,6 @@ class ZigbeeMqttAdapter extends Adapter {
                             //console.log(key);
                         }
                         
-
                     
                         //
                         //  SOME PROPERTIES ARE IGNORED
@@ -3403,7 +3710,6 @@ class ZigbeeMqttAdapter extends Adapter {
                 }
                 
             }
-            
 
 		}
         catch (error){

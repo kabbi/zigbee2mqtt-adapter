@@ -41,6 +41,11 @@
 }
 
 
+body.developer .extension-zigbee2mqtt-adapter-hide-if-developer,
+body:not(.developer) .extension-zigbee2mqtt-adapter-show-if-developer{
+	display:none!important;
+}
+
 /*
 #extension-zigbee2mqtt-adapter-title #extension-zigbee2mqtt-adapter-tutorial-button{
 	opacity:0;
@@ -54,6 +59,12 @@
 }
 */
 
+
+.extension-zigbee2mqtt-adapter-flex-center{
+	display:flex;
+	align-items:center;
+	justify-content:center;
+}
 
 
 #extension-zigbee2mqtt-adapter-view button{
@@ -91,6 +102,25 @@
 
 .developer .extension-zigbee2mqtt-adapter-developer-only{
     display:block;
+}
+
+.extension-zigbee2mqtt-adapter-area{
+	margin:4rem auto;
+	padding:2rem;
+	border-radius:.8rem;
+	background-color:rgba(0,0,0,.15);
+}
+
+#extension-zigbee2mqtt-adapter-zigbee-radio-serial-port-image{
+	min-width:64px;
+	min-height:64px;
+	margin-right:2rem;
+}
+
+#extension-zigbee2mqtt-adapter-zigbee-radio-container button{
+    display: block;
+    margin-left: auto;
+	font-size:1.8rem;
 }
 
 /*  DELETE  */
@@ -461,15 +491,12 @@
 	text-align:center;
 }
 
-
-
 .extension-zigbee2mqtt-adapter-line1{
 	display:flex;
 	flex-wrap:wrap;
 	align-items:start;
 	width:100%;
 }
-
 
 .extension-zigbee2mqtt-adapter-line2{
 	display:flex;
@@ -651,6 +678,22 @@
 }
 
 
+#extension-zigbee2mqtt-adapter-zigbee-radio-serial-port:not(:empty)::before {
+    content: '';
+    background-image: url(../images/USB_radio.svg);
+    background-size: 4rem;
+    background-position: center;
+    background-repeat: no-repeat;
+    width: 6rem;
+    height: 6rem;
+    min-width: 6rem;
+    min-height: 6rem;
+    display: inline-block;
+    background-color: rgba(255, 255, 255, .2);
+    margin-right: 1rem;
+    border-radius: 3rem;
+}
+
 #extension-zigbee2mqtt-adapter-usb-port-issue-hint,
 #extension-zigbee2mqtt-adapter-serial-hint{
     max-width:60rem;
@@ -678,6 +721,38 @@
 
 
 
+
+/*  NOTE: this css is copied from the candleappstore addon. Any changes made here should be made there too (and in power settings and zigbee2mqtt..). */
+#extension-candleappstore-flash-message-container{
+	position:fixed;
+	top:0;
+	left:0;
+	width:100%;
+	min-height:0;
+	height:9.6rem;
+	max-height:9.6rem;
+	pointer-events:none;
+	background-color:#0a273c;
+	color:white;
+	font-weight:bold;
+	text-align:center;
+	overflow:hidden;
+	transition: all 0.1s ease-out;
+	padding:1rem;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	font-size:1.6rem;
+	line-height:160%;
+	z-index:1111;
+}
+#extension-candleappstore-flash-message-container:empty{
+	min-height:0;
+	height:0;
+	max-height:0;
+	padding:0;
+	transition: all 0.1s ease-in;
+}
 
 
 

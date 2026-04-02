@@ -29,20 +29,42 @@
 			this.previous_map_data = "";
             this.all_things = {};
             this.title_lookup_table = {};
-
+			
+			this.busy_doing_poll = false;
+			
+			this.serial_port_path = null;
+			this.missing_usb_stick = null;
+			
+			this.serial_port_name_el = null;
+			this.find_usb_stick_container_el = null;
+			
+			this.page_visible = true;
+			document.addEventListener("visibilitychange", () => {
+			  if (document.hidden) {
+				  if(this.debug){
+					  console.log("zigbee2mqtt debug: page became hidden");
+				  }
+				  this.page_visible = false;
+			  } else {
+				  if(this.debug){
+					  console.log("zigbee2mqtt debug: page became visible");
+				  }
+				  this.page_visible = true;
+			  }
+			});
+			
 			fetch(`/extensions/${this.id}/views/content.html`)
 	        .then((res) => res.text())
 	        .then((text) => {
 				//console.log("fetched html:");
 				//console.log(text);
 	         	this.content = text;
-	  		 	  
-                    if( document.location.href.endsWith("extensions/zigbee2mqtt-adapter") ){
-					    //console.log(document.location.href);
-	  		  		    this.show();
-	  		  	    }
+				
+                if( window.location.pathname == "/extensions/zigbee2mqtt-adapter" ){
+	  		  		this.show();
+	  		  	}
 	        })
-	        .catch((e) => console.error('Failed to fetch content:', e));
+	        .catch((err) => console.error('zigbee2mqtt: failed to fetch content:', err));
 	    }
 
 
@@ -53,26 +75,25 @@
 			//console.log(this.content);
 			
             //console.log("this.debug: " + this.debug);
-            
+            /*
 			try{
-				clearInterval(window.zigbee2mqtt_interval);
+				if(window.zigbee2mqtt_interval){
+					clearInterval(window.zigbee2mqtt_interval);
+				}
 			}
 			catch(e){
 				//console.log("no interval to clear?: " + e);
 			}
+			*/
             
-            const main_view = document.getElementById('extension-zigbee2mqtt-adapter-view');
-            
-			//console.log("main view: ", main_view);
 			if(this.content == ''){
-				console.log("show: content was empty");
-				//main_view.innerHTML = "<h1>Error loading, try reloading the page</h1>";
-
+				if(this.debug){
+					console.log("zigbee2mqtt: show: content was empty");
+				}
 				return;
 			}
-            main_view.innerHTML = this.content;
+            this.view.innerHTML = this.content;
             
-            //console.log("main view: ", main_view);
             
             try{
         	    API.getThings().then((things) => {
@@ -108,8 +129,10 @@
                     this.request_devices_list();
                 });
             }
-			catch(e){
-				console.log("Error calling API.getThings(): " + e);
+			catch(err){
+				if(this.debug){
+					console.error("zigbee2mqtt: caught error calling API.getThings(): ", err);
+				}
                 this.request_devices_list();
 			}
             
@@ -118,9 +141,9 @@
 			
 			
 
-			const list = document.getElementById('extension-zigbee2mqtt-adapter-list');
+			const list = this.view.querySelector('#extension-zigbee2mqtt-adapter-list');
 		
-			const pre = document.getElementById('extension-zigbee2mqtt-adapter-response-data');
+			//const pre = document.getElementById('extension-zigbee2mqtt-adapter-response-data');
 			
 			
 			
@@ -128,10 +151,10 @@
 
 
 			// Attach click event to update map button
-			document.getElementById('extension-zigbee2mqtt-adapter-update-map-button').addEventListener('click', (event) => {
+			this.view.querySelector('#extension-zigbee2mqtt-adapter-update-map-button').addEventListener('click', () => {
 				//console.log("clicked on update map button");
-				document.getElementById("extension-zigbee2mqtt-adapter-graphviz-container").innerHTML = '<div class="extension-zigbee2mqtt-adapter-spinner"><div></div><div></div><div></div><div></div></div>';
-				document.getElementById('extension-zigbee2mqtt-adapter-update-map-button').disabled = true;
+				this.view.querySelector('#extension-zigbee2mqtt-adapter-graphviz-container').innerHTML = '<div class="extension-zigbee2mqtt-adapter-spinner"><div></div><div></div><div></div><div></div></div>';
+				this.view.querySelector('#extension-zigbee2mqtt-adapter-update-map-button').disabled = true;
 				
 				this.asked_for_map = true;
 				//console.log("this.asked_for_map is now: " + this.asked_for_map);
@@ -142,12 +165,14 @@
 
 		        ).then((body) => {
 					if(this.debug){
-                        console.log("update-map response: ", body);
+                        console.log("zigbee2mqtt debug: update-map response: ", body);
                     }
 					//document.getElementById("extension-zigbee2mqtt-adapter-graphviz-container").innerHTML = body.status;
 				    
-		        }).catch((e) => {
-		  			console.log("Error sending update map request: ", e);
+		        }).catch((err) => {
+		  			if(this.debug){
+						console.error("zigbee2mqtt debug: caught error sending update map request: ", err);
+					}
 		        });
 			});
 
@@ -156,14 +181,14 @@
 
 
             // Save new network security values
-            document.getElementById('extension-zigbee2mqtt-adapter-save-security-button').addEventListener('click', (event) => {
+            this.view.querySelector('#extension-zigbee2mqtt-adapter-save-security-button').addEventListener('click', (event) => {
                 //console.log("save zigbee security button clicked");
-                const new_pan_id = document.getElementById("extension-zigbee2mqtt-adapter-security-pan-id").value;
-                const new_network_key = document.getElementById("extension-zigbee2mqtt-adapter-security-network-key").value;
+                const new_pan_id = this.view.querySelector('#extension-zigbee2mqtt-adapter-security-pan-id').value;
+                const new_network_key = this.view.querySelector('#extension-zigbee2mqtt-adapter-security-network-key').value;
                 //console.log(new_pan_id,new_network_key);
                 
                 if(new_pan_id == "" || new_network_key == ""){
-                    alert("security values cannot be empty");
+                    this.flash_message("security values cannot be empty");
                     return;
                 }
                 if( confirm("Are you sure you want to set these security values?") ){
@@ -174,12 +199,14 @@
 
     		        ).then((body) => {
                         //console.log("new values have been saved");
-                        alert("The security values were saved");
+                        this.flash_message("The security values were saved");
     					//console.log(body);
     					//document.getElementById("extension-zigbee2mqtt-adapter-graphviz-container").innerHTML = body.status;
 
-    		        }).catch((e) => {
-    		  				//console.log("Error sending security values: " + e.toString());
+    		        }).catch((err) => {
+    		  			if(this.debug){
+							console.error("zigbee2mqtt debug: caught error sending security values: ", err);
+						}
     		        });
                     
                 }
@@ -189,10 +216,8 @@
             
             
             // Reinstall button
-            document.getElementById('extension-zigbee2mqtt-adapter-reinstall-button').addEventListener('click', (event) => {
-                //console.log("re-install button clicked");
-                //console.log(new_pan_id,new_network_key);
-                
+            this.view.querySelector('#extension-zigbee2mqtt-adapter-reinstall-button').addEventListener('click', () => {
+
                 if( confirm("Are you absolutely sure you want to re-install Zigbee2MQTT? Only proceed if you understand the risks!") ){
                     
     		        window.API.postJson(
@@ -200,15 +225,19 @@
     					{"action":"re-install"}
 
     		        ).then((body) => {
-                        document.getElementById('extension-zigbee2mqtt-adapter-content-container').innerHTML = '<h3 id="extension-zigbee2mqtt-adapter-title"><img id="extension-zigbee2mqtt-adapter-main-page-icon" src="/extensions/zigbee2mqtt-adapter/images/menu-icon.svg">Zigbee2MQTT</h3><br/><br/><h4 style="text-align:center">Please wait...</h4>';
-                        
+						const content_container_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-content-container');
+		                if(content_container_el){
+		                    content_container_el.innerHTML = '<h3 id="extension-zigbee2mqtt-adapter-title"><img id="extension-zigbee2mqtt-adapter-main-page-icon" src="/extensions/zigbee2mqtt-adapter/images/menu-icon.svg">Zigbee2MQTT</h3><br/><br/><h4 style="text-align:center">Please wait...</h4>';
+                        }
                         window.setTimeout(() => {
                             //console.log("refreshing page so that 'still installing' message is shown");
                             window.location.reload(false);
                         }, 40000);
                         
-    		        }).catch((e) => {
-    		  			//console.log("Error sending security values: " + e.toString());
+    		        }).catch((err) => {
+    		  			if(this.debug){
+							console.error("zigbee2mqtt debug: caught error sending security values: ", err);
+						}
     		        });
                     
                 }
@@ -216,188 +245,192 @@
             });
 
 
+			const find_radio_wizard_start_button_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-button');
+            if(find_radio_wizard_start_button_el){
+				find_radio_wizard_start_button_el.addEventListener('click', () => {
+	            	this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-container').classList.remove('extension-zigbee2mqtt-adapter-hidden');
+					this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-success').classList.add('extension-zigbee2mqtt-adapter-hidden');
+					this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-step2').classList.remove('extension-zigbee2mqtt-adapter-hidden');
+					this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-step2').classList.add('extension-zigbee2mqtt-adapter-hidden');
+					this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-failed').classList.add('extension-zigbee2mqtt-adapter-hidden');
+	            });
+            }
+			
+            // Add USB stick BEFORE button
+			const add_radio_before_button_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-add-radio-before-button');
+			if(add_radio_before_button_el){
+	            add_radio_before_button_el.addEventListener('click', () => {
+
+	                add_radio_before_button_el.classList.add('extension-zigbee2mqtt-adapter-hidden');
+                
+			        window.API.postJson(
+			         "/extensions/zigbee2mqtt-adapter/api/ajax",
+						{"action":"find_usb_stick_before"}
+
+			        ).then((body) => {
+	                    if(this.debug){
+							console.log("zigbee2mqtt debug: find_usb_stick_before response: ", body);
+						}
+	                    if(body['state'] == true){
+	                        //console.log("USB stick was detected!");
+	                        this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-step2').classList.remove('extension-zigbee2mqtt-adapter-hidden');
+	                    }
+						add_radio_before_button_el.classList.remove('extension-zigbee2mqtt-adapter-hidden');
+                    
+			        }).catch((err) => {
+						this.flash_message("Connection error");
+			  			if(this.debug){
+							console.log("zigbee2mqtt debug: caught error in find_usb_stick_before request: ", err);
+						}
+						add_radio_before_button_el.classList.remove('extension-zigbee2mqtt-adapter-hidden');
+			        });
+                
+	            });
+			}
+            
+			
+			
+            // Add USB stick AFTER button
+			const add_radio_after_button_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-add-radio-after-button');
+            if(add_radio_after_button_el){
+				add_radio_after_button_el.addEventListener('click', () => {
+
+	                add_radio_after_button_el.classList.add('extension-zigbee2mqtt-adapter-hidden');
+					this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-failed').classList.add('extension-zigbee2mqtt-adapter-hidden');
+                
+			        window.API.postJson(
+			         "/extensions/zigbee2mqtt-adapter/api/ajax",
+						{"action":"find_usb_stick_after"}
+
+			        ).then((body) => {
+	                    if(this.debug){
+							console.log("zigbee2mqtt debug: find_usb_stick_after response: ", body);
+						}
+	                    if(body['state'] == true){
+	                        if(this.debug){
+								console.log("zigbee2mqtt debug: USB stick was succesfully detected");
+							}
+							this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-step1').classList.add('extension-zigbee2mqtt-adapter-hidden');
+	                        this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-step2').classList.add('extension-zigbee2mqtt-adapter-hidden');
+							this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-success').classList.remove('extension-zigbee2mqtt-adapter-hidden');
+	                    }
+						add_radio_after_button_el.classList.remove('extension-zigbee2mqtt-adapter-hidden');
+                    
+			        }).catch((err) => {
+						this.flash_message("Connection error");
+			  			if(this.debug){
+							console.log("zigbee2mqtt debug: caught error in find_usb_stick_after request: ", err);
+						}
+						add_radio_after_button_el.classList.remove('extension-zigbee2mqtt-adapter-hidden');
+			        });
+                
+	            });
+            }
+			
+
             
 
             // Scan for USB stick button
-            document.getElementById('extension-zigbee2mqtt-adapter-look-for-usb-stick-button').addEventListener('click', (event) => {
-                //console.log("re-install button clicked");
-                //console.log(new_pan_id,new_network_key);
-                
-                document.getElementById('extension-zigbee2mqtt-adapter-look-for-usb-stick-button').style.display = 'none';
-                
-                
-		        window.API.postJson(
-		         "/extensions/zigbee2mqtt-adapter/api/ajax",
-					{"action":"look_for_usb_stick"}
+			const start_usb_stick_wizard_button_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-look-for-usb-stick-button');
+            if(start_usb_stick_wizard_button_el){
+				start_usb_stick_wizard_button_el.addEventListener('click', () => {
 
-		        ).then((body) => {
-                    //console.log("look_for_usb_stick response: ", body);
-                    if(body['state'] == true){
-                        //console.log("USB stick was detected!");
-                        document.getElementById('extension-zigbee2mqtt-adapter-serial-hint').style.display = 'none';
-                        window.location.reload(false);
-                    }
-                    else{
-                        document.getElementById('extension-zigbee2mqtt-adapter-look-for-usb-stick-button').style.display = 'inline-block';
-                    }
-                    
-		        }).catch((e) => {
-		  			console.log("Error in look_for_usb_stick request: ", e);
-                    document.getElementById('extension-zigbee2mqtt-adapter-look-for-usb-stick-button').style.display = 'inline-block';
-		        });
+					start_usb_stick_wizard_button_el.classList.add('extension-zigbee2mqtt-adapter-hidden');
                 
-            });
+			        window.API.postJson(
+			         "/extensions/zigbee2mqtt-adapter/api/ajax",
+						{"action":"look_for_usb_stick"}
+
+			        ).then((body) => {
+	                    //console.log("look_for_usb_stick response: ", body);
+	                    if(body['state'] == true){
+	                        //console.log("USB stick was detected!");
+	                        this.view.querySelector('#extension-zigbee2mqtt-adapter-serial-hint').style.display = 'none';
+	                        window.location.reload(false);
+	                    }
+	                    else{
+	                        start_usb_stick_wizard_button_el.classList.remove('extension-zigbee2mqtt-adapter-hidden');
+	                    }
+                    
+			        }).catch((err) => {
+			  			if(this.debug){
+							console.error("zigbee2mqtt adapter: caught error in look_for_usb_stick request: ", err);
+						}
+	                    start_usb_stick_wizard_button_el.classList.remove('extension-zigbee2mqtt-adapter-hidden');
+			        });
+                
+	            });
+            }
+			
             
 
 
             // Do health check button
-            document.getElementById('extension-zigbee2mqtt-adapter-health-check-button').addEventListener('click', (event) => {
-                //console.log("re-install button clicked");
-                //console.log(new_pan_id,new_network_key);
-                
-                document.getElementById('extension-zigbee2mqtt-adapter-health-check-button').style.display = 'none';
-                
+			const health_check_button_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-health-check-button');
+            health_check_button_el.addEventListener('click', () => {
+				
+                health_check_button_el.style.display = 'none';
                 
 		        window.API.postJson(
 		         "/extensions/zigbee2mqtt-adapter/api/ajax",
 					{"action":"health_check"}
 
 		        ).then((body) => {
-                    console.log("health check response: ", body);
+                    if(this.debug){
+						console.log("zigbee2MQTT debug: health check response: ", body);
+                    }
                     
-                    
-		        }).catch((e) => {
-		  			console.log("Error doing health check request: ", e);
-                    document.getElementById('extension-zigbee2mqtt-adapter-health-check-button').style.display = 'inline-block';
+		        }).catch((err) => {
+		  			if(this.debug){
+						console.log("zigbee2MQTT debug: caught error doing health check request: ", err);
+					}
+                    health_check_button_el.style.display = 'inline-block';
 		        });
                 
             });
             
 
 
-		
-		    //setTimeout(() => alert('Hello'), 1000);
-			window.zigbee2mqtt_interval = setInterval( () => {
-				if(this.debug){
-                    //console.log("tick");
-                }
-				try{
-					if( this.asked_for_map || this.updating_firmware || this.updating_z2m){
-						if(this.debug){
-                            //console.log("asked for map, firmware update, or updating z2m was true");
-                        }
+			if(typeof window.zigbee2mqtt_interval == 'undefined' || window.zigbee2mqtt_interval == null){
+				window.zigbee2mqtt_interval = setInterval( () => {
+					if(this.debug){
+	                    console.log("zigbee2MQTT debug:  at interval");
+						console.log("this.busy_doing_poll, this.page_visible, window.location.pathname: ", this.busy_doing_poll, this.page_visible, window.location.pathname);
+	                }
+					try{
+						if(this.busy_doing_poll == false && this.page_visible && window.location.pathname == "/extensions/zigbee2mqtt-adapter"){ //  && this.asked_for_map || this.updating_firmware || this.updating_z2m
+							if(this.debug){
+	                            console.log("zigbee2MQTT debug: calling poll");
+	                        }
+							this.busy_doing_poll = true;
 						
-					  	window.API.postJson(`/extensions/${this.id}/api/ajax`,
-						{"action":"poll"}
-                        
-					        ).then((body) => {
+						  	window.API.postJson(`/extensions/${this.id}/api/ajax`,
+								{"action":"poll"}
+							).then((body) => {
 								if(this.debug){
-                                    console.log("received poll response:");
-								    console.log(body);
-                                }
-                                
-								if(this.asked_for_map){
-									if(body['map'] != this.previous_map_data && body['map'] != ""){
-										this.previous_map_data = body['map'];
-										//console.log("Received new map data!");
-										//console.log(body['map']);
-									
-								      	// Generate the Visualization of the Graph into "svg".
-								      	if(body['map'] != ""){
-											const svg = Viz(body['map'], "svg");
-									      	document.getElementById("extension-zigbee2mqtt-adapter-graphviz-container").innerHTML = svg;
-								      	}
-									
-										// If we received the actual map, stop requesting the map data
-										if(body['map'] != 'digraph G { "Breathe in" -> "Breathe out" "Breathe out" -> "Relax"}'){
-											this.asked_for_map = false;
-											pre.innerText = "";
-											document.getElementById('extension-zigbee2mqtt-adapter-update-map-button').disabled = false;
-										}else{
-											//console.log("relax");
-										}
-									}
-									else{
-										//console.log("not ok response while getting items list");
-										if(this.debug){
-                                            pre.innerText = body['status'];
-                                        }
-									}
+	                                console.log("zigbee2MQTT debug: received poll response: ", body);
+	                            }
+								this.parse_body(body);
+								this.busy_doing_poll = false;
+							}).catch((err) => {
+								if(this.debug){
+									console.error("zigbee2MQTT debug: caught error calling poll: ", err);
 								}
-								
-                                // Check for progress on the firmware update
-                                if(this.debug){
-                                    //console.log("this.updating_firmware = " + this.updating_firmware);
-                                }
-								if(this.updating_firmware){
-									if(body['updating_firmware'] == false){ // this occurs when Z2M sends a message to /bridge/response/device/ota_update/update, which signals a big change in the status of the firmware update progress. E,g, that it finished.
-										
-										if(body['update_result']['status'] == 'ok'){
-											pre.innerText = "Firmware updated succesfully";
-                                            //alert("Firmware was updated succesfully");
-										}
-										else if(body['update_result']['status'] == 'error'){
-                                            alert("Firmware update failed! The error was: " + body['update_result']['error']);
-											pre.innerText = "The firmware update failed: " + body['update_result']['error'];
-										}
-                                        else if(body['update_result']['status'] == 'idle'){
-                                            pre.innerText = "";
-                                        }
-										
-										this.updating_firmware = false;
-                                        this.request_devices_list(); // also then regenerates the devices list so the update progress indicator is shown.
-										
-									}
-									else if(body['updating_firmware'] == true){ // messages while updating
-										//console.log("not ok response while getting items list");
-                                        if(body['update_result']['status'] == 'error'){
-										    if(this.debug){
-                                                pre.innerText = body['update_result']['error']; // likely the message that an update is already in progress
-                                            }
-                                        }
-                                        if(body['update_result']['status'] == 'idle'){
-                                            if(this.debug){
-                                                //console.log("update result status was still idle"); // this means the update is still in progress.
-                                            }
-                                        }
-									}
-                                    //this.request_devices_list(); // also then regenerates the devices list so the update progress indicator is shown.
-                                    this.update_progress_bar(body['devices']);
-								}
-								
-                                if(this.updating_z2m){
-                                    //console.log("updating z2m?");
-                                    
-                                    if(body.installed && !body.started){
-                                        //console.log("installed, but not started yet");
-                                    }
-                                    this.request_devices_list();
-                                    if(body.started){
-                                        //console.log("Z2M moved from installing to started");
-                                        this.updating_z2m = false;
-                                    }
-                                    
-                                }
-                                
-
-					        }).catch((e) => {
-					  			//console.log("Error getting timer items: " + e.toString());
-								//console.log("Error while waiting for map/firmware update: ", e);
-								pre.innerText = "Connection error";
-					        });	
+								this.busy_doing_poll = false;
+							});
+						
+						}
 					}
-					else{
-						//console.log("this.asked_for_map was not true");
-						//pre.innerText = "Not waiting for map.";
-					}
-				}
-				catch(e){
-                    if(this.debug){
-                        console.log("Zigbee2MQTT polling error: ", e);
-                    }
-                }
+					catch(err){
+	                    if(this.debug){
+	                        console.error("zigbee2MQTT debug: caught polling error: ", err);
+	                    }
+						this.busy_doing_poll = false;
+	                }
 				
-			}, 3000);
+				}, 3000);
+			}
+			
 			
 
 			// TABS
@@ -414,6 +447,19 @@
 			document.getElementById('extension-zigbee2mqtt-adapter-tab-button-security').addEventListener('click', (event) => {
 				//console.log(event);
 				document.getElementById('extension-zigbee2mqtt-adapter-content').classList = ['extension-zigbee2mqtt-adapter-show-tab-security'];
+				
+			  	window.API.postJson(`/extensions/${this.id}/api/ajax`,
+					{"action":"get_security"}
+				).then((body) => {
+					if(this.debug){
+                        console.log("zigbee2MQTT debug: received get_security response: ", body);
+                    }
+					this.parse_body(body);
+				}).catch((err) => {
+					if(this.debug){
+						console.error("zigbee2MQTT debug: caught error calling get_security: ", err);
+					}
+				});
 			});
 			document.getElementById('extension-zigbee2mqtt-adapter-tab-button-tutorial').addEventListener('click', (event) => {
 				//console.log(event);
@@ -430,17 +476,20 @@
 			
 			try{
                 if(document.getElementById('extension-zigbee2mqtt-adapter-menu-item').classList.contains('selected') == false){
-                    clearInterval(window.zigbee2mqtt_interval);
+                    //clearInterval(window.zigbee2mqtt_interval);
                     this.view.innerHTML = "";
                 }
 			}
-            catch(e){
-                console.log("Zigbee2mqtt addin: error in hide(): ", e);
+            catch(err){
+                if(this.debug){
+					console.log("Zigbee2mqtt addon: caught error in hide: ", err);
+				}
             }
             
-            
-            
 		}
+		
+		
+		
 		
 	
     
@@ -454,74 +503,14 @@
 	          '/extensions/zigbee2mqtt-adapter/api/ajax',
 						{"action": "init"}
 	        ).then((body) => {
-				//console.log("Zigbee2MQTT: init response received: ", body);
-				//console.log(body.devices);
-                const list2 = document.getElementById('extension-zigbee2mqtt-adapter-list');
-                //console.log("list2:",list2);
-                
-                if(body.installed == false){
-                    //console.log("STILL INSTALLING");
-			        this.updating_z2m = true;
-                    
-    				if(typeof list2 != 'undefined'){
-                        list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Still installing...</h2><br/><div class="extension-zigbee2mqtt-adapter-spinner"><div></div><div></div><div></div><div></div></div><br/><p>It takes about 30 minutes for Zigbee2MQTT to be fully downloaded and installed.</p><p>Come back a little later. If this message is gone, that means the intallation has finished.</p><p style="font-style:italic">Do not power-off or restart this controller until installation is complete!</p></div>';
-    				    return;
-    				}
-                    else{
-                        alert("The Zigbee2MQTT addon is still installing itself. Please wait about 30 minutes before rebooting the system.");
-                    }
-                }
-                else if(body.serial == null){
-                    document.getElementById('extension-zigbee2mqtt-adapter-serial-hint').style.display = 'block';
-                }
-                else if(body.usb_port_issue != false){
-                    document.getElementById('extension-zigbee2mqtt-adapter-usb-port-issue-hint').style.display = 'block';
-                }
-                else if(body.started == false){
-    				if(typeof list2 != 'undefined'){
-                        list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Zigbee2MQTT has not started (yet).</h2><br/><div class="extension-zigbee2mqtt-adapter-spinner"><div></div><div></div><div></div><div></div></div><br/><p>It may be that it is still starting up. If this message is still here after two minutes, then something is probably wrong. In that case, try rebooting your controller.</p><p>Also make sure no other Zigbee addons are running.</p></div>';
-    				    return;
-    				}
-                }
-                else{
-                    if(typeof list2 != 'undefined'){
-                        list2.innerHTML = "";
-                        //console.log("installed and running, so will show zigbee devices list. Calling regenerate_items()");
-                        this.regenerate_items(body.devices);
-                    }
-                    else{
-                        //console.log("Zigbee2MQTT: the target element no longer exists. User has likely switched to another page.");
-                    }
-                }
-                /*
-                if(typeof body.serial != 'undefined'){
-                    //console.log("body.serial was not undefined. It was: " + body.serial);
-                    if(body.serial == null && body.installed == true){
-                        console.log('no USB stick detected?');
-                        
-                    }
-                }
-                */
-                
-                if(typeof body.security != 'undefined'){
-                    //console.log("security values were present in init data. pan_id: " + body.security.pan_id);
-                    document.getElementById('extension-zigbee2mqtt-adapter-security-pan-id').value = body.security.pan_id;
-                    document.getElementById('extension-zigbee2mqtt-adapter-security-network-key').value = body.security.network_key;
-                }
-				
-				
-                if(typeof body.debug != 'undefined'){
-                    this.debug = body.debug;
-                    if(body.debug){
-                        document.getElementById('extension-zigbee2mqtt-adapter-debug-warning').style.display = 'block';
-                    }
-                }
+				this.parse_body(body);
                 
 
 	        }).catch((e) => {
 	  			//console.log("Error sending init request: " + e.toString());
-                if(document.getElementById('extension-zigbee2mqtt-adapter-content-container') != null){
-                    document.getElementById('extension-zigbee2mqtt-adapter-content-container').innerHTML = '<div style="text-align:center"><h1>The Zigbee2Mqtt addon did not respond (yet)</h1><p>It might just be a temporary connection error. Try refreshing the page in a few seconds.</p></div>';
+				const content_container_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-content-container');
+                if(content_container_el){
+                    content_container_el.innerHTML = '<div style="text-align:center"><h1>The Zigbee2Mqtt addon did not respond (yet)</h1><p>It might just be a temporary connection error. Try refreshing the page in a few seconds.</p></div>';
                     setTimeout(function(){
                         window.location.reload(true);
                     }, 10000);
@@ -530,6 +519,219 @@
 				//document.getElementById('extension-zigbee2mqtt-adapter-response-data').innerText = "Error sending init request: " + e.toString();
 	        });
 		}
+	
+	
+	
+	
+		parse_body(body){
+			
+			// poll
+			
+            if(typeof body.debug != 'undefined'){
+                this.debug = body.debug;
+                if(this.debug){
+					const debug_warning_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-debug-warning');
+					if(debug_warning_el){
+						debug_warning_el.style.display = 'block';
+					}
+                }
+            }
+			
+			if(this.debug){
+				console.log("Zigbee2MQTT: parse_body:  body: ", body);
+			}
+			
+            if(typeof body.security != 'undefined'){
+                //console.log("security values were present in init data. pan_id: " + body.security.pan_id);
+				const pan_id_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-security-pan-id');
+				if(pan_id_el){
+	                pan_id_el.value = body.security.pan_id;
+	                this.view.querySelector('#extension-zigbee2mqtt-adapter-security-network-key').value = body.security.network_key;
+				}
+			}
+			
+			if(typeof body.serial_port_path == 'string' && typeof body.radio_serial_port == 'string'){
+				if(this.debug){
+					console.log("zigbee2mqtt debug: parse_body: body.radio_serial_port: ", body.radio_serial_port);
+				}
+				this.serial_port_path = body.serial_port_path;
+				
+				this.serial_port_name_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-zigbee-radio-serial-port');
+				if(this.serial_port_name_el){
+					this.serial_port_name_el.textContent = body.radio_serial_port + ' (' + body.serial_port_path + ')';
+				}
+			}
+			
+			if(typeof body.missing_usb_stick == 'boolean'){
+				if(this.debug){
+					//console.log("zigbee2mqtt debug: parse_body:  body.missing_usb_stick,this.find_usb_stick_container_el: ", body.missing_usb_stick, this.find_usb_stick_container_el);
+				}
+				this.missing_usb_stick = body.missing_usb_stick;
+				
+				this.find_usb_stick_container_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-zigbee-radio-container');
+				if(this.find_usb_stick_container_el){
+					if(this.missing_usb_stick){
+						this.find_usb_stick_container_el.classList.remove('extension-zigbee2mqtt-adapter-hidden');
+					}
+					else{
+						this.find_usb_stick_container_el.classList.add('extension-zigbee2mqtt-adapter-hidden');
+					}
+				}
+				else{
+					console.error("this.find_usb_stick_container_el?", this.find_usb_stick_container_el);
+				}
+			}
+			
+			
+			
+			
+			
+			if(this.asked_for_map){
+				if(typeof body['map'] == 'string' && body['map'] != this.previous_map_data && body['map'] != ""){
+					this.previous_map_data = body['map'];
+					//console.log("Received new map data!");
+					//console.log(body['map']);
+					const graph_container_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-graphviz-container');
+			      	if(graph_container_el){
+						// Generate the Visualization of the Graph into "svg".
+				      	if(body['map'] != ""){
+							const svg = Viz(body['map'], "svg");
+					      	graph_container_el.innerHTML = svg;
+				      	}
+						
+						// If we received the actual map, stop requesting the map data
+						if(body['map'] != 'digraph G { "Breathe in" -> "Breathe out" "Breathe out" -> "Relax"}'){
+							this.asked_for_map = false;
+							this.view.querySelector('#extension-zigbee2mqtt-adapter-update-map-button').disabled = false;
+						}else{
+							//console.log("relax");
+						}
+			      	}
+					
+				
+					
+				}
+			}
+			
+			if(this.updating_firmware){
+				if(typeof body['updating_firmware'] == 'boolean' && body['updating_firmware'] == false){ // this occurs when Z2M sends a message to /bridge/response/device/ota_update/update, which signals a big change in the status of the firmware update progress. E,g, that it finished.
+					
+					if(body['update_result']['status'] == 'ok'){
+						this.flash_message("Firmware updated succesfully");
+					}
+					else if(body['update_result']['status'] == 'error'){
+                        if(this.debug){
+							console.error("Firmware update failed! The error was: " + body['update_result']['error']);
+						}
+						this.flash_message("The firmware update failed: " + body['update_result']['error']);
+					}
+                    else if(body['update_result']['status'] == 'idle'){
+                        
+                    }
+					
+					this.updating_firmware = false;
+                    this.request_devices_list(); // also then regenerates the devices list so the update progress indicator is shown.
+					
+				}
+				else if(body['updating_firmware'] == true){ // messages while updating
+					//console.log("not ok response while getting items list");
+                    if(body['update_result']['status'] == 'error'){
+					    if(this.debug){
+                            console.error("z2m: error while already updating firmware: ", body['update_result']['error']); // likely the message that an update is already in progress
+                        }
+                    }
+                    if(body['update_result']['status'] == 'idle'){
+                        if(this.debug){
+                            //console.log("update result status was still idle"); // this means the update is still in progress.
+                        }
+                    }
+				}
+                //this.request_devices_list(); // also then regenerates the devices list so the update progress indicator is shown.
+                if(typeof body['devices'] != 'undefined'){
+                	this.update_progress_bar(body['devices']);
+                }
+				
+			}
+			
+            if(this.updating_z2m){
+                //console.log("updating z2m?");
+                if(typeof body.installed == 'boolean' && typeof body.started == 'boolean'){
+	                if(body.installed && !body.started){
+	                    if(this.debug){
+							console.log("z2m installed, but not started yet");
+						}
+	                }
+	                this.request_devices_list();
+	                if(body.started){
+	                    if(this.debug){
+							console.log("Z2M moved from installing to started");
+						}
+	                    this.updating_z2m = false;
+	                }
+                }
+            }
+			
+			
+			
+			
+			
+			
+			// init
+			
+            const list2 = this.view.querySelector('#extension-zigbee2mqtt-adapter-list');
+
+            if(body.installed == false){
+                //console.log("STILL INSTALLING");
+		        this.updating_z2m = true;
+                
+				if(list2){
+                    list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Still installing...</h2><br/><div class="extension-zigbee2mqtt-adapter-spinner"><div></div><div></div><div></div><div></div></div><br/><p>It takes about 30 minutes for Zigbee2MQTT to be fully downloaded and installed.</p><p>Come back a little later. If this message is gone, that means the intallation has finished.</p><p style="font-style:italic">Do not power-off or restart this controller until installation is complete!</p></div>';
+				    return;
+				}
+                else{
+                    this.flash_message("The Zigbee2MQTT addon is still installing itself. Please wait about 30 minutes before rebooting the system.");
+                }
+            }
+			else if(this.missing_usb_stick == true){
+				
+				
+			}
+            else if(body.serial == null){
+				const serial_hint_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-serial-hint');
+                if(serial_hint_el){
+                	serial_hint_el.style.display = 'block';
+                }
+            }
+            else if(body.usb_port_issue != false){
+				const usb_port_issue_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-usb-port-issue-hint');
+				if(usb_port_issue_el){
+					usb_port_issue_el.style.display = 'block';
+				}
+            }
+            else if(list2 && this.missing_usb_stick == false){
+				
+				if(body.started == false){
+                    list2.innerHTML = '<div style="margin:4rem auto;padding:2rem;max-width:40rem;text-align:center; background-color:rgba(0,0,0,.1);border-radius:10px"><h2>Zigbee2MQTT has not started (yet).</h2><br/><div class="extension-zigbee2mqtt-adapter-spinner"><div></div><div></div><div></div><div></div></div><br/><p>It may be that it is still starting up. If this message is still here after two minutes, then something is probably wrong. In that case, try rebooting your controller.</p><p>Also make sure no other Zigbee addons are running.</p></div>';
+				    return;
+				}
+				else{
+                    list2.innerHTML = "";
+                    //console.log("installed and running, so will show zigbee devices list. Calling regenerate_items()");
+                    this.regenerate_items(body.devices);
+				}
+            }
+            else{
+                
+            }
+			
+		}
+	
+	
+	
+	
+	
+	
+	
 	
 	
 		//
@@ -541,11 +743,11 @@
 				//console.log("regenerating list");
 				//console.log(items);
 		
-				const pre = document.getElementById('extension-zigbee2mqtt-adapter-response-data');
-				const list = document.getElementById('extension-zigbee2mqtt-adapter-list');
-				const original = document.getElementById('extension-zigbee2mqtt-adapter-original-item');
+				//const pre = document.getElementById('extension-zigbee2mqtt-adapter-response-data');
+				const list = this.view.querySelector('#extension-zigbee2mqtt-adapter-list');
+				const original = this.view.querySelector('#extension-zigbee2mqtt-adapter-original-item');
 			
-				if(typeof list == 'undefined'){
+				if(!list){
 				    return;
 				}
 				list.innerHTML = "";
@@ -631,18 +833,17 @@
 							}
 						
 							var s = document.createElement("div");
-							var t = document.createTextNode( icon_name );
-							icon_name = icon_name.toLowerCase().replace(/ /g, '-');
-							const class_name = 'extension-zigbee2mqtt-adapter-icon-' + icon_name;
-							
-							s.appendChild(t);
+							s.textContent = icon_name;
+							const class_name = 'extension-zigbee2mqtt-adapter-icon-' + icon_name.toLowerCase().replace(/ /g, '-');
 							s.classList.add(class_name);                   
 							clone.querySelectorAll('.extension-zigbee2mqtt-adapter-icon' )[0].appendChild(s);
 						}
 
 					}
-					catch(e){
-						//console.log("error adding icon: " + e);
+					catch(err){
+						if(this.debug){
+							console.error("zigbee2mqtt debug: caught error adding icon: ", err);
+						}
 					}	
 					
 					
@@ -701,12 +902,11 @@
 							clone.querySelectorAll('.extension-zigbee2mqtt-adapter-version' )[0].appendChild(s);
 						}
 
-						
-						
-						
 					}
-					catch(e){
-						//console.log("error handling Zigbee2MQTT device data: " + e);
+					catch(err){
+						if(this.debug){
+							console.error("zigbee2MQTT debug: caught error handling Zigbee2MQTT device data: ", err);
+						}
 					}
 						
 					// Click on first firmware update button
@@ -766,11 +966,10 @@
 						
 						// Disable all update buttons if one has been clicked
 						var update_buttons = document.getElementsByClassName("extension-zigbee2mqtt-adapter-item-update-button");
-						for(var i = 0; i < update_buttons.length; i++)
-						{
+						for(var i = 0; i < update_buttons.length; i++){
 							update_buttons[i].disabled = true;
 						}
-						//pre.innerText = "Please wait 10 minutes before you start another update!";
+						this.flash_message("Please wait at least 10 minutes before you start another update");
 						
 						
 						// Send update request to backend
@@ -781,14 +980,13 @@
                             if(this.debug){
 							    //console.log("Update item reaction: ");
 							    //console.log(body);
-							    pre.innerText = "update firmware response: " + body['update'];
+							    this.flash_message("update firmware response: " + body['update']);
                             }
 							this.updating_firmware = true;
 
-						}).catch((e) => {
+						}).catch((err) => {
 							if(this.debug){
-                                //console.log("zigbee2mqtt: postJson error while requesting update start");
-                                pre.innerText = e.toString();
+                                console.error("zigbee2mqtt debug: caught error while requesting update start: ", err);
                             }
 						});
 					
@@ -816,9 +1014,6 @@
     						).then((body) => { 
     							if(this.debug){
                                     console.log("delete zigbee item reaction: ", body);
-    							    //console.log(body); 
-    							    //if( body['state'] != true ){
-    							    //pre.innerText = body['message'];
                                 }
                                 if(body['status'] == 'ok'){
                                     parent3.classList.add(".extension-zigbee2mqtt-adapter-hidden");
@@ -826,16 +1021,14 @@
                                 
     							//}
 
-    						}).catch((e) => {
+    						}).catch((err) => {
     							//console.log("zigbee2mqt error in delete items handler: " + e.toString());
     							if(this.debug){
-                                    pre.innerText = e.toString();
+                                    console.error("zigbee2mqt: caught error in delete items handler: ", err);
                                 }
     						});
                         }
 						
-					
-					
 				  	});
 					
 					
@@ -869,27 +1062,12 @@
 						update_buttons[i].disabled = true;
 					}
                 }
-				/*
-				try{
-					const reading_list = document.getElementsByClassName('extension-zigbee2mqtt-adapter-read-about-risks');
-					for( var link in reading_list ){
-						const element = reading_list[link]
-						element.addEventListener('click', (event) => {
-							//console.log(event);
-							document.getElementById('extension-zigbee2mqtt-adapter-content').classList = ['extension-zigbee2mqtt-adapter-show-tab-tutorial'];
-						});
-					}
-				}
-				catch (e) {
-					// statements to handle any exceptions
-					//console.log("error creating reading list items: " + e); // pass exception object to error handler
-				}
-				*/
 			
 			}
-			catch (e) {
-				// statements to handle any exceptions
-				//console.log("error while generating items: " + e); // pass exception object to error handler
+			catch (err) {
+				if(this.debug){
+					console.error("zigbee2mqtt debug: caught error while generating items: ", err);
+				}
 			}
 			
 
@@ -920,6 +1098,27 @@
                 }  
             }
         }
+		
+		
+		flash_message(message){
+			if(typeof message == 'string' && message.length){
+				let flash_message_el = document.getElementById('extension-candleappstore-flash-message-container');
+				if(flash_message_el == null){
+					flash_message_el = document.createElement('div');
+					flash_message_el.setAttribute('id','extension-candleappstore-flash-message-container');
+					document.body.appendChild(flash_message_el);
+				}
+				if(flash_message_el){
+					flash_message_el.innerHTML = '<h3>' + message + '</h3>';
+					setTimeout(() => {
+						flash_message_el.innerHTML = '';
+					},3000);
+				}
+				else{
+					alert(message);
+				}
+			}
+		}
         
         
 	}
