@@ -187,6 +187,8 @@
     "images/*.svg",
     "images/*.png",
     "images/*.gif",
+	"images/*.jpg",
+	"images/*.jpeg",
     "js/*.js",
     "views/*.html"
   ]
