@@ -43,9 +43,14 @@ echo "TARFILE_SUFFIX: $TARFILE_SUFFIX"
 
 #npm install -g pnpm
 #pnpm install --frozen-lockfile
+echo "doing npm rebuild. Node version is:"
+node --version
+echo "... and node version should be:"
+echo $NODE_VERSION
+echo ""
 npm --yes rebuild
 CPPFLAGS="-DPNG_ARM_NEON_OPT=0" npm --yes install --omit=dev
-	
+
 # small hack to allow metadata to be sent with internal gateway messages
 if [ -f ./node_modules/gateway-addon/lib/property.js ]; then
   sed -i 's/setValue(value) {/setValue(value, meta) {/g' ./node_modules/gateway-addon/lib/property.js
