@@ -76,10 +76,12 @@ TARFILE_ARCH="${TARFILE/.tgz/${TARFILE_SUFFIX}.tgz}"
 cp z2m.tar.gz ./package
 cp package-lock.json ./package
 cp -r node_modules ./package
+cp -r images ./package
 echo "TARFILE_ARCH: $TARFILE_ARCH"
 echo ""
 echo "ls package/images:"
 ls package/images
+
 echo ""
 tar czf ${TARFILE_ARCH} package
 
