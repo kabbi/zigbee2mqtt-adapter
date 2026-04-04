@@ -44,7 +44,7 @@ echo "TARFILE_SUFFIX: $TARFILE_SUFFIX"
 #npm install -g pnpm
 #pnpm install --frozen-lockfile
 npm --yes rebuild
-CPPFLAGS="-DPNG_ARM_NEON_OPT=0" npm --yes install
+CPPFLAGS="-DPNG_ARM_NEON_OPT=0" npm --yes install --omit=dev
 	
 # small hack to allow metadata to be sent with internal gateway messages
 if [ -f ./node_modules/gateway-addon/lib/property.js ]; then
