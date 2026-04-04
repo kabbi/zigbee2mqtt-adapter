@@ -54,6 +54,10 @@ else
   exit 1
 fi
 
+echo "ls images:"
+ls images
+echo ""
+
 curl -s https://api.github.com/repos/Koenkk/zigbee2mqtt/releases/latest | grep  -m 1 '"url":' | cut -d : -f 2,3 | tr -d \" | sed 's/,*$//g' | xargs -n1 curl -s | grep tarball_url | cut -d : -f 2,3 | tr -d \" | sed 's/,*$//g' | xargs -n1 curl -L -o "z2m.tar.gz"
 
 shasum --algorithm 256 manifest.json package.json package-lock.json *.js LICENSE README.md z2m.tar.gz > SHA256SUMS
@@ -68,6 +72,10 @@ cp z2m.tar.gz ./package
 cp package-lock.json ./package
 cp -r node_modules ./package
 echo "TARFILE_ARCH: $TARFILE_ARCH"
+echo ""
+echo "ls package/images:"
+ls package/images
+echo ""
 tar czf ${TARFILE_ARCH} package
 
 shasum --algorithm 256 ${TARFILE_ARCH} > ${TARFILE_ARCH}.sha256sum
