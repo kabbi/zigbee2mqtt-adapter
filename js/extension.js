@@ -564,7 +564,7 @@
 			
 			if(typeof body.missing_usb_stick == 'boolean'){
 				if(this.debug){
-					//console.log("zigbee2mqtt debug: parse_body:  body.missing_usb_stick,this.find_usb_stick_container_el: ", body.missing_usb_stick, this.find_usb_stick_container_el);
+					console.log("zigbee2mqtt debug: parse_body:  missing_usb_stick: ", body.missing_usb_stick);
 				}
 				this.missing_usb_stick = body.missing_usb_stick;
 				
@@ -691,23 +691,25 @@
                 else{
                     this.flash_message("The Zigbee2MQTT addon is still installing itself. Please wait about 30 minutes before rebooting the system.");
                 }
-            }
+            }/*
 			else if(this.missing_usb_stick == true){
 				
 				
 			}
-            else if(body.serial == null){
+            else if(body.serial == null || (typeof body.serial == 'string' && body.serial == '')){
 				const serial_hint_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-serial-hint');
                 if(serial_hint_el){
                 	serial_hint_el.style.display = 'block';
                 }
             }
-            else if(body.usb_port_issue != false){
+			*/
+            else if(typeof body.usb_port_issue == 'boolean' && body.usb_port_issue != false){
 				const usb_port_issue_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-usb-port-issue-hint');
 				if(usb_port_issue_el){
 					usb_port_issue_el.style.display = 'block';
 				}
             }
+			/*
             else if(list2 && this.missing_usb_stick == false){
 				
 				if(body.started == false){
@@ -723,6 +725,13 @@
             else{
                 
             }
+			*/
+			
+			if(typeof body.devices != 'undefined' && Array.isArray(body.devices)){
+				this.regenerate_items(body.devices);
+			}
+			
+			
 			
 		}
 	

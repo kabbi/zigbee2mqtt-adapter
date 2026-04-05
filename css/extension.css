@@ -111,6 +111,12 @@ body:not(.developer) .extension-zigbee2mqtt-adapter-show-if-developer{
 	background-color:rgba(0,0,0,.15);
 }
 
+#extension-zigbee2mqtt-adapter-zigbee-radio-serial-port{
+	display:flex;
+	align-items:center;
+	word-wrap:break-word;
+}
+
 #extension-zigbee2mqtt-adapter-zigbee-radio-serial-port-image{
 	min-width:64px;
 	min-height:64px;

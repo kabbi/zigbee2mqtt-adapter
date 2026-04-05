@@ -764,7 +764,7 @@ class ZigbeeMqttAdapter extends Adapter {
 
 
 
-    look_for_usb_stick(){
+    look_for_usb_stick(allow_auto_detect=true){
 		if (this.DEBUG) {
 			console.log("in look_for_usb_stick");
 		}
@@ -774,9 +774,12 @@ class ZigbeeMqttAdapter extends Adapter {
         try{
 			if(fs.existsSync('/dev/serial/by-id')){
 	            if (typeof this.persistent_data['radio_serial_port'] == 'string' && this.persistent_data['radio_serial_port'].length > 3) {
-	                let result = require('child_process').execSync('ls -l /dev/serial/by-id | grep ' + this.persistent_data['radio_serial_port']).toString();
+					let grep_command = 'ls -l /dev/serial/by-id | grep ' + this.persistent_data['radio_serial_port'];
+					//console.log("look_for_usb_stick: grep_command: ", grep_command);
+					grep_command = 'ls -l /dev/serial/by-id';
+	                let result = require('child_process').execSync(grep_command).toString();
 	                if (this.DEBUG) {
-	                    console.log("look_for_usb_stick: output from ls -l/dev/serial/by-id was: ", result);
+	                    console.log("look_for_usb_stick: output from:\n" + grep_command + "\nwas:\n", result);
 	                }
 	                result = result.split(/\r?\n/);
 	    			for (const i in result) {
@@ -785,6 +788,7 @@ class ZigbeeMqttAdapter extends Adapter {
 	    				}
 
 	                    if (result[i].indexOf(this.persistent_data['radio_serial_port']) != -1 && result[i].indexOf('/') != -1 ){
+							this.missing_usb_stick = false;
 	                        this.sendPairingPrompt("Found Zigbee radio");
 	                        serial_port = "/dev/" + result[i].split("/").pop();
 	                        this.serial_port_path = serial_port;
@@ -816,8 +820,9 @@ class ZigbeeMqttAdapter extends Adapter {
                     
 	    			}
 				}
-				else{
-					let result = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
+				else if(allow_auto_detect){
+					//let result = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
+					let result = require('child_process').execSync("ls -1 /dev/serial/by-id | xargs -0 -n 1 basename").toString(); // | tr '\n' '\0'
 	                if (this.DEBUG) {
 	                    console.log("look_for_usb_stick: auto-detect: output from ls -l/dev/serial/by-id was: ", result);
 	                }
@@ -827,12 +832,17 @@ class ZigbeeMqttAdapter extends Adapter {
 	    					console.log("look_for_usb_stick: auto-detect: line: " + result[i]);
 	    				}
 
-	                    if ( (result[i].toLowerCase().includes("conbee") || result[i].toLowerCase().includes('zigbee')) && result[i].toLowerCase().indexOf('thread') == -1 && result[i].indexOf('/') != -1 ){
+	                    if ( result[i].length > 10 && (result[i].toLowerCase().includes("conbee") || result[i].toLowerCase().includes('zigbee')) && result[i].toLowerCase().indexOf('thread') == -1){ // && result[i].indexOf('/') != -1 ){
 	                        this.sendPairingPrompt("Auto-detected a Zigbee radio");
-	                        serial_port = "/dev/" + result[i].split("/").pop();
 							this.persistent_data['radio_serial_port'] = result[i].trim();
-	                        this.save_persistent_data();
-							this.serial_port_path = serial_port;
+							this.save_persistent_data();
+							serial_port = this.look_for_usb_stick(false);
+							
+							
+	                        //serial_port = "/dev/" + result[i].split("/").pop();
+							//this.persistent_data['radio_serial_port'] = result[i].trim();
+	                        //this.save_persistent_data();
+							//this.serial_port_path = serial_port;
 							
 	                       	/*
 						    if (result[i].toLowerCase().includes("skyconnect")) {
