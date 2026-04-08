@@ -1,7 +1,7 @@
 <div id="extension-zigbee2mqtt-adapter-content" class="extension-zigbee2mqtt-adapter-show-tab-things">
   
     <div id="extension-zigbee2mqtt-adapter-content-container">
-        <h3 id="extension-zigbee2mqtt-adapter-title"><img id="extension-zigbee2mqtt-adapter-main-page-icon" src="/extensions/zigbee2mqtt-adapter/images/menu-icon.svg">Zigbee2MQTT</h3>
+        <h3 id="extension-zigbee2mqtt-adapter-title"><img id="extension-zigbee2mqtt-adapter-main-page-icon" src="/extensions/zigbee2mqtt-adapter/images/menu-icon.svg" alt="Z">Zigbee2MQTT</h3>
 		
 		<div class="extension-zigbee2mqtt-adapter-tab-buttons">
             <button id="extension-zigbee2mqtt-adapter-tab-button-things" class="extension-zigbee2mqtt-adapter-main-tab-button">Things</button>
@@ -119,7 +119,7 @@
           			
                     <div class="extension-zigbee2mqtt-adapter-overlay rule-edit-overlay extension-zigbee2mqtt-adapter-update">
                         <div class="rule-delete-dialog">
-                            <p>Are you sure you want to update the firmware of this device? Please <span class="extension-zigbee2mqtt-adapter-read-about-risks">read about the risks</a> first.</p>
+                            <p>Are you sure you want to update the firmware of this device? Please <span class="extension-zigbee2mqtt-adapter-read-about-risks">read about the risks</span> first.</p>
                             <input class="extension-zigbee2mqtt-adapter-overlay-cancel-update-button rule-delete-cancel-button" type="button" data-l10n-id="rule-delete-cancel-button" value="Cancel">
                             <input class="extension-zigbee2mqtt-adapter-overlay-start-update-button rule-delete-confirm-button" type="button" value="Update">
                         </div>
@@ -128,7 +128,7 @@
                     <div class="extension-zigbee2mqtt-adapter-overlay rule-edit-overlay extension-zigbee2mqtt-adapter-updating">
                         <div class="rule-delete-dialog">
           				    <div class="extension-zigbee2mqtt-adapter-updating-text-container">
-                            	<img class="extension-zigbee2mqtt-adapter-update-spinner" src="/extensions/zigbee2mqtt-adapter/images/spinner.gif"><p>Updating firmware... Do not turn off the controller or the Zigbee device.</p>
+                            	<img class="extension-zigbee2mqtt-adapter-update-spinner" src="/extensions/zigbee2mqtt-adapter/images/spinner.gif" alt="!"><p>Updating firmware... Do not turn off the controller or the Zigbee device.</p>
           			  	    </div>
                             
           				    <div class="extension-zigbee2mqtt-adapter-update-progress-bar-container">
@@ -140,19 +140,22 @@
                     </div>
 				</div>
 				
+				
+				<button id="extension-zigbee2mqtt-adapter-add-things-button" class="icon-button"></button>
+				
 			</div>
 
 			
 			<div id="extension-zigbee2mqtt-adapter-tab-map" class="extension-zigbee2mqtt-adapter-tab">
 				<div id="extension-zigbee2mqtt-adapter-graphviz-container">
-                    <img id="extension-zigbee2mqtt-adapter-network-map-icon" src="/extensions/zigbee2mqtt-adapter/images/network-map.svg" alt="network map"/>
+                    <img id="extension-zigbee2mqtt-adapter-network-map-icon" src="/extensions/zigbee2mqtt-adapter/images/network-map.svg" alt="network map">
 				</div>
 				<div id="extension-zigbee2mqtt-adapter-map" class="extension-zigbee2mqtt-adapter-centered-page">
 					<p>Here you can find out how your Zigbee devices have organised themselves into a network. Depending on the size of your network, updating the map can take a few minutes. During this time your Zigbee network may be very unresponsive.</p> 
 					<button id="extension-zigbee2mqtt-adapter-update-map-button" class="text-button">Generate map</button>
 
 				</div>
-
+				
 			</div>
 
 
@@ -165,12 +168,12 @@
                         <h3>Security</h3>
     					<p>The addon will have generated a random network ID and network password when it was installed. You might want to write these down. Whenever these are changed, you will need to re-pair all your devices. After changing these codes you will have to restart your device before the new codes will take effect.</p> 
     					<p>If these two fields are empty, it likely means the security codes were not generated yet. This can happen if you installed this addon at versions below 0.7.0, or if you manually disabled advanced security in the addon's settings.</p>
-                        <label for="extension-zigbee2mqtt-adapter-security-pan-id">PAN ID</label><br/>
-                        <input id="extension-zigbee2mqtt-adapter-security-pan-id" type="text" name="extension-zigbee2mqtt-adapter-security-pan-id" value="" style="width:100%"/>
-                        <br/><br/>
-    					<label for="extension-zigbee2mqtt-adapter-security-network-key">Network key</label><br/>
-                        <input id="extension-zigbee2mqtt-adapter-security-network-key" type="text" name="extension-zigbee2mqtt-adapter-security-network-key" value="" style="width:100%"/>
-                        <br/><br/>
+                        <label for="extension-zigbee2mqtt-adapter-security-pan-id">PAN ID</label><br>
+                        <input id="extension-zigbee2mqtt-adapter-security-pan-id" type="text" name="extension-zigbee2mqtt-adapter-security-pan-id" value="" style="width:100%">
+                        <br><br>
+    					<label for="extension-zigbee2mqtt-adapter-security-network-key">Network key</label><br>
+                        <input id="extension-zigbee2mqtt-adapter-security-network-key" type="text" name="extension-zigbee2mqtt-adapter-security-network-key" value="" style="width:100%">
+                        <br><br>
                         <div>
                             <button id="extension-zigbee2mqtt-adapter-save-security-button" class="text-button">SAVE</button>
                         </div>
@@ -186,12 +189,12 @@
                         </div>
                     </div>
                     
-                    <div class="extension-zigbee2mqtt-adapter-vlak extension-zigbee2mqtt-adapter-developer-only">
+                    <div class="extension-zigbee2mqtt-adapter-vlak extension-zigbee2mqtt-adapter-show-if-developer">
                         <h3>Health check</h3>
                         <p>Developer only function. Requests a health check.</p>
                         <button id="extension-zigbee2mqtt-adapter-health-check-button" class="text-button">Health check</button>
-                    
-
+                    </div>
+					
 				</div>
 
 			</div>
@@ -203,14 +206,14 @@
 					<p>Zigbee2MQTT is an open source software project in which hundreds of people have worked together to support as many Zigbee devices as possible. This addon builds on their work.</p>
 					<p>To learn more about the project, and learn which devices are supported, visit <a target="_blank" href="https://www.zigbee2mqtt.io">www.zigbee2mqtt.io</a>.</p>
 					<p>&nbsp;</p>
-					<h4>A word about firmware updates</h4>
+					<h3>A word about firmware updates</h3>
 					<p>This addon can help you keep your devices up to date with the latest firmware. Not all manufacturers support this, but <a target="_blank" href="https://www.zigbee2mqtt.io/information/ota_updates.html">some do</a>. IKEA, for example.</p>
 					<p>Keeping Zigbee devices up to date isn't vital. Since Zigbee devices do not connect to the internet by themselves, they are less likely to be hacked.</p>
 					<p>Before you update a device, always make sure you do some <a target="_blank" href="https://github.com/Koenkk/zigbee2mqtt/issues?q=is%3Aissue+is%3Aopen+firmware">research</a>. While firmware updates should generally improve security and perhaps even add features, in some cases there may be downsides associated with updating firmware on your devices.</p>
 					<p>Any interruption of the update process could damage your device. It's recommended to install fresh batteries in a device before you start a firmware update, or have them at 70% at the least. Also make sure you don't turn off your Webthings Gateway during the proces. Firmware updates can take about 10 minutes.</p>
 					<p style="font-style:italic">This addon is not associated with any manufacturer of Zigbee devices. Use the update functionality at your own risk.</p>
 					<p>&nbsp;</p>
-					<h4>Further details</h4>
+					<h3>Further details</h3>
 					<!--<p>In theory, when you remove a thing from the gateway, it will also be unpaired from your Zigbee network. However, your Zigbee device will likely still contain your Zigbee network settings. If you want to sell your device, make sure to do a full reset. Details on how to do this may be found on the website of the manufacturer.</p>-->
                     <ul>
                         <li>A Link quality below 20 is considered bad.</li>
@@ -225,8 +228,8 @@
 		
 		
 
-        <br/>
-        <br/>
+        <br>
+        <br>
         
         <div id="extension-zigbee2mqtt-adapter-debug-warning" style="display:none">
             <h2>Debugging is enabled</h2>
@@ -237,7 +240,7 @@
         <div id="extension-zigbee2mqtt-adapter-response">
             <p id="extension-zigbee2mqtt-adapter-response-data" class="extension-zigbee2mqtt-adapter-centered-error"></p>
         </div>
-        <br/>
+        <br>
 
     </div>
     
