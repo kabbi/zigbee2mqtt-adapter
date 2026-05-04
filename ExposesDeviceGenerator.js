@@ -36,12 +36,16 @@ class ExposesDeviceGenerator {
 	generateDevice(info, zigbee_id, model_id) {
         try{
             if(info == null){
-                console.log("Error, no exposes data (info was null)");
+                if(this.config.debug){
+					console.log("debug: error: generateDevice: no exposes data (info was null). Aborting.");
+				}
     			return;
             }
             
     		if (!info.supported || !info.definition || !info.definition.exposes) {
-                console.log("Error, missing exposes data, cannot generate device: ", info);
+                if(this.config.debug){
+					console.log("debug: error: generateDevice: missing exposes data, cannot generate device.  info: ", info);
+				}
     			return;
     		}
         
@@ -78,7 +82,7 @@ class ExposesDeviceGenerator {
 			//console.log(device);
             if(this.config.debug){
         		console.log(".");
-                console.log("final device: ", device);
+                console.log("debug: final device: ", device);
                 console.log(" ");
                 console.log(" ");
                 console.log(" ");
@@ -86,9 +90,11 @@ class ExposesDeviceGenerator {
             }
             
         }
-        catch (error){
-	  	    console.error("Error in generateDevice: " + error);
-            console.debug('Device', info.friendly_name, 'exposes', JSON.stringify(info.definition.exposes));
+        catch (err){
+	  	    if(this.config.debug){
+				console.error("debug: caught error in generateDevice: ", err);
+            	console.debug('Device', info.friendly_name, 'exposes', JSON.stringify(info.definition.exposes));
+			}
         }
 		
 	    return device;
@@ -116,8 +122,10 @@ class ExposesDeviceGenerator {
 				}
 			}
 		}
-		catch (error){
-			console.log("Error in device pre-parsing: " + error)
+		catch (err){
+			if(this.config.debug){
+				console.error("caught eror in device pre-parsing: ", err);
+			}
 		}
 		
 		return property_names_list;
@@ -129,16 +137,21 @@ class ExposesDeviceGenerator {
 	parse_device(exposes_info, device, property_names_list){
 		
 		
-        if(typeof device == 'undefined'){
-            console.log("ERROR: ExposesGenerator: device was undefined in parse_device");
-        }
         
-        if(typeof device['@type'] == 'undefined'){
-            console.log("ERROR: ExposesGenerator: device @TYPE was undefined in parse_device");
-        }
+        
+        
         
         
         if(this.config.debug){
+			
+	        if(typeof device == 'undefined'){
+	            console.log("ERROR: ExposesGenerator: device was undefined in parse_device");
+	        }
+			
+	        if(typeof device['@type'] == 'undefined'){
+	            console.log("ERROR: ExposesGenerator: device @TYPE was undefined in parse_device");
+	        }
+			
             console.log(" ");
             console.log("+ + + + + + + + + + + + + parse_device + + + + + + + + + + + + + + + + + + + + + + + +");
             console.log("property_names_list: ", property_names_list);
@@ -150,9 +163,9 @@ class ExposesDeviceGenerator {
 		try{
 			
 			if(typeof exposes_info['features'] != "undefined"){
-				console.log("features spotted");
-			
-				
+				if(this.config.debug){
+					console.log("debug: features spotted");
+				}
 			}
             else{
                 console.log("Error, parse_device: device features are undefined?");
@@ -161,8 +174,8 @@ class ExposesDeviceGenerator {
 				console.log("type also spotted. Type = " + exposes_info['type']);
 				if(exposes_info['type'] == "composite"){
 					if(this.config.debug){
-                        console.log("it's a composite");
-                        console.log("exposes_info[property]: ", exposes_info['property']);
+                        console.log("debug: it's a composite");
+                        console.log("debug: exposes_info[property]: ", exposes_info['property']);
                     }
 					if(typeof exposes_info['property'] != "undefined"){
                         if(this.config.debug){
@@ -189,13 +202,13 @@ class ExposesDeviceGenerator {
 				}
 				else if(exposes_info['type'] == "light"){
 					if(this.config.debug){
-						console.log("it's a lamp");
+						console.log("debug: it's a light");
 					}
 					device['@type'].push('Light');
 				}
 				else if(exposes_info['type'] == "switch"){
 					if(this.config.debug){
-						console.log("it's a switch");
+						console.log("debug: it's a switch");
 					}
                     /*
                     if(device.model_id == 'ZB-SW01'){
@@ -222,24 +235,28 @@ class ExposesDeviceGenerator {
                 */
 				else if(exposes_info['type'] == "climate"){
 					if(this.config.debug){
-						console.log("it's a thermostat");
+						console.log("debug: it's a thermostat");
 					}
 					device['@type'].push('Thermostat');
 				}
                 else{
 					if(this.config.debug){
-						console.log("Warning, exposes_info type fell through");
+						console.log("debug: warning, exposes_info type fell through");
 					}
                 }
 			
 			}
             else{
-                console.log("Error, parse_device: device has features, but type is undefined?");
+                if(this.config.debug){
+					console.log("debug: error, parse_device: device has features, but type is undefined?");
+				}
             }
         
 		}
-		catch (error){
-			console.log("Error in first part of parse_device: " + error);
+		catch (err){
+			if(this.config.debug){
+				console.log("debug: caught error in first part of parse_device: ", err);
+			}
 		}
         
         
@@ -281,8 +298,10 @@ class ExposesDeviceGenerator {
 			} // end of for loop
 			
 		}
-		catch (error){
-			console.log("Error in second part of parse_device: " + error);
+		catch (err){
+			if(this.config.debug){
+				console.error("debug: caught general error in second part of parse_device: ", err);
+			}
 		}
         
         return device;
@@ -297,9 +316,9 @@ class ExposesDeviceGenerator {
 	
 	parse_property(expose, device, property_names_list){
 		if(this.config.debug){
-            console.log("+ (parse_property)");
-            console.log("expose: ", expose);
-            console.log("+");
+            console.log("debug: + (parse_property)");
+            console.log("debug: expose: ", expose);
+            console.log("debug: +");
         }
         
         //console.log("parse_property: is device undefined? " + typeof device);
@@ -312,14 +331,16 @@ class ExposesDeviceGenerator {
             
             if(this.adapter.reverse_list_contact.includes(device.model_id) && expose.property == 'contact'){
                 if(this.config.debug){
-                    console.log("- spotted a boolean propery that should be reversed");
+                    console.log("debug: spotted a boolean propery that should be reversed");
                 }
                 expose['reversed'] = true;
             }
             
         }
-        catch(e){
-            console.log("Error while doing device-specific adjustments: ", e);
+        catch(err){
+            if(this.config.debug){
+				console.error("debug: caught error while doing device-specific adjustments: ", err);
+			}
         }
         
         
@@ -365,9 +386,9 @@ class ExposesDeviceGenerator {
                 const wt_id_base = device_id + "-";
                 const wt_id = wt_id_base + expose.property;
                 if(this.config.debug){
-                    console.log("device_id: ", device_id);
-                    console.log("wt_id: ", wt_id);
-                    console.log("expose.type: ", expose.type);
+                    console.log("debug: device_id: ", device_id);
+                    console.log("debug: wt_id: ", wt_id);
+                    console.log("debug: expose.type: ", expose.type);
                 }
                 
                 try{
@@ -459,8 +480,10 @@ class ExposesDeviceGenerator {
                                                 }
                                             }
                                         }
-                                    }catch(e){
-                                        console.log("Error finding thermostat cooling-heating property");
+                                    }catch(err){
+										if(this.config.debug){
+                                        	console.log("debug: caught error finding thermostat cooling-heating property: ", err);
+										}
                                     }
                                     
                                     if(found_heat_cool_property){
@@ -507,8 +530,10 @@ class ExposesDeviceGenerator {
                             
         			}
                 }
-                catch(e){
-                    console.log("error in parse_property while generating property options: ", e);
+                catch(err){
+					if(this.config.debug){
+                    	console.error("debug: caught error in parse_property while generating property options: ", err);
+					}
                 }
     			
 			
@@ -579,8 +604,11 @@ class ExposesDeviceGenerator {
                         device.properties[wt_id]['multipleOf'] = 0.1;
                     }
                 }
-                catch(e){
-                    console.log("error in parse_property while improving units: ", e);
+                catch(err){
+					if(this.config.debug){
+						console.error("error in parse_property while improving units: ", err);
+					}
+                    
                 }
                 
                 
@@ -597,12 +625,12 @@ class ExposesDeviceGenerator {
                     
                     try{
                         if(typeof device['@type'] == 'undefined'){
-                            console.error("ERROR, device[@type] was undefined. Creating empty @type array now.");
+                            //console.error("ERROR, device[@type] was undefined. Creating empty @type array now.");
                             device['@type'] = [];
                         }
                         else{
-                            console.log("device @type exists on expose.name: ", expose.name);
-                            console.log('device[@type] : ', device['@type']);
+                            //console.log("device @type exists on expose.name: ", expose.name);
+                            //console.log('device[@type] : ', device['@type']);
                         }
                         
                         if(typeof device.properties[wt_id] != 'undefined'){
@@ -728,9 +756,9 @@ class ExposesDeviceGenerator {
             					}
             				}
             				else if(expose.name == "color"){
-                                console.log('___color: wt_id: ', wt_id);
-                                console.log('___color: device: ', device);
-                                console.log('___color: device.properties[wt_id]: ', device.properties[wt_id]);
+                                //console.log('___color: wt_id: ', wt_id);
+                                //console.log('___color: device: ', device);
+                                //console.log('___color: device.properties[wt_id]: ', device.properties[wt_id]);
             					device.properties[wt_id]['@type'] = 'ColorProperty';
             					if(device['@type'].indexOf("ColorControl") == -1){ // && device['@type'].length == 0
             						device['@type'].unshift('ColorControl');
@@ -746,9 +774,9 @@ class ExposesDeviceGenerator {
             				}
                             */
             				else if(expose.name == "color_xy" || expose.name == "color_hs"){
-                                console.log('___color_XY: wt_id: ', wt_id);
-                                console.log('___color_XY: device: ', device);
-                                console.log('___color_XY: device.properties[wt_id]: ', device.properties[wt_id]);
+                                //console.log('___color_XY: wt_id: ', wt_id);
+                                //console.log('___color_XY: device: ', device);
+                                //console.log('___color_XY: device.properties[wt_id]: ', device.properties[wt_id]);
             					device.properties[wt_id]['@type'] = 'ColorProperty';
             					if(device['@type'].indexOf("ColorControl") == -1){
             						device['@type'].unshift('ColorControl');
@@ -861,8 +889,10 @@ class ExposesDeviceGenerator {
             				}
                         }
                     }
-                    catch(e){
-                        console.log("error in parse_device while trying to add capabilities: ", e);
+                    catch(err){
+                        if(this.config.debug){
+							console.error("debug: caught error in parse_device while trying to add capabilities: ", err);
+						}
                     }
     			}
 			
@@ -988,7 +1018,9 @@ class ExposesDeviceGenerator {
                                 device.properties[wt_id_base + 'brightness'].origin = "exposes-generated-from-action";
                             }
                             else{
-                                console.log("GENERATING FROM ACTIONS: BRIGHTNESS PROPERTY ALREADY EXISTED");
+                                if(this.config.debug){
+									console.log("GENERATING FROM ACTIONS: BRIGHTNESS PROPERTY ALREADY EXISTED");
+								}
                             }
                         
                         }
@@ -1000,7 +1032,7 @@ class ExposesDeviceGenerator {
     					
                             
                                 if(this.config.debug){
-                                    console.log("exposesDeviceGenerator spotted a on and off combo in an action property enum list, and no pre-existing toggle property");
+                                    console.log("debug: exposesDeviceGenerator spotted a on and off combo in an action property enum list, and no pre-existing toggle property");
                                 }
         						var fake_exposes_info = {
         							'access':1,
@@ -1038,7 +1070,7 @@ class ExposesDeviceGenerator {
                                 
                                 if( expose.values[i].toLowerCase() == "arrow_right_click" || expose.values[i].toLowerCase() == "arrow_left_click"){
                                     if(this.config.debug){
-                                        console.log("exposesDeviceGenerator spotted a brightness_stop in an action property enum list, and no pre-existing brightness property");
+                                        console.log("debug: exposesDeviceGenerator spotted a brightness_stop in an action property enum list, and no pre-existing brightness property");
                                     }
                                     var fake_exposes_info = {'access': 1, 
                                         'name':expose.values[i].toLowerCase(),
@@ -1059,27 +1091,35 @@ class ExposesDeviceGenerator {
             				    }
                             
                             }
-                            catch(e){
-                                console.log("error in parse_device while looping in actions enum: ", e);
+                            catch(err){
+                                if(this.config.debug){
+									console.log("debug: caught error in parse_device while looping in actions enum: ", err);
+								}
                             }
                         
                         
         				}
                         
                     }
-                    catch(e){
-                        console.log("error while trying to add extra properties based on actions: ", e);
+                    catch(err){
+						if(this.config.debug){
+                        	console.error("debug: caught error while trying to add extra properties based on actions: ", err);
+						}
                     }                    
                     
     			}
 			
     		}
     		else{
-    			console.log("Weird, expose['type'] did not exist");
+    			if(this.config.debug){
+					console.log("debug: weird, expose['type'] did not exist");
+				}
     		}
         }
-        catch(e){
-            console.log("error in parse_device: ", e);
+        catch(err){
+            if(this.config.debug){
+				console.log("debug: caught error in parse_device: ", err);
+			}
         }
 		
 		return device;
