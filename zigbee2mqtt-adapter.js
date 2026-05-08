@@ -2390,8 +2390,8 @@ class ZigbeeMqttAdapter extends Adapter {
                             }
                         
                         }
-                        catch(e){
-                            console.log("Error appending weather prediction based on barometric pressure: ", e);
+                        catch(err){
+                            console.log("caught error appending weather prediction based on barometric pressure: ", err);
                         }
                     
                     
@@ -2624,18 +2624,18 @@ class ZigbeeMqttAdapter extends Adapter {
                                 //console.log(key + " has a minimum for this value: ", property.options.minimum);
                                 if( msg[key] < property.options.minimum){
                                     //console.log("- setting value to null: " + msg[key]);
-                                    msg[key] = null;
+                                    msg[key] = property.options.minimum;
                                 }
                             }
     						if (property.options.hasOwnProperty("maximum")) {
                                 //console.log(key + " has a maximum for this value: ", property.options.maximum);
                                 if( msg[key] > property.options.maximum){
                                     //console.log("- setting value to null: " + msg[key]);
-                                    msg[key] = null;
+                                    msg[key] = property.options.maximum;
                                 }
     						}
     					} catch (error) {
-    						console.log("Zigbee2MQTT addon: error checking for minumum/maximum overflow: " + error);
+    						console.log("Zigbee2MQTT addon: caught error checking for minumum/maximum overflow: " + error);
     						continue;
     					}
                         
@@ -4390,18 +4390,40 @@ class MqttProperty extends Property {
 	setValue(value) {
         
 		if (this.device.adapter.config.debug) {
-			console.log("in setValue of property '" + this.name + "', where value = " + value + " and this.options: ");
-			console.log("- this.options: " + this.options);
+			console.log("in setValue of property '", this.name, "', provided value = ", value, " and this.options: ", this.options);
 		}
+
+        if(typeof value == 'number'){
+            if(typeof this.options.multipleOf == 'number'){
+                //value = Math.round(value * (1 / this.options.multipleOf)) / (1 / this.options.multipleOf);
+                const shave_off = (Math.round(value * 1000 % (this.options.multipleOf * 1000)) / 1000);
+                if(shave_off != 0){
+                    if (this.device.adapter.config.debug) {
+                        console.log("setValue: adjusting to MultipleOf: ", this.options.multipleOf, ", by shaving off: ", shave_off, ", from value: ", value);
+                    }
+                    value = value - shave_off;
+                }
+            }
+            if(typeof this.options.minimum == 'number' && value < this.options.minimum){
+                value = this.options.minimum;
+            }
+            if(typeof this.options.maximum == 'number' && value > this.options.maximum){
+                value = this.options.maximum;
+            }
+        }
+
+
         if(value != this.value){
+            
             this.value = value;
         
-            if(this.name == "data_transmission" && this.name == "data_blur"){
+            if(this.name == "data_transmission" || this.name == "data_blur"){
                 try{
                     this.device.adapter.persistent_data.devices_overview[this.device.id]['appendages'][this.name]['value'] = value;
+                    this.device.adapter.save_persistent_data();
                 }
-                catch(e){
-                    console.log("Error saving data_transmission or data_blur property value to persistent data: ", e);
+                catch(err){
+                    console.error("caught error setting data_transmission or data_blur property value in persistent data: ", err);
                 }
             }
 
@@ -4419,7 +4441,9 @@ class MqttProperty extends Property {
                             }
                             if(!updatedValue.startsWith('#')){
                                 updatedValue = colourNameToHex(updatedValue);
-                                console.log("color name has been changed to: " + updatedValue);
+                                if (this.device.adapter.config.debug) {
+                                    console.log("setValue: color name has been changed to: ", updatedValue);
+                                }
                             }
                             //if(this.device.adapter.config.debug){
     						//	console.log("translating HEX color to XY (cie color space)");
@@ -4432,7 +4456,7 @@ class MqttProperty extends Property {
     							"hex": updatedValue // turns out that Zigbee2MQTT can handle HEX values as input
     						};
     						if (this.device.adapter.config.debug) {
-    							console.log("color value set to: " + updatedValue);
+    							console.log("setValue: color value set to: ", updatedValue);
     						}
     					}
 
@@ -4440,7 +4464,7 @@ class MqttProperty extends Property {
     						if (this.options["origin"] == "exposes-scaled-percentage") {
     							updatedValue = percentage_to_integer(updatedValue, this.options["origin_maximum"]);
     							if (this.device.adapter.config.debug) {
-    								console.log("- exposes-scaled-percentage -> updatedValue scaled back to: " + updatedValue);
+    								console.log("setValue: exposes-scaled-percentage -> updatedValue scaled back to: ", updatedValue);
     							}
     						}
     					}
@@ -4448,7 +4472,8 @@ class MqttProperty extends Property {
                     
 
                         // Publish to Zigbee network
-                        if(this.name != "data_transmission" && this.name != "data_blur"){ // all properties except the data_transmission property
+                        // TODO: do no send if value is null?
+                        if(this.name != "data_transmission" && this.name != "data_blur" && updatedValue != null){ // all properties except the data_transmission property
                             if (this.device.adapter.config.debug) {
                                 console.log("sending '" + updatedValue + "' to Z2M via toMqtt:", {[this.options.property]: toMqtt(updatedValue),});
                             }
@@ -4462,14 +4487,13 @@ class MqttProperty extends Property {
                             //}
                         }
                     
-                    
                         this.device.notifyPropertyChanged(this); // TODO: where is the setCachedValue?
                     
     					resolve(updatedValue);
 					
     				})
     				.catch((err) => {
-                        console.log("Error in set_value of property; ", err);
+                        console.error("caught error in set_value of property; ", err);
     					reject(err);
     				});
     		});
