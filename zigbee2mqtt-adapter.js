@@ -1134,6 +1134,7 @@ class ZigbeeMqttAdapter extends Adapter {
 				}
 				
                 base_config += "availability:\n" +
+						"  enabled: true\n" +
                         "  active:\n" +
                         "    timeout: " + this.availability_interval + "\n" +
                         "  passive:\n" +
