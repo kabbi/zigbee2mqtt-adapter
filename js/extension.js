@@ -306,7 +306,7 @@
 	                    if(this.debug){
 							console.log("zigbee2mqtt debug: find_usb_stick_after response: ", body);
 						}
-	                    if(body['state'] == true){
+	                    if(typeof body['state'] == 'boolean' && body['state'] == true){
 	                        if(this.debug){
 								console.log("zigbee2mqtt debug: USB stick was succesfully detected");
 							}
@@ -314,6 +314,9 @@
 	                        this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-step2').classList.add('extension-zigbee2mqtt-adapter-hidden');
 							this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-success').classList.remove('extension-zigbee2mqtt-adapter-hidden');
 	                    }
+						else{
+							this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-failed').classList.remove('extension-zigbee2mqtt-adapter-hidden');
+						}
 						add_radio_after_button_el.classList.remove('extension-zigbee2mqtt-adapter-hidden');
 
 			        }).catch((err) => {
@@ -941,7 +944,7 @@
 
 
 					const read_about_risks_button = clone.querySelectorAll('.extension-zigbee2mqtt-adapter-read-about-risks')[0];
-					read_about_risks_button.addEventListener('click', (event) => {
+					read_about_risks_button.addEventListener('click', () => {
 						document.getElementById('extension-zigbee2mqtt-adapter-content').classList = ['extension-zigbee2mqtt-adapter-show-tab-tutorial'];
 					});
 
