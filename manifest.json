@@ -37,6 +37,7 @@
       "mqtt": "mqtt://localhost",
       "prefix": "zigbee2mqtt",
       "serial_port": "",
+	  "radio_firmware_type": "automatic",
       "channel": "11",
       "ikea_test_server": false,
 	  "home_assistant_support":false,
@@ -101,6 +102,20 @@
         "custom_serial": {
           "type": "string",
           "description": "Advanced. Sometimes it may be necessary to provide Zigbee2MQTT with something like 'adapter: ezsp' before a USB stick will be recognised properly. You can add that string here."
+        },
+        "radio_firmware_type": {
+          "description": "Advanced. If the USB stick is plugged in but you keep getting popup-messages about 'issue or unplugged', then you can try to manually set the type here. If 'custom_serial' is set to a value, then 'radio_firmware_type' will be ignored. The default is 'automatic'.",
+          "enum": [
+            "automatic",
+            "zstack",
+			"deconz",
+			"ezsp",
+			"ember",
+            "zigate",
+            "zboss",
+            "zoh"
+          ],
+          "type": "string"
         },
         "channel": {
           "description": "Advanced. The wireless channel you want to the Zigbee network to use. If you change this, you will have to pair all your devices again. Suggested options are 11, 15, 20, or 25. The default and minimum is 11. The maximum is 26, although not all Zigbee devices support that channel.",
@@ -181,7 +196,7 @@
     }
   },
   "short_name": "zigbee2mqtt",
-  "version": "1.3.11",
+  "version": "1.3.7",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",

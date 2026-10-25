@@ -199,9 +199,13 @@ class Zigbee2MQTTHandler extends APIHandler {
 					let state = false;
 					try {
 						if (fs.existsSync('/dev/serial/by-id')) {
-							const usb_devices_before = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
+							//const usb_devices_before = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
+							const usb_devices_before = require('child_process').execSync('ls -1 /dev/serial/by-id').toString();
 							if (typeof usb_devices_before == 'string'){
 								this.adapter.usb_devices_before = usb_devices_before;
+								if(this.DEBUG){
+									console.log("this.adapter.usb_devices_before is now: ", this.adapter.usb_devices_before);
+								}
 								state = true;
 							}
 						}
@@ -225,19 +229,25 @@ class Zigbee2MQTTHandler extends APIHandler {
 					try {
 
 						if (fs.existsSync('/dev/serial/by-id')) {
-							const usb_devices_after = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
-							if (typeof usb_devices_after == 'string' && usb_devices_after.length > this.usb_devices_before.length && usb_devices_after != this.usb_devices_before){
+							//const usb_devices_after = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
+							const usb_devices_after = require('child_process').execSync('ls -1 /dev/serial/by-id').toString();
+							if (typeof usb_devices_after == 'string' && usb_devices_after.length > this.adapter.usb_devices_before.length && usb_devices_after != this.adapter.usb_devices_before){
 
 								let usb_devices_after_lines = usb_devices_after.split(/\r?\n/);
 								for (const i in usb_devices_after_lines) {
 									let line = usb_devices_after_lines[i].replace(/[\r\n]/g, '');
 									line = line.trim();
 									if (this.DEBUG) {
-										console.log("line: ", line);
+										console.log("find_usb_stick_after:  line: ", line);
 									}
-									if (line.length > 5 && this.usb_devices_before.indexOf(line) == -1){
+									if (line.length > 5 && line.indexOf(' ') == -1 && this.adapter.usb_devices_before.indexOf(line) == -1){
 										this.adapter.persistent_data['radio_serial_port'] = line;
-										this.look_for_usb_stick();
+										this.adapter.save_persistent_data();
+										if (this.DEBUG) {
+											console.log("find_usb_stick_after:  FOUND NEW RADIO SERIAL PORT: ", line);
+										}
+										this.adapter.sendPairingPrompt("New USB device detected");
+										this.adapter.look_for_usb_stick(false);
 										state = true;
 										break
 									}
@@ -247,7 +257,7 @@ class Zigbee2MQTTHandler extends APIHandler {
 						}
 					} 
 					catch (error) {
-						console.log("Error in find_usb_stick_after API handling: ", error);
+						console.error("caught error in find_usb_stick_after API handling: ", error);
 					}
 
 					return new APIResponse({

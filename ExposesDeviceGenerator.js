@@ -164,7 +164,7 @@ class ExposesDeviceGenerator {
 			
 			if(typeof exposes_info['features'] != "undefined"){
 				if(this.config.debug){
-					console.log("debug: features spotted");
+					console.log("debug: features spotted: ", exposes_info['features']);
 				}
 			}
             else{
@@ -368,12 +368,12 @@ class ExposesDeviceGenerator {
     					}
     				}
     				*/
-    				if(typeof expose["value_step"] != "undefined"){
+    				if(typeof expose["value_step"] == "number"){
     					if( expose["value_step"] != 1){
     						expose.type = "float";
     					}
     				}
-    				if(typeof expose["name"] != "undefined"){
+    				if(typeof expose["name"] == "string"){
     					if( expose["name"] == "local_temperature"){
     						expose.type = "float";
     					}	
@@ -559,13 +559,13 @@ class ExposesDeviceGenerator {
                     }
                 
                     if(typeof device.properties[wt_id] != 'undefined'){
-                        if(device.properties[wt_id]['title'] == "Color temp"){
-                            device.properties[wt_id]['title'] = "Color temperature";
+                        if(typeof device.properties[wt_id]['title'] == 'string' && device.properties[wt_id]['title'].endswith(" temp")){
+                            device.properties[wt_id]['title'] += "erature";
                         }
                     }
 
                     // Add unit if available
-                    if(typeof expose['unit'] != "undefined" && device.properties[wt_id] != 'undefined'){
+                    if(typeof expose['unit'] != "undefined" && typeof device.properties[wt_id] != 'undefined'){
                         device.properties[wt_id]['unit'] = expose['unit'];
                     
                         if( expose['unit'] == 'mV' || expose['unit'] == 'lqi'){
@@ -599,7 +599,7 @@ class ExposesDeviceGenerator {
                         }
                     }
                 
-                    if( expose['name'] == 'humidity' && device.properties[wt_id] != 'undefined'){
+                    if( expose['name'] == 'humidity' && typeof device.properties[wt_id] != 'undefined'){
                         device.properties[wt_id]['unit'] = 'percent';
                         device.properties[wt_id]['multipleOf'] = 0.1;
                     }
@@ -611,16 +611,28 @@ class ExposesDeviceGenerator {
                     
                 }
                 
+
+
+                if(typeof device.properties[wt_id] != 'undefined' && typeof expose.name == 'string'){
+                    if(typeof expose['value_max'] == "number"){
+                        device.properties[wt_id]['maximum'] = expose['value_max'];
+                    }
+                    if(typeof expose['value_min'] == "number"){
+                        device.properties[wt_id]['minimum'] = expose['value_min'];
+                    }
+                    if(typeof expose['value_step'] == "number"){
+                        device.properties[wt_id]['multipleOf'] = expose['value_step'];
+                    }
+                    if(typeof expose['unit'] == "string" && typeof device.properties[wt_id]['unit'] == 'undefined'){
+                        device.properties[wt_id]['unit'] = expose['unit'];
+                    }
+                }
+                
                 
                 
                 // add capabilities information
-    			if(typeof expose['name'] != "undefined" && device.properties[wt_id] != 'undefined'){
+    			if(typeof expose['name'] != "undefined" && typeof device.properties[wt_id] != 'undefined'){
                     //console.log("expose.name = " + expose.property);
-                    
-                    
-                    
-                    
-                    
                     
                     
                     try{
@@ -634,7 +646,7 @@ class ExposesDeviceGenerator {
                         }
                         
                         if(typeof device.properties[wt_id] != 'undefined'){
-            				if( expose.name.endsWith("state") ){
+            				if(typeof expose.name == "string" && expose.name.endsWith("state") ){
             					//console.log("expose.name ends with state, so adding onOfProperty @type");
                                 //console.log("device['@type'] = ", device['@type']);
                                 //console.log( device['@type'].indexOf('Lock') );
