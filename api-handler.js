@@ -269,6 +269,124 @@ class Zigbee2MQTTHandler extends APIHandler {
 					});
 				}
 
+
+
+
+				else if (action == "forget_radio") {
+					let state = false;
+					console.log("handling forget_radio request");
+
+					this.adapter.serial_port_path = null;
+					this.adapter.missing_usb_stick = true;
+					this.adapter.persistent_data['radio_serial_port'] = null;
+					this.adapter.save_persistent_data();
+
+					this.stop_zigbee2mqtt()
+					.then(() => {
+						state = true;
+					})
+					.catch((err) => {
+						console.error("caught error handling forget_radio command: ", err);
+					})
+					.finally(() => {
+						return new APIResponse({
+							status: 200,
+							contentType: 'application/json',
+							content: JSON.stringify({
+								'state': state,
+							}),
+						});
+					})
+					
+				}
+
+
+				else if (action == "get_usb_stick_list") {
+					let state = false;
+					let serial_radios_list = [];
+
+					try {
+
+						if (fs.existsSync('/dev/serial/by-id')) {
+							//const usb_devices_after = require('child_process').execSync('ls -l /dev/serial/by-id').toString();
+							const usb_devices_after = require('child_process').execSync('ls -1 /dev/serial/by-id').toString();
+
+							if (this.DEBUG) {
+								console.log("get_usb_stick_list: raw list: ", usb_devices_after);
+							}
+
+							if (typeof usb_devices_after == 'string' && usb_devices_after.length > 3){
+								
+								let usb_devices_after_lines = usb_devices_after.split(/\r?\n/);
+								for (const i in usb_devices_after_lines) {
+									let line = usb_devices_after_lines[i].replace(/[\r\n]/g, '');
+									line = line.trim();
+									if (this.DEBUG) {
+										console.log("get_usb_stick_list:  line: ", line);
+									}
+									if (line.length > 5 && line.indexOf(' ') == -1){
+										serial_radios_list.push(line);
+									}
+								}
+								state = true;
+							}
+							else{
+								console.error("error: get_usb_stick_list: raw list of radios was not a string or too short: ", usb_devices_after);
+							}
+						}
+						else{
+							console.error("error: get_usb_stick_list: /dev/serial/by-id does not exist");
+						}
+					}
+					catch (error) {
+						console.error("caught error in get_usb_stick_list API handling: ", error);
+					}
+
+					return new APIResponse({
+						status: 200,
+						contentType: 'application/json',
+						content: JSON.stringify({
+							'state': state,
+							'radio_list': serial_radios_list
+						}),
+					});
+				}
+
+
+
+				else if (action == "set_radio_name") {
+					let state = false;
+					try {
+
+						if(typeof request.body.radio_name == 'string' && request.body.radio_name.length > 3){
+							if (this.DEBUG) {
+								console.log("set_radio_name:  saving radio_name: ", request.body.radio_name);
+							}
+							this.adapter.persistent_data['radio_serial_port'] = request.body.radio_name;
+							this.adapter.save_persistent_data();
+							
+							this.adapter.sendPairingPrompt("Zigbee radio name saved");
+							this.adapter.look_for_usb_stick(false);
+							state = true;
+						}
+
+					} 
+					catch (error) {
+						console.error("caught error in set_radio_name API handling: ", error);
+					}
+
+					return new APIResponse({
+						status: 200,
+						contentType: 'application/json',
+						content: JSON.stringify({
+							'state': state
+						}),
+					});
+				}
+
+
+
+
                 
                 else if (action == "health_check") {
                     

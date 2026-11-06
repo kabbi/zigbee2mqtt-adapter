@@ -716,8 +716,26 @@ body:not(.developer) .extension-zigbee2mqtt-adapter-show-if-developer{
 
 
 
+
+#extension-zigbee2mqtt-adapter-zigbee-radio-serial-port:empty + #extension-zigbee2mqtt-adapter-forget-radio-button-container{
+	display:none;
+}
+
+.extension-zigbee2mqtt-adapter-find-zigbee-radio-quick-select-list-item{
+	cursor:pointer;
+	background-color:rgba(0,0,0,.3);
+	margin:1rem 0;
+	padding:.8rem;
+	border-radius:.4rem;
+}
+.extension-zigbee2mqtt-adapter-find-zigbee-radio-quick-select-list-item:hover{
+	background-color:rgba(0,0,0,.6);
+}
+
+
 /*  ADVANCED  */
 
+#extension-zigbee2mqtt-adapter-forget-radio-button,
 #extension-zigbee2mqtt-adapter-reinstall-button,
 #extension-zigbee2mqtt-adapter-save-security-button{
     display:block;

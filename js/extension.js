@@ -177,7 +177,33 @@
 			});
 
 
+			
 
+			this.view.querySelector('#extension-zigbee2mqtt-adapter-forget-radio-button').addEventListener('click', (event) => {
+                console.log("Forget Zigbee radio button clicked");
+				if( confirm("Are you sure you want to forget the Zigbee radio? You'll have to go through the process of selecting one again.") ){
+
+    		        window.API.postJson(
+    		         "/extensions/zigbee2mqtt-adapter/api/ajax",
+    					{"action":"forget_radio"}
+
+    		        ).then((body) => {
+                        this.flash_message("The Zigbee radio has been forgotten");
+						this.view.querySelector('#extension-zigbee2mqtt-adapter-zigbee-radio-serial-port').innerHTML = '';
+						
+						document.getElementById('extension-zigbee2mqtt-adapter-content').classList = ['extension-zigbee2mqtt-adapter-show-tab-things'];
+						this.request_devices_list();
+
+    		        }).catch((err) => {
+    		  			if(this.debug){
+							console.error("zigbee2mqtt debug: caught error forgetting zigbee radio: ", err);
+						}
+    		        });
+
+                }
+				
+			});
+			
 
 
             // Save new network security values
@@ -253,6 +279,7 @@
 					this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-step2').classList.remove('extension-zigbee2mqtt-adapter-hidden');
 					this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-step2').classList.add('extension-zigbee2mqtt-adapter-hidden');
 					this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-failed').classList.add('extension-zigbee2mqtt-adapter-hidden');
+					this.populate_zigbee_radios_list();
 	            });
             }
 
@@ -982,7 +1009,7 @@
 
 						// Disable all update buttons if one has been clicked
 						var update_buttons = document.getElementsByClassName("extension-zigbee2mqtt-adapter-item-update-button");
-						for(var i = 0; i < update_buttons.length; i++){
+						for (var i = 0; i < update_buttons.length; i++){
 							update_buttons[i].disabled = true;
 						}
 						this.flash_message("Please wait at least 10 minutes before you start another update");
@@ -1072,7 +1099,7 @@
                 if(this.updating_firmware){
 					// Disable all update buttons an update is in progress
 					var update_buttons = document.getElementsByClassName("extension-zigbee2mqtt-adapter-item-update-button");
-					for(var i = 0; i < update_buttons.length; i++)
+					for (var i = 0; i < update_buttons.length; i++)
 					{
 						update_buttons[i].disabled = true;
 					}
@@ -1085,9 +1112,79 @@
 				}
 			}
 
+		}
 
+
+		populate_zigbee_radios_list(){
+			if(this.debug){
+				console.log("in populate_zigbee_radios_list");
+			}
+
+			const radio_quick_select_list_el = this.view.querySelector('#extension-zigbee2mqtt-adapter-find-zigbee-radio-quick-select-list');
+			if(radio_quick_select_list_el){
+
+				radio_quick_select_list_el.innerHTML = '';
+
+				window.API.postJson(
+					"/extensions/zigbee2mqtt-adapter/api/ajax",
+						{"action":"get_usb_stick_list"}
+
+				).then((body) => {
+
+					if(this.debug){
+						console.log("get_usb_stick_list: ", body);
+					}
+					if(typeof body.radio_list != 'undefined'){
+						for ( const radio_name_index in body.radio_list ){
+							
+							const radio_name = body.radio_list[radio_name_index];
+							if(this.debug){
+								console.log("get_usb_stick_list:  radio_name: ", radio_name);
+							}
+
+							const radio_item_container_el = document.createElement('div');
+							radio_item_container_el.classList.add('extension-zigbee2mqtt-adapter-find-zigbee-radio-quick-select-list-item');
+							radio_item_container_el.textContent = radio_name;
+
+							radio_item_container_el.addEventListener('click', () => {
+								if(this.debug){
+									console.log("clicked on Zigbee radio name: ", radio_name);
+								}
+
+								window.API.postJson(
+									"/extensions/zigbee2mqtt-adapter/api/ajax",
+										{"action":"set_radio_name","radio_name":radio_name}
+
+								).then((body) => {
+									this.flash_message('Saved ' + radio_name);
+
+								}).catch((err) => {
+									if(this.debug){
+										console.error("zigbee2mqtt adapter: caught error saving radio_name: ", err);
+									}
+									this.flash_message('Error saving');
+								});
+
+							});
+
+							radio_quick_select_list_el.appendChild(radio_item_container_el);
+
+						}
+					}
+
+				}).catch((err) => {
+					if(this.debug){
+						console.error("zigbee2mqtt adapter: caught error in get_usb_stick_list: ", err);
+					}
+					radio_quick_select_list_el.innerHTML = 'Error getting list';
+				});
+				
+			}
 
 		}
+
+
+
 
         // Only updates the progressbar, but leaves the other items in the list as they are.
         update_progress_bar(items){
@@ -1100,7 +1197,7 @@
 			}
 
 			// Loop over all items
-			for( var item in items ){
+			for ( var item in items ){
                 if( typeof items[item]['update'] != 'undefined' ){
                     if( typeof items[item]['update']['state'] != 'undefined' ){
                         if(items[item]['update']['state'] == 'updating'){

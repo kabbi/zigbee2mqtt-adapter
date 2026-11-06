@@ -14,10 +14,6 @@
 			
 			<div id="extension-zigbee2mqtt-adapter-tab-things" class="extension-zigbee2mqtt-adapter-tab">
                 
-				<div id="extension-zigbee2mqtt-adapter-zigbee-radio-serial-port-container" class="extension-zigbee2mqtt-adapter-flex-center extension-zigbee2mqtt-adapter-show-if-developer">
-					<span id="extension-zigbee2mqtt-adapter-zigbee-radio-serial-port"></span>
-				</div>
-				
                 <div id="extension-zigbee2mqtt-adapter-zigbee-radio-container" class="extension-zigbee2mqtt-adapter-flex-column extension-zigbee2mqtt-adapter-area extension-zigbee2mqtt-adapter-hidden">
                     <!--
 					<div class="extension-zigbee2mqtt-adapter-flex-center">
@@ -38,6 +34,13 @@
 						</div>
 					</div>
 	                <div id="extension-zigbee2mqtt-adapter-find-zigbee-radio-container" class="extension-zigbee2mqtt-adapter-hidden">
+						<div id="extension-zigbee2mqtt-adapter-find-zigbee-radio-quick-select-container" class="extension-zigbee2mqtt-adapter-area">
+							<h3>Adding a Zigbee radio</h3>
+							<p>If you have already plugged it in, and you can recognize it in the list below, then select it. Alternatively you can follow the steps below.</p>
+							<div id="extension-zigbee2mqtt-adapter-find-zigbee-radio-quick-select-list" class="extension-zigbee2mqtt-adapter-area">
+
+							</div>
+						</div>
 						<div id="extension-zigbee2mqtt-adapter-find-zigbee-radio-step1" class="extension-zigbee2mqtt-adapter-area">
 							<h3>1. Make sure it's unplugged first</h3>
 							<p>Before we begin, make sure your Zigbee radio is <span class="extension-zigbee2mqtt-adapter-bold">unplugged</span>.</p>
@@ -46,8 +49,8 @@
 							</div>
 						</div>
 						<div id="extension-zigbee2mqtt-adapter-find-zigbee-radio-step2" class="extension-zigbee2mqtt-adapter-hidden extension-zigbee2mqtt-adapter-area">
-							<h3>2. Plug in your Thread radio</h3>
-							<p>Plug your thread radio into your Candle controller.</p>
+							<h3>2. Plug in your Zigbee radio</h3>
+							<p>Plug your Zigbee radio into your Candle controller.</p>
 							<div class="extension-zigbee2mqtt-adapter-align-right">
 								<button id="extension-zigbee2mqtt-adapter-add-radio-after-button" class="text-button">It's plugged in</button>
 							</div>
@@ -57,7 +60,7 @@
 							<p>Attempting to start Zigbee2MQTT...</p>
 						</div>
 						<div id="extension-zigbee2mqtt-adapter-find-zigbee-radio-failed" class="extension-zigbee2mqtt-adapter-hidden extension-zigbee2mqtt-adapter-area">
-							<h3>No new Thread radio found?</h3>
+							<h3>No new Zigbee radio found?</h3>
 							<p>You can try the steps again. Unplug it and click on the "It's unplugged" button. Wait a few seconds, then plug it in, wait a few more seconds, and click on the "It's plugged in" button.</p>
 							<p>How it works: the controller checks the list of devices that were plugged in before and after, and assumes that any new device that shows up in the second list must be the radio.</p>
 							<p>You can verify this yourself on the System Information page under Settings, where you can see a list of plugged in USB devices. Do you see some kind of 'serial' or 'UART' device there when it's plugged in?</p>
@@ -160,10 +163,22 @@
 
 
 			<div id="extension-zigbee2mqtt-adapter-tab-security" class="extension-zigbee2mqtt-adapter-tab">
+				<!--
 				<div id="extension-zigbee2mqtt-adapter-security-container">
 				</div>
+				-->
 				<div id="extension-zigbee2mqtt-adapter-security-form" class="extension-zigbee2mqtt-adapter-centered-page">
                     
+					<div class="extension-zigbee2mqtt-adapter-vlak">
+						<div id="extension-zigbee2mqtt-adapter-zigbee-radio-serial-port-container">
+							<span id="extension-zigbee2mqtt-adapter-zigbee-radio-serial-port"></span>
+							<div id="extension-zigbee2mqtt-adapter-forget-radio-button-container">
+                            	<button id="extension-zigbee2mqtt-adapter-forget-radio-button" class="text-button">Forget this Zigbee radio</button>
+                        	</div>
+						</div>
+						
+					</div>
+
                     <div class="extension-zigbee2mqtt-adapter-vlak">
                         <h3>Security</h3>
     					<p>The addon will have generated a random network ID and network password when it was installed. You might want to write these down. Whenever these are changed, you will need to re-pair all your devices. After changing these codes you will have to restart your device before the new codes will take effect.</p> 
