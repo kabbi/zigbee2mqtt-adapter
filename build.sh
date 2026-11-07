@@ -41,7 +41,7 @@ function install_linux_cross_compiler() {
   sudo apt install --no-install-recommends -y \
     binfmt-support \
     qemu-system \
-    qemu-user-static
+    qemu-user
   docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 }
 
