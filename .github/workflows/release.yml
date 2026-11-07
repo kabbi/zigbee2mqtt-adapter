@@ -100,15 +100,15 @@ jobs:
           'linux-arm',
         ]
         pair: [
-          'node:24',
+#          'node:24',
           'node:20',
         ]
         include:
           - platform: 'linux-arm'
             host-os: 'ubuntu-latest'
-          - pair: 'node:24'
-            language: 'node'
-            version: '24'
+#          - pair: 'node:24'
+#            language: 'node'
+#            version: '24'
           - pair: 'node:20'
             language: 'node'
             version: '20'
